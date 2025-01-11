@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuWriter.Library", "SudokuWriter.Library\SudokuWriter.Library.csproj", "{A24BD37B-B2F9-4207-B10F-FB698F5F9C1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuWriter.Library.Tests", "SudokuWriter.Library.Tests\SudokuWriter.Library.Tests.csproj", "{192D493D-1BC3-4A2C-BC30-E52498D80146}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A24BD37B-B2F9-4207-B10F-FB698F5F9C1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A24BD37B-B2F9-4207-B10F-FB698F5F9C1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A24BD37B-B2F9-4207-B10F-FB698F5F9C1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A24BD37B-B2F9-4207-B10F-FB698F5F9C1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{192D493D-1BC3-4A2C-BC30-E52498D80146}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{192D493D-1BC3-4A2C-BC30-E52498D80146}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{192D493D-1BC3-4A2C-BC30-E52498D80146}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{192D493D-1BC3-4A2C-BC30-E52498D80146}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
