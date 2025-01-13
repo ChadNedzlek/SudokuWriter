@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuWriter.Library", "Sud
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuWriter.Library.Tests", "SudokuWriter.Library.Tests\SudokuWriter.Library.Tests.csproj", "{192D493D-1BC3-4A2C-BC30-E52498D80146}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuWriter.Gui", "SudokuWriter.Gui\SudokuWriter.Gui.csproj", "{BE470545-5641-4A40-A7BB-4F5E790E50AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{192D493D-1BC3-4A2C-BC30-E52498D80146}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{192D493D-1BC3-4A2C-BC30-E52498D80146}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{192D493D-1BC3-4A2C-BC30-E52498D80146}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE470545-5641-4A40-A7BB-4F5E790E50AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE470545-5641-4A40-A7BB-4F5E790E50AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE470545-5641-4A40-A7BB-4F5E790E50AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE470545-5641-4A40-A7BB-4F5E790E50AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

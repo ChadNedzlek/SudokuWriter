@@ -19,22 +19,63 @@ public readonly struct Cells
 
     public int GetSingle(int row, int col)
     {
-        var value = _cells[row, col];
+        ushort value = _cells[row, col];
         if (value == 0) return -1;
         if (!BitOperations.IsPow2(value)) return -1;
         return BitOperations.Log2(value);
     }
 
-    public CellsBuilder ToBuilder() => new(_cells.ToBuilder());
+    public CellsBuilder ToBuilder()
+    {
+        return new CellsBuilder(_cells.ToBuilder());
+    }
 
     public static Cells CreateFilled(int rows = 9, int columns = 9, int digits = 9)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(digits);
-        var array = ImmutableArray2.CreateBuilder<ushort>(rows, columns);
+        ImmutableArray2.Builder<ushort> array = ImmutableArray2.CreateBuilder<ushort>(rows, columns);
         array.Fill(unchecked((ushort)((1 << digits) - 1)));
         return new Cells(array.MoveToImmutable());
     }
 
-    public Cells SetCell(int row, int column, int digit) => new(_cells.SetItem(row, column, unchecked((ushort)(1 << digit))));
-    public ushort GetMask(int row, int column) => _cells[row, column];
+    public Cells SetCell(int row, int column, int digit)
+    {
+        return new Cells(_cells.SetItem(row, column, unchecked((ushort)(1 << digit))));
+    }
+
+    public bool TryRemoveDigit(int row, int column, int digit, out Cells removed)
+    {
+        ushort c = _cells[row, column];
+        var mask = unchecked((ushort)(1 << digit));
+        if ((c & mask) == 0)
+        {
+            removed = default;
+            return false;
+        }
+
+        c = unchecked((ushort)(c & (ushort)~mask));
+        if (c == 0)
+        {
+            removed = default;
+            return false;
+        }
+
+        removed = new Cells(_cells.SetItem(row, column, c));
+        return true;
+    }
+
+    public ushort GetMask(int row, int column)
+    {
+        return _cells[row, column];
+    }
+
+    public ulong GetCellHash()
+    {
+        return _cells.GetHash64();
+    }
+
+    public static bool IsDigitSet(ushort mask, int digit)
+    {
+        return unchecked(mask & (1 << digit)) != 0;
+    }
 }
