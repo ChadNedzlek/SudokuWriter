@@ -54,7 +54,7 @@
             </Viewbox.Resources>
             <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="300" Width="300"
                   TextBoxBase.TextChanged="CellChanged" UIElement.GotFocus="CellFocused"
-                  UIElement.LostFocus="CellUnfocused" Name="GameGrid">
+                  UIElement.LostFocus="CellUnfocused" Name="GameGrid" PreviewKeyDown="GridPreviewKeyDown">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="*" />

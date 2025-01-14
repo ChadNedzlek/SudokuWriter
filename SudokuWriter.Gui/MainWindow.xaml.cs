@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using SudokuWriter.Library;
 
 namespace SudokuWriter.Gui;
@@ -256,4 +257,32 @@ public partial class MainWindow : Window
     }
 
     private readonly record struct CellValue(string Text, CellStyle Style);
+
+    private void GridPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.OriginalSource is not TextBox box) return;
+
+        int i = CellBoxes.IndexOf(box);
+        if (i == -1) return;
+        
+        switch (e.Key)
+        {
+            case Key.Up:
+                if (i > 9) CellBoxes[i - 9].Focus();
+                break;
+            case Key.Down:
+                if (i < (9*8)) CellBoxes[i + 9].Focus();
+                break;
+            case Key.Left:
+                if (i > 0) CellBoxes[i - 1].Focus();
+                break;
+            case Key.Right:
+                if (i < 9*9) CellBoxes[i + 1].Focus();
+                break;
+            default:
+                return;
+        }
+
+        e.Handled = true;
+    }
 }
