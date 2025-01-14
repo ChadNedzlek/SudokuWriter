@@ -11,12 +11,8 @@ public class GameEngineTest
     [Test]
     public void AmbiguousTinyGame()
     {
-        var state = new GameState(
-            Cells.CreateFilled(4, 4, 4),
-            2,
-            2,
-            4
-        );
+        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var state = new GameState(Cells.CreateFilled(s), s);
         var sw = Stopwatch.StartNew();
         GameEngine.Default.Evaluate(state, out _, out _).Should().Be(GameResult.MultipleSolutions);
         TestContext.WriteLine($"Completed in {sw.Elapsed}");
@@ -25,7 +21,7 @@ public class GameEngineTest
     [Test]
     public void AmbiguousNormalGame()
     {
-        var state = new GameState(Cells.CreateFilled());
+        var state = new GameState(Cells.CreateFilled(), GameStructure.Default);
         var sw = Stopwatch.StartNew();
         GameEngine.Default.Evaluate(state, out _, out _).Should().Be(GameResult.MultipleSolutions);
         TestContext.WriteLine($"Completed in {sw.Elapsed}");
@@ -34,12 +30,8 @@ public class GameEngineTest
     [Test]
     public void SolvableTinyNormalGame()
     {
-        var state = new GameState(
-            Cells.CreateFilled(2, 2, 2).SetCell(0, 0, 0),
-            1,
-            2,
-            2
-        );
+        GameStructure s = new GameStructure(2, 2, 2, 1, 2);
+        var state = new GameState(Cells.CreateFilled(s).SetCell(0, 0, 0), s);
         var sw = Stopwatch.StartNew();
         GameEngine.Default.Evaluate(state, out GameState? solved, out _).Should().Be(GameResult.Solved);
         TestContext.WriteLine($"Completed in {sw.Elapsed}");

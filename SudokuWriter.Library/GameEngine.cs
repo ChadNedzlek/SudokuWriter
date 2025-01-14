@@ -7,23 +7,34 @@ namespace SudokuWriter.Library;
 
 public class GameEngine
 {
-    private GameEngine(IEnumerable<IGameRule> rules) : this(rules.ToImmutableArray())
+    public GameState InitialState { get; }
+    public ImmutableArray<IGameRule> Rules { get; }
+
+    private GameEngine(GameState initialState, IEnumerable<IGameRule> rules) : this(initialState,  rules.ToImmutableArray())
     {
     }
 
-    private GameEngine(params ImmutableArray<IGameRule> rules)
+    private GameEngine(GameState initialState, params ImmutableArray<IGameRule> rules)
     {
+        InitialState = initialState;
         Rules = rules;
     }
 
-    public static GameEngine NoRules { get; } = new();
-    public static GameEngine Default { get; } = new(BasicGameRule.Instance);
+    public static GameEngine Default { get; } =
+        new(
+            new GameState(
+                Cells.CreateFilled(GameStructure.Default),
+                GameStructure.Default),
+            BasicGameRule.Instance);
 
-    public ImmutableArray<IGameRule> Rules { get; }
+    public GameEngine WithInitialState(GameState state)
+    {
+        return new GameEngine(state, Rules);
+    }
 
     public GameEngine AddRule(IGameRule rule)
     {
-        return new GameEngine([..Rules, rule]);
+        return new GameEngine(InitialState, [..Rules, rule]);
     }
 
     public GameResult Evaluate(GameState state, out GameState? solution, out GameState? conflict)

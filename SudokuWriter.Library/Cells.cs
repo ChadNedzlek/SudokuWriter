@@ -84,10 +84,14 @@ public readonly struct Cells
 
     public static bool IsDigitSet(ushort mask, int digit)
     {
-        return unchecked(mask & (1 << digit)) != 0;
+        return (mask & (1 << digit)) != 0;
     }
+    
     public static ushort GetDigitMask(int digit)
     {
         return (ushort)(1 << digit);
     }
+
+    public static Cells CreateFilled(GameStructure structure) =>
+        CreateFilled(structure.Rows, structure.Columns, structure.Digits);
 }

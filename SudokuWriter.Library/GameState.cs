@@ -1,29 +1,38 @@
+using System;
 using System.Diagnostics;
 using System.Text;
 
 namespace SudokuWriter.Library;
 
+public readonly record struct GameStructure(int Rows, int Columns, int Digits, int BoxRows, int BoxColumns)
+{
+    public static GameStructure Default { get; } = new GameStructure(9, 9, 9, 3, 3);
+}
+
 [DebuggerDisplay("Board: {BoardString(),nq}")]
 public readonly struct GameState
 {
-    public static GameState Default { get; } = new(Cells.CreateFilled());
+    public static GameState Default { get; } = new(Cells.CreateFilled(), GameStructure.Default);
 
-    public GameState(Cells cells, int boxRows = 3, int boxColumns = 3, int digits = 9)
+    public GameState(Cells cells, GameStructure structure)
     {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(cells.Rows, structure.Rows);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(cells.Columns, structure.Columns);
         Cells = cells;
-        BoxRows = boxRows;
-        BoxColumns = boxColumns;
-        Digits = digits;
+        Structure = structure;
     }
 
     public Cells Cells { get; }
-    public int BoxRows { get; }
-    public int BoxColumns { get; }
-    public int Digits { get; }
+    public GameStructure Structure { get; }
+    public int BoxRows => Structure.BoxRows;
+    public int BoxColumns => Structure.BoxColumns;
+    public int Digits => Structure.Digits;
 
     public GameState WithCells(Cells cells)
     {
-        return new GameState(cells, BoxRows, BoxColumns, Digits);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(cells.Rows, Structure.Rows);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(cells.Columns, Structure.Columns);
+        return new GameState(cells, Structure);
     }
 
     public ulong GetStateHash()

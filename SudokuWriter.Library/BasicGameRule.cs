@@ -1,8 +1,10 @@
 using System;
 using System.Numerics;
+using System.Text.Json;
 
 namespace SudokuWriter.Library;
 
+[GameRule("basic")]
 public class BasicGameRule : IGameRule
 {
     public static BasicGameRule Instance { get; } = new();
@@ -139,5 +141,9 @@ public class BasicGameRule : IGameRule
         }
 
         return null;
+    }
+
+    public void WriteRule(Utf8JsonWriter writer)
+    {
     }
 }

@@ -10,27 +10,27 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluateDefault()
     {
-        var state = new GameState(Cells.CreateFilled());
+        var state = GameState.Default;
         BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unknown);
     }
 
     [Test]
     public void EvaluateSingleSet()
     {
-        var state = new GameState(Cells.CreateFilled(4, 4, 4).SetCell(0, 0, 0), 2, 2, 4);
+        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var state = new GameState(Cells.CreateFilled(s).SetCell(0, 0, 0), s);
         BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unknown);
     }
 
     [Test]
     public void EvaluatePairedRow()
     {
+        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
-            Cells.CreateFilled(4, 4, 4)
+            Cells.CreateFilled(s)
                 .SetCell(0, 0, 0)
                 .SetCell(2, 0, 0),
-            2,
-            2,
-            4
+            s
         );
         BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unsolvable);
     }
@@ -38,13 +38,12 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluatePairedCol()
     {
+        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
-            Cells.CreateFilled(4, 4, 4)
+            Cells.CreateFilled(s)
                 .SetCell(0, 0, 0)
                 .SetCell(0, 2, 0),
-            2,
-            2,
-            4
+            s
         );
         BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unsolvable);
     }
@@ -52,13 +51,12 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluatePairedBox()
     {
+        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
-            Cells.CreateFilled(4, 4, 4)
+            Cells.CreateFilled(s)
                 .SetCell(0, 0, 0)
                 .SetCell(1, 1, 0),
-            2,
-            2,
-            4
+            s
         );
         BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unsolvable);
     }
@@ -66,8 +64,9 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluateSolved()
     {
+        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
-            Cells.CreateFilled(4, 4, 4)
+            Cells.CreateFilled(s)
                 .SetCell(0, 0, 0)
                 .SetCell(0, 1, 1)
                 .SetCell(0, 2, 2)
@@ -84,9 +83,7 @@ public class BasicGameRuleTest
                 .SetCell(3, 1, 0)
                 .SetCell(3, 2, 1)
                 .SetCell(3, 3, 2),
-            2,
-            2,
-            4
+            s
         );
         BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Solved);
     }
@@ -94,11 +91,10 @@ public class BasicGameRuleTest
     [Test]
     public void SimplifyNoneFails()
     {
+        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
-            Cells.CreateFilled(4, 4, 4),
-            2,
-            2,
-            4
+            Cells.CreateFilled(s),
+            s
         );
         BasicGameRule.Instance.TryReduce(state).Should().BeNull();
     }
@@ -106,12 +102,11 @@ public class BasicGameRuleTest
     [Test]
     public void SimplifyFromOneSet()
     {
+        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
-            Cells.CreateFilled(4, 4, 4)
+            Cells.CreateFilled(s)
                 .SetCell(0, 0, 0),
-            2,
-            2,
-            4
+            s
         );
         GameState? reducedState = BasicGameRule.Instance.TryReduce(state);
         reducedState.Value.Should().NotBeNull();
