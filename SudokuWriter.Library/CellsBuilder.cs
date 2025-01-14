@@ -4,7 +4,7 @@ public readonly struct CellsBuilder
 {
     public int Rows => _cells.Rows;
     public int Columns => _cells.Columns;
-    
+
     private readonly ImmutableArray2.Builder<ushort> _cells;
 
     public CellsBuilder(ImmutableArray2.Builder<ushort> cells)

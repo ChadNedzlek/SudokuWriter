@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace SudokuWriter.Library;
 
@@ -34,32 +34,20 @@ public class BasicGameRule : IGameRule
                 allowedInBox[b] |= allowed;
 
                 int v = state.Cells.GetSingle(r, c);
-                if (v == -1)
-                {
-                    continue;
-                }
+                if (v == -1) continue;
 
                 var m = unchecked((ushort)(1 << v));
 
-                if ((forcedRow & m) != 0)
-                {
-                    return GameResult.Unsolvable;
-                }
+                if ((forcedRow & m) != 0) return GameResult.Unsolvable;
 
                 forcedRow |= m;
 
                 ref ushort col = ref forcedByColumn[c];
-                if ((col & m) != 0)
-                {
-                    return GameResult.Unsolvable;
-                }
+                if ((col & m) != 0) return GameResult.Unsolvable;
 
                 col |= m;
                 ref ushort box = ref forcedByBox[b];
-                if ((box & m) != 0)
-                {
-                    return GameResult.Unsolvable;
-                }
+                if ((box & m) != 0) return GameResult.Unsolvable;
 
                 box |= m;
             }
@@ -67,17 +55,15 @@ public class BasicGameRule : IGameRule
 
         var dMask = unchecked((ushort)((1 << state.Digits) - 1));
 
-        if (allowedInRow.ContainsAnyExcept(dMask) || allowedInColumns.ContainsAnyExcept(dMask) ||
+        if (allowedInRow.ContainsAnyExcept(dMask) ||
+            allowedInColumns.ContainsAnyExcept(dMask) ||
             allowedInBox.ContainsAnyExcept(dMask))
-        {
             return GameResult.Unsolvable;
-        }
 
-        if (forcedByRow.ContainsAnyExcept(dMask) || forcedByColumn.ContainsAnyExcept(dMask) ||
+        if (forcedByRow.ContainsAnyExcept(dMask) ||
+            forcedByColumn.ContainsAnyExcept(dMask) ||
             forcedByBox.ContainsAnyExcept(dMask))
-        {
             return GameResult.Unknown;
-        }
 
         return GameResult.Solved;
     }
@@ -98,10 +84,7 @@ public class BasicGameRule : IGameRule
             for (var c = 0; c < nColumns; c++)
             {
                 int v = state.Cells.GetSingle(r, c);
-                if (v == -1)
-                {
-                    continue;
-                }
+                if (v == -1) continue;
 
                 var m = unchecked((ushort)(1 << v));
                 row |= m;
@@ -119,31 +102,28 @@ public class BasicGameRule : IGameRule
             for (var c = 0; c < nColumns; c++)
             {
                 ref ushort cell = ref cellBuilder[r, c];
-                if (BitOperations.IsPow2(cell))
-                {
-                    continue;
-                }
+                if (BitOperations.IsPow2(cell)) continue;
 
                 int b = br + c / state.BoxColumns;
                 var m = unchecked((ushort)~(row | byColumn[c] | byBox[b]));
                 ushort before = cell;
                 cell &= m;
-                if (cell != before)
-                {
-                    removed = true;
-                }
+                if (cell != before) removed = true;
             }
         }
 
-        if (removed)
-        {
-            return state.WithCells(cellBuilder.MoveToImmutable());
-        }
+        if (removed) return state.WithCells(cellBuilder.MoveToImmutable());
 
         return null;
     }
 
-    public void WriteRule(Utf8JsonWriter writer)
+    public JsonObject ToJsonObject()
     {
+        return new JsonObject();
+    }
+
+    public static IGameRule FromJsonObject(JsonObject jsonObject)
+    {
+        return Instance;
     }
 }

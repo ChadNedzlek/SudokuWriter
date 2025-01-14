@@ -7,25 +7,27 @@ namespace SudokuWriter.Library;
 
 public class GameEngine
 {
-    public GameState InitialState { get; }
-    public ImmutableArray<IGameRule> Rules { get; }
-
-    private GameEngine(GameState initialState, IEnumerable<IGameRule> rules) : this(initialState,  rules.ToImmutableArray())
+    public GameEngine(GameState initialState, IEnumerable<IGameRule> rules) : this(initialState, rules.ToImmutableArray())
     {
     }
 
-    private GameEngine(GameState initialState, params ImmutableArray<IGameRule> rules)
+    public GameEngine(GameState initialState, params ImmutableArray<IGameRule> rules)
     {
-        InitialState = initialState;
+        InitialState = initialState.WithCells(initialState.Cells.FillEmpty(initialState.Structure));
         Rules = rules;
     }
+
+    public GameState InitialState { get; }
+    public ImmutableArray<IGameRule> Rules { get; }
 
     public static GameEngine Default { get; } =
         new(
             new GameState(
                 Cells.CreateFilled(GameStructure.Default),
-                GameStructure.Default),
-            BasicGameRule.Instance);
+                GameStructure.Default
+            ),
+            BasicGameRule.Instance
+        );
 
     public GameEngine WithInitialState(GameState state)
     {
@@ -48,18 +50,16 @@ public class GameEngine
             foreach (GameState next in NextStates(s))
             {
                 GameResult result = Rules.Aggregate(
-                    GameResult.Unknown,
+                    GameResult.Solved,
                     (res, rule) => res switch
                     {
                         GameResult.Unsolvable => GameResult.Unsolvable,
-                        _ => rule.Evaluate(next)
+                        GameResult.Unknown => GameResult.Unknown,
+                        _ => rule.Evaluate(next),
                     }
                 );
 
-                if (result == GameResult.Unsolvable)
-                {
-                    continue;
-                }
+                if (result == GameResult.Unsolvable) continue;
 
                 GameState simplified = next;
                 var reduced = true;
@@ -97,10 +97,7 @@ public class GameEngine
                         continue;
                 }
 
-                if (!seenStates.Add(simplified.GetStateHash()))
-                {
-                    continue;
-                }
+                if (!seenStates.Add(simplified.GetStateHash())) continue;
 
                 searchStates.Enqueue(simplified, GetPossibilities(simplified));
             }
@@ -144,10 +141,7 @@ public class GameEngine
 
         for (var d = 0; d < nDigits; d++)
         {
-            if (!Cells.IsDigitSet(minMask, d))
-            {
-                continue;
-            }
+            if (!Cells.IsDigitSet(minMask, d)) continue;
 
             yield return initial.WithCells(initial.Cells.SetCell(minRow, minColumn, d));
         }

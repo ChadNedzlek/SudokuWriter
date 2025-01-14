@@ -1,12 +1,15 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Numerics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
 using SudokuWriter.Library;
 
 namespace SudokuWriter.Gui;
@@ -23,10 +26,16 @@ public partial class MainWindow : Window
 
     private readonly Lazy<ImmutableList<TextBox>> _cellLayout;
 
+    private readonly CancellationTokenSource _exit = new();
+
     private GameEngine _gameEngine = GameEngine.Default;
-    private Task _solveTask;
+    private readonly AutoResetEventAsync _gameStateAvailable = new();
+
+    private readonly ConcurrentQueue<GameQuery> _queries = new();
 
     private int _selfTriggered;
+    private Task _solveTask;
+    private readonly GameEngineSerializer _serializer;
 
     public MainWindow()
     {
@@ -35,9 +44,16 @@ public partial class MainWindow : Window
         List<TextBox> cells = GetDescendants<TextBox>(GameGrid);
         _cellLayout = new Lazy<ImmutableList<TextBox>>(() => PopulateCells(cells));
         _solveTask = Task.Run(SolveQueries);
+        _serializer = new GameEngineSerializer();
     }
 
     private ImmutableList<TextBox> CellBoxes => _cellLayout.Value;
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        _exit.Cancel();
+        base.OnClosing(e);
+    }
 
     private ImmutableList<TextBox> PopulateCells(List<TextBox> cells)
     {
@@ -50,13 +66,10 @@ public partial class MainWindow : Window
     {
         try
         {
-            if (_selfTriggered != 0)
-            {
-                return;
-            }
+            if (_selfTriggered != 0) return;
 
             if (e.OriginalSource is not TextBox cell) return;
-            
+
             cell.Tag = new CellValue(cell.Text, CellStyle.Fixed);
             await ValidateAndReportGameState();
         }
@@ -68,23 +81,13 @@ public partial class MainWindow : Window
 
     private async Task ValidateAndReportGameState()
     {
-        GameState state = GameState.Default;
-        CellsBuilder cells = state.Cells.ToBuilder();
-        var uiCells = CellBoxes;
-        for (int r = 0; r < cells.Rows; r++)
-        for (int c = 0; c < cells.Columns; c++)
-        { 
-            var uiCell = uiCells[r * 9 + c];
-            if (uiCell.Tag is CellValue { Style: CellStyle.Fixed, Text: { } cellText } &&
-                ushort.TryParse(cellText, out var value))
-            {
-                cells.SetSingle(r, c, (ushort)(value - 1));
-            }
-        }
+        if (_gameEngine.Rules.IsEmpty) return;
+        
+        GameState state = BuildGameStateFromUi();
 
         TaskCompletionSource<GameQueryResult> resultTask = new();
-        _queries.Enqueue(new GameQuery(state.WithCells(cells.MoveToImmutable()), resultTask));
-        Interlocked.Exchange(ref _gameStateAvailable, new TaskCompletionSource()).SetResult();
+        _queries.Enqueue(new GameQuery(state, resultTask));
+        _gameStateAvailable.Trigger();
         GameQueryResult result = await resultTask.Task;
 
         Style s = result.Result switch
@@ -92,18 +95,17 @@ public partial class MainWindow : Window
             GameResult.Unsolvable => GameGrid.TryFindResource("UnsolvableGame") as Style,
             GameResult.Solved => GameGrid.TryFindResource("SolvedGame") as Style,
             GameResult.MultipleSolutions => GameGrid.TryFindResource("AmbiguousGame") as Style,
-            _ => null,
+            _ => null
         };
-        foreach (var border in GetDescendants<Border>(GameGrid))
-        {
-            border.Style = s;
-        }
+        foreach (Border border in GetDescendants<Border>(GameGrid)) border.Style = s;
 
-        for (int r = 0; r < cells.Rows; r++)
-        for (int c = 0; c < cells.Columns; c++)
+        ImmutableList<TextBox> uiCells = CellBoxes;
+        
+        for (var r = 0; r < state.Structure.Rows; r++)
+        for (var c = 0; c < state.Structure.Columns; c++)
         {
             TextBox uiCell = uiCells[r * 9 + c];
-            var style = uiCell.Tag is CellValue value ? value.Style : CellStyle.Ambiguous;
+            CellStyle style = uiCell.Tag is CellValue value ? value.Style : CellStyle.Ambiguous;
             if (style == CellStyle.Fixed) continue;
             switch (result.Result)
             {
@@ -111,76 +113,96 @@ public partial class MainWindow : Window
                     SetCell(r, c, "", CellStyle.Potential);
                     break;
                 case GameResult.Solved:
-                    SetCell(r,
+                    SetCell(
+                        r,
                         c,
                         TextFromDigit(result.PrimaryState.Value.Cells.GetSingle(r, c)),
-                        CellStyle.Solved);
+                        CellStyle.Solved
+                    );
                     break;
                 case GameResult.MultipleSolutions:
                     var mask = (ushort)(result.PrimaryState.Value.Cells.GetMask(r, c) |
                         result.ConflictingState.Value.Cells.GetMask(r, c));
                     if (BitOperations.IsPow2(mask))
-                    {
-                        SetCell(r,
+                        SetCell(
+                            r,
                             c,
                             TextFromDigitMask(
-                                mask),
-                            CellStyle.Solved);
-                    }
+                                mask
+                            ),
+                            CellStyle.Solved
+                        );
                     else
-                    {
-                        SetCell(r,
+                        SetCell(
+                            r,
                             c,
                             TextFromDigitMask(
-                                mask),
-                            CellStyle.Ambiguous);
-                    }
+                                mask
+                            ),
+                            CellStyle.Ambiguous
+                        );
 
                     break;
             }
         }
     }
 
-    private ushort DigitFromText(string text) => (ushort)(ushort.TryParse(text, out var digit) ? digit - 1 : ~0);
-    private string TextFromDigit(int digit) => (digit + 1).ToString();
+    private GameState BuildGameStateFromUi()
+    {
+        var state = new GameState(Cells.CreateFilled(_gameEngine.InitialState.Structure), _gameEngine.InitialState.Structure);
+        CellsBuilder cells = state.Cells.ToBuilder();
+        ImmutableList<TextBox> uiCells = CellBoxes;
+        for (var r = 0; r < cells.Rows; r++)
+        for (var c = 0; c < cells.Columns; c++)
+        {
+            if (uiCells[r * 9 + c].Tag is CellValue { Style: CellStyle.Fixed, Text: { } cellText })
+            {
+                cells.SetSingle(r, c, DigitFromText(cellText));
+            }
+        }
+
+        state = state.WithCells(cells.MoveToImmutable());
+        return state;
+    }
+
+    private ushort DigitFromText(string text)
+    {
+        return (ushort)(ushort.TryParse(text, out ushort digit) ? digit - 1 : ~0);
+    }
+
+    private string TextFromDigit(int digit)
+    {
+        return (digit + 1).ToString();
+    }
 
     private string TextFromDigitMask(ushort digit)
     {
-        StringBuilder b = new StringBuilder(9);
+        var b = new StringBuilder(9);
         for (ushort d = 0; d < 9; d++)
-        {
             if (Cells.IsDigitSet(digit, d))
-            {
                 b.Append(TextFromDigit(d));
-            }
-        }
 
         return b.ToString();
     }
 
-    private record class GameQueryResult(GameResult Result, GameState? PrimaryState, GameState? ConflictingState);
-    
-    private record class GameQuery(GameState State, TaskCompletionSource<GameQueryResult> OnSolved);
-
-    private ConcurrentQueue<GameQuery> _queries = new();
-
-    private CancellationTokenSource _exit = new ();
-    private TaskCompletionSource _gameStateAvailable = new TaskCompletionSource();
-    
     [DoesNotReturn]
     private async Task SolveQueries()
     {
         while (true)
         {
             _exit.Token.ThrowIfCancellationRequested();
-            await _gameStateAvailable.Task;
-            if (_queries.TryDequeue(out var s))
+            await _gameStateAvailable.WaitAsync();
+            if (_queries.TryDequeue(out GameQuery s))
             {
-                var result = _gameEngine.Evaluate(s.State, out var solution, out var conflict);
-                s.OnSolved.TrySetResult(new(result, solution, conflict));
+                Debug.WriteLine("Found state to query", "INFO");
+                GameResult result = _gameEngine.Evaluate(s.State, out GameState? solution, out GameState? conflict);
+                Debug.WriteLine($"Query complete result={result}", "INFO");
+                s.OnSolved.TrySetResult(new GameQueryResult(result, solution, conflict));
+                Debug.WriteLine($"Dispatch query complete", "INFO");
             }
             else
             {
+                Debug.WriteLine("No query found", "ERROR");
             }
         }
     }
@@ -206,7 +228,8 @@ public partial class MainWindow : Window
         }
     }
 
-    private static List<T> GetDescendants<T>(FrameworkElement ctrl) where T : FrameworkElement
+    private static List<T> GetDescendants<T>(FrameworkElement ctrl)
+        where T : FrameworkElement
     {
         List<T> list = [];
         Queue<FrameworkElement> search = new();
@@ -215,10 +238,7 @@ public partial class MainWindow : Window
             foreach (object child in LogicalTreeHelper.GetChildren(e))
                 if (child is FrameworkElement fe)
                 {
-                    if (fe is T t)
-                    {
-                        list.Add(t);
-                    }
+                    if (fe is T t) list.Add(t);
 
                     search.Enqueue(fe);
                 }
@@ -228,35 +248,21 @@ public partial class MainWindow : Window
 
     private void CellFocused(object sender, RoutedEventArgs e)
     {
-        if (e.OriginalSource is not TextBox box)
-        {
-            return;
-        }
-        
-        if (box.Tag is CellValue { Style: CellStyle.Fixed })
-        {
-            return;
-        }
+        if (e.OriginalSource is not TextBox box) return;
+
+        if (box.Tag is CellValue { Style: CellStyle.Fixed }) return;
 
         SetCellTextAndStyle(box, "", CellStyle.Fixed);
     }
 
     private void CellUnfocused(object sender, RoutedEventArgs e)
     {
-        if (e.OriginalSource is not TextBox box)
-        {
-            return;
-        }
+        if (e.OriginalSource is not TextBox box) return;
 
-        if (box.Tag is not CellValue computed)
-        {
-            return;
-        }
+        if (box.Tag is not CellValue computed) return;
 
         SetCellTextAndStyle(box, computed.Text, computed.Style);
     }
-
-    private readonly record struct CellValue(string Text, CellStyle Style);
 
     private void GridPreviewKeyDown(object sender, KeyEventArgs e)
     {
@@ -264,25 +270,100 @@ public partial class MainWindow : Window
 
         int i = CellBoxes.IndexOf(box);
         if (i == -1) return;
-        
+
         switch (e.Key)
         {
             case Key.Up:
                 if (i > 9) CellBoxes[i - 9].Focus();
                 break;
             case Key.Down:
-                if (i < (9*8)) CellBoxes[i + 9].Focus();
+                if (i < 9 * 8) CellBoxes[i + 9].Focus();
                 break;
             case Key.Left:
                 if (i > 0) CellBoxes[i - 1].Focus();
                 break;
             case Key.Right:
-                if (i < 9*9) CellBoxes[i + 1].Focus();
+                if (i < 9 * 9) CellBoxes[i + 1].Focus();
                 break;
             default:
                 return;
         }
 
         e.Handled = true;
+    }
+
+    private record class GameQueryResult(GameResult Result, GameState? PrimaryState, GameState? ConflictingState);
+
+    private record class GameQuery(GameState State, TaskCompletionSource<GameQueryResult> OnSolved);
+
+    private readonly record struct CellValue(string Text, CellStyle Style);
+
+    private void CloseWindow(object sender, ExecutedRoutedEventArgs e) => Close();
+
+    private void NewGame(object sender, ExecutedRoutedEventArgs e)
+    {
+        _gameEngine = GameEngine.Default;
+        _selfTriggered++;
+        foreach (var cell in CellBoxes)
+        {
+            cell.Text = "";
+        }
+        _selfTriggered--;
+    }
+
+    private async void SaveGame(object sender, ExecutedRoutedEventArgs e)
+    {
+        var dlg = new SaveFileDialog()
+        {
+            Filter = "Sudoku Game (*.sdku)|*.sdku|All Files (*.*)|*.*",
+            DefaultExt = ".sdku",
+            AddExtension = true,
+            ValidateNames = true,
+        };
+        
+        if (dlg.ShowDialog() is not true)
+        {
+            return;
+        }
+        
+        var gameState = BuildGameStateFromUi();
+        await using var stream = dlg.OpenFile();
+        await _serializer.SaveGameAsync(_gameEngine.WithInitialState(gameState), stream);
+    }
+
+    private async void OpenGame(object sender, ExecutedRoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Filter = "Sudoku Game (*.sdku)|*.sdku|All Files (*.*)|*.*",
+            DefaultExt = ".sdku",
+            Multiselect = false,
+        };
+        
+        if (dlg.ShowDialog() is not true)
+        {
+            return;
+        }
+        
+        _queries.Clear();
+            
+        await using var stream = dlg.OpenFile();
+        var gameEngine = await _serializer.LoadGameAsync(stream);
+        _gameEngine = gameEngine;
+        for (var r = 0; r < gameEngine.InitialState.Structure.Rows; r++)
+        for (var c = 0; c < gameEngine.InitialState.Structure.Columns; c++)
+        {
+            switch (gameEngine.InitialState.Cells.GetSingle(r, c))
+            {
+                case -1:
+                    SetCell(r, c, "", CellStyle.Potential);
+                    break;
+                case var x:
+                    SetCell(r, c, TextFromDigit(x), CellStyle.Fixed);
+                    break;
+            }
+        }
+
+        await ValidateAndReportGameState();
     }
 }

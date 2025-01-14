@@ -1,6 +1,8 @@
 using System;
 using System.IO.Hashing;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SudokuWriter.Library;
 
@@ -136,4 +138,13 @@ public static class ImmutableArray2
             _array.Span.Fill(value);
         }
     }
+}
+
+public class AutoResetEventAsync
+{
+    private TaskCompletionSource _current = new();
+
+    public Task WaitAsync() => _current.Task;
+
+    public void Trigger() => Interlocked.Exchange(ref _current, new ()).SetResult();
 }

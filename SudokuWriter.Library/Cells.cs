@@ -20,15 +20,9 @@ public readonly struct Cells
     public int GetSingle(int row, int col)
     {
         ushort value = _cells[row, col];
-        if (value == 0)
-        {
-            return -1;
-        }
+        if (value == 0) return -1;
 
-        if (!BitOperations.IsPow2(value))
-        {
-            return -1;
-        }
+        if (!BitOperations.IsPow2(value)) return -1;
 
         return BitOperations.Log2(value);
     }
@@ -49,6 +43,19 @@ public readonly struct Cells
     public Cells SetCell(int row, int column, int digit)
     {
         return new Cells(_cells.SetItem(row, column, unchecked((ushort)(1 << digit))));
+    }
+
+    public Cells FillEmpty(GameStructure structure)
+    {
+        ImmutableArray2.Builder<ushort> b = _cells.ToBuilder();
+        for (var r = 0; r < b.Rows; r++)
+        for (var c = 0; c < b.Columns; c++)
+        {
+            ref ushort cell = ref b[r, c];
+            if (cell == 0) cell = GetAllDigitsMask(structure.Digits);
+        }
+
+        return new Cells(b.MoveToImmutable());
     }
 
     public bool TryRemoveDigit(int row, int column, int digit, out Cells removed)
@@ -86,12 +93,19 @@ public readonly struct Cells
     {
         return (mask & (1 << digit)) != 0;
     }
-    
+
     public static ushort GetDigitMask(int digit)
     {
         return (ushort)(1 << digit);
     }
 
-    public static Cells CreateFilled(GameStructure structure) =>
-        CreateFilled(structure.Rows, structure.Columns, structure.Digits);
+    public static ushort GetAllDigitsMask(int digits)
+    {
+        return unchecked((ushort)((1 << digits) - 1));
+    }
+
+    public static Cells CreateFilled(GameStructure structure)
+    {
+        return CreateFilled(structure.Rows, structure.Columns, structure.Digits);
+    }
 }

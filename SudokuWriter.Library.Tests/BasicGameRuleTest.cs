@@ -17,7 +17,7 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluateSingleSet()
     {
-        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(Cells.CreateFilled(s).SetCell(0, 0, 0), s);
         BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unknown);
     }
@@ -25,7 +25,7 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluatePairedRow()
     {
-        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
             Cells.CreateFilled(s)
                 .SetCell(0, 0, 0)
@@ -38,7 +38,7 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluatePairedCol()
     {
-        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
             Cells.CreateFilled(s)
                 .SetCell(0, 0, 0)
@@ -51,7 +51,7 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluatePairedBox()
     {
-        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
             Cells.CreateFilled(s)
                 .SetCell(0, 0, 0)
@@ -64,7 +64,7 @@ public class BasicGameRuleTest
     [Test]
     public void EvaluateSolved()
     {
-        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
             Cells.CreateFilled(s)
                 .SetCell(0, 0, 0)
@@ -91,7 +91,7 @@ public class BasicGameRuleTest
     [Test]
     public void SimplifyNoneFails()
     {
-        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
             Cells.CreateFilled(s),
             s
@@ -102,7 +102,7 @@ public class BasicGameRuleTest
     [Test]
     public void SimplifyFromOneSet()
     {
-        GameStructure s = new GameStructure(4, 4, 4, 2, 2);
+        var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
             Cells.CreateFilled(s)
                 .SetCell(0, 0, 0),

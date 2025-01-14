@@ -5,294 +5,316 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="10" />
-            <RowDefinition Height="*" MinHeight="300" />
-            <RowDefinition Height="10" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="10" />
-            <ColumnDefinition Width="*" MinWidth="300" />
-            <ColumnDefinition Width="10" />
-        </Grid.ColumnDefinitions>
-        <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform" StretchDirection="Both">
-            <Viewbox.Resources>
-                <Style TargetType="TextBox">
-                    <Setter Property="Foreground" Value="Black" />
-                    <Setter Property="HorizontalContentAlignment" Value="Center" />
-                    <Setter Property="VerticalContentAlignment" Value="Center" />
-                    <Setter Property="BorderThickness" Value="0.5" />
-                    <Setter Property="MaxLength" Value="1" />
-                    <Setter Property="FontSize" Value="20" />
-                    <Setter Property="TextWrapping" Value="Wrap" />
-                </Style>
-                <Style TargetType="TextBox" x:Key="Ambiguous" BasedOn="{StaticResource {x:Type TextBox}}">
-                    <Setter Property="Foreground" Value="DarkRed" />
-                    <Setter Property="FontSize" Value="9" />
-                </Style>
-                <Style TargetType="TextBox" x:Key="Fixed" BasedOn="{StaticResource {x:Type TextBox}}" />
-                <Style TargetType="TextBox" x:Key="Solved" BasedOn="{StaticResource {x:Type TextBox}}">
-                    <Setter Property="Foreground" Value="LightBlue" />
-                </Style>
-                <Style TargetType="TextBox" x:Key="Potential" BasedOn="{StaticResource {x:Type TextBox}}">
-                    <Setter Property="Foreground" Value="CadetBlue" />
-                    <Setter Property="FontSize" Value="9" />
-                </Style>
-                <Style TargetType="Border">
-                    <Setter Property="BorderBrush" Value="DimGray" />
-                    <Setter Property="BorderThickness" Value="0.5" />
-                </Style>
-                <Style TargetType="Border" x:Key="SolvedGame" BasedOn="{StaticResource {x:Type Border}}">
-                    <Setter Property="BorderBrush" Value="Green" />
-                </Style>
-                <Style TargetType="Border" x:Key="AmbiguousGame" BasedOn="{StaticResource {x:Type Border}}">
-                </Style>
-                <Style TargetType="Border" x:Key="UnsolvableGame" BasedOn="{StaticResource {x:Type Border}}">
-                    <Setter Property="BorderBrush" Value="Red" />
-                </Style>
-            </Viewbox.Resources>
-            <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="300" Width="300"
-                  TextBoxBase.TextChanged="CellChanged" UIElement.GotFocus="CellFocused"
-                  UIElement.LostFocus="CellUnfocused" Name="GameGrid" PreviewKeyDown="GridPreviewKeyDown">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Border Grid.Row="0" Grid.Column="0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+    <Window.CommandBindings>
+        <CommandBinding Command="New" Executed="NewGame" />
+        <CommandBinding Command="Save" Executed="SaveGame" />
+        <CommandBinding Command="Open" Executed="OpenGame" />
+        <CommandBinding Command="Close" Executed="CloseWindow" />
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Control" Command="New" />
+        <KeyBinding Key="O" Modifiers="Control" Command="Open" />
+        <KeyBinding Key="S" Modifiers="Control" Command="Save" />
+    </Window.InputBindings>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Command="New" />
+                <MenuItem Header="_Open" Command="Open" />
+                <MenuItem Header="_Save" Command="Save" />
+                <Separator />
+                <MenuItem Header="E_xit" Command="Close" />
+            </MenuItem>
+        </Menu>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10" />
+                <RowDefinition Height="*" MinHeight="300" />
+                <RowDefinition Height="10" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" MinWidth="300" />
+                <ColumnDefinition Width="10" />
+            </Grid.ColumnDefinitions>
+            <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform" StretchDirection="Both">
+                <Viewbox.Resources>
+                    <Style TargetType="TextBox">
+                        <Setter Property="Foreground" Value="Black" />
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                        <Setter Property="BorderThickness" Value="0.5" />
+                        <Setter Property="MaxLength" Value="1" />
+                        <Setter Property="FontSize" Value="20" />
+                        <Setter Property="TextWrapping" Value="Wrap" />
+                    </Style>
+                    <Style TargetType="Border">
+                        <Setter Property="BorderBrush" Value="DimGray" />
+                        <Setter Property="BorderThickness" Value="0.5" />
+                    </Style>
+                    <Style TargetType="TextBox" x:Key="Ambiguous" BasedOn="{StaticResource {x:Type TextBox}}">
+                        <Setter Property="Foreground" Value="DarkRed" />
+                        <Setter Property="FontSize" Value="9" />
+                    </Style>
+                    <Style TargetType="TextBox" x:Key="Fixed" BasedOn="{StaticResource {x:Type TextBox}}" />
+                    <Style TargetType="TextBox" x:Key="Solved" BasedOn="{StaticResource {x:Type TextBox}}">
+                        <Setter Property="Foreground" Value="LightBlue" />
+                    </Style>
+                    <Style TargetType="TextBox" x:Key="Potential" BasedOn="{StaticResource {x:Type TextBox}}">
+                        <Setter Property="Foreground" Value="CadetBlue" />
+                        <Setter Property="FontSize" Value="9" />
+                    </Style>
+                    <Style TargetType="Border" x:Key="SolvedGame" BasedOn="{StaticResource {x:Type Border}}">
+                        <Setter Property="BorderBrush" Value="Green" />
+                    </Style>
+                    <Style TargetType="Border" x:Key="AmbiguousGame" BasedOn="{StaticResource {x:Type Border}}">
+                    </Style>
+                    <Style TargetType="Border" x:Key="UnsolvableGame" BasedOn="{StaticResource {x:Type Border}}">
+                        <Setter Property="BorderBrush" Value="Red" />
+                    </Style>
+                </Viewbox.Resources>
+                <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="300" Width="300"
+                      TextBoxBase.TextChanged="CellChanged" UIElement.GotFocus="CellFocused"
+                      UIElement.LostFocus="CellUnfocused" Name="GameGrid" PreviewKeyDown="GridPreviewKeyDown">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Row="0" Grid.Column="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="1">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="2">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="2">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
 
-                <Border Grid.Row="1" Grid.Column="0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+                    <Border Grid.Row="1" Grid.Column="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
-                <Border Grid.Row="1" Grid.Column="1">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
-                <Border Grid.Row="1" Grid.Column="2">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="2">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
 
-                <Border Grid.Row="2" Grid.Column="0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+                    <Border Grid.Row="2" Grid.Column="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
-                <Border Grid.Row="2" Grid.Column="1">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
-                <Border Grid.Row="2" Grid.Column="2">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0" />
-                        <TextBox Grid.Row="0" Grid.Column="1" />
-                        <TextBox Grid.Row="0" Grid.Column="2" />
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="2">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Row="0" Grid.Column="0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" />
+                            <TextBox Grid.Row="0" Grid.Column="2" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" />
-                        <TextBox Grid.Row="1" Grid.Column="2" />
+                            <TextBox Grid.Row="1" Grid.Column="0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" />
+                            <TextBox Grid.Row="1" Grid.Column="2" />
 
-                        <TextBox Grid.Row="2" Grid.Column="0" />
-                        <TextBox Grid.Row="2" Grid.Column="1" />
-                        <TextBox Grid.Row="2" Grid.Column="2" />
-                    </Grid>
-                </Border>
-            </Grid>
-        </Viewbox>
-    </Grid>
+                            <TextBox Grid.Row="2" Grid.Column="0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" />
+                            <TextBox Grid.Row="2" Grid.Column="2" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Viewbox>
+        </Grid>
+    </DockPanel>
 </Window>

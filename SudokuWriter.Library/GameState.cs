@@ -6,7 +6,7 @@ namespace SudokuWriter.Library;
 
 public readonly record struct GameStructure(int Rows, int Columns, int Digits, int BoxRows, int BoxColumns)
 {
-    public static GameStructure Default { get; } = new GameStructure(9, 9, 9, 3, 3);
+    public static GameStructure Default { get; } = new(9, 9, 9, 3, 3);
 }
 
 [DebuggerDisplay("Board: {BoardString(),nq}")]
@@ -55,9 +55,7 @@ public readonly struct GameState
                 {
                     for (var d = 0; d < Digits; d++)
                         if (Cells[r, c, d])
-                        {
                             builder.Append((char)('1' + d));
-                        }
 
                     builder.Append(' ');
                 }
