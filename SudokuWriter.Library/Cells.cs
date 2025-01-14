@@ -20,8 +20,16 @@ public readonly struct Cells
     public int GetSingle(int row, int col)
     {
         ushort value = _cells[row, col];
-        if (value == 0) return -1;
-        if (!BitOperations.IsPow2(value)) return -1;
+        if (value == 0)
+        {
+            return -1;
+        }
+
+        if (!BitOperations.IsPow2(value))
+        {
+            return -1;
+        }
+
         return BitOperations.Log2(value);
     }
 
@@ -77,5 +85,9 @@ public readonly struct Cells
     public static bool IsDigitSet(ushort mask, int digit)
     {
         return unchecked(mask & (1 << digit)) != 0;
+    }
+    public static ushort GetDigitMask(int digit)
+    {
+        return (ushort)(1 << digit);
     }
 }

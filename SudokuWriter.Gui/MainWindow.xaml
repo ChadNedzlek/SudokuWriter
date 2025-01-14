@@ -8,12 +8,12 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="10" />
-            <RowDefinition Height="*" MinHeight="200" />
+            <RowDefinition Height="*" MinHeight="300" />
             <RowDefinition Height="10" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="10" />
-            <ColumnDefinition Width="*" MinWidth="200" />
+            <ColumnDefinition Width="*" MinWidth="300" />
             <ColumnDefinition Width="10" />
         </Grid.ColumnDefinitions>
         <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform" StretchDirection="Both">
@@ -22,14 +22,39 @@
                     <Setter Property="Foreground" Value="Black" />
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
                     <Setter Property="VerticalContentAlignment" Value="Center" />
-                    <Setter Property="BorderThickness" Value="0.5"></Setter>
+                    <Setter Property="BorderThickness" Value="0.5" />
+                    <Setter Property="MaxLength" Value="1" />
+                    <Setter Property="FontSize" Value="20" />
+                    <Setter Property="TextWrapping" Value="Wrap" />
+                </Style>
+                <Style TargetType="TextBox" x:Key="Ambiguous" BasedOn="{StaticResource {x:Type TextBox}}">
+                    <Setter Property="Foreground" Value="DarkRed" />
+                    <Setter Property="FontSize" Value="9" />
+                </Style>
+                <Style TargetType="TextBox" x:Key="Fixed" BasedOn="{StaticResource {x:Type TextBox}}" />
+                <Style TargetType="TextBox" x:Key="Solved" BasedOn="{StaticResource {x:Type TextBox}}">
+                    <Setter Property="Foreground" Value="LightBlue" />
+                </Style>
+                <Style TargetType="TextBox" x:Key="Potential" BasedOn="{StaticResource {x:Type TextBox}}">
+                    <Setter Property="Foreground" Value="CadetBlue" />
+                    <Setter Property="FontSize" Value="9" />
                 </Style>
                 <Style TargetType="Border">
                     <Setter Property="BorderBrush" Value="DimGray" />
                     <Setter Property="BorderThickness" Value="0.5" />
                 </Style>
+                <Style TargetType="Border" x:Key="SolvedGame" BasedOn="{StaticResource {x:Type Border}}">
+                    <Setter Property="BorderBrush" Value="Green" />
+                </Style>
+                <Style TargetType="Border" x:Key="AmbiguousGame" BasedOn="{StaticResource {x:Type Border}}">
+                </Style>
+                <Style TargetType="Border" x:Key="UnsolvableGame" BasedOn="{StaticResource {x:Type Border}}">
+                    <Setter Property="BorderBrush" Value="Red" />
+                </Style>
             </Viewbox.Resources>
-            <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="160" Width="160" TextBoxBase.TextChanged="CellChanged" Name="GameGrid">
+            <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="300" Width="300"
+                  TextBoxBase.TextChanged="CellChanged" UIElement.GotFocus="CellFocused"
+                  UIElement.LostFocus="CellUnfocused" Name="GameGrid">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="*" />
@@ -52,17 +77,17 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
                 <Border Grid.Row="0" Grid.Column="1">
@@ -77,17 +102,17 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
                 <Border Grid.Row="0" Grid.Column="2">
@@ -102,20 +127,20 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
-                
+
                 <Border Grid.Row="1" Grid.Column="0">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -128,17 +153,17 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
                 <Border Grid.Row="1" Grid.Column="1">
@@ -153,17 +178,17 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
                 <Border Grid.Row="1" Grid.Column="2">
@@ -178,20 +203,20 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
-                
+
                 <Border Grid.Row="2" Grid.Column="0">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -204,17 +229,17 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
                 <Border Grid.Row="2" Grid.Column="1">
@@ -229,17 +254,17 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
                 <Border Grid.Row="2" Grid.Column="2">
@@ -254,17 +279,17 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Row="0" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="0" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="1" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="1" Grid.Column="2"></TextBox>
-                        
-                        <TextBox Grid.Row="2" Grid.Column="0"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
-                        <TextBox Grid.Row="2" Grid.Column="2"></TextBox>
+                        <TextBox Grid.Row="0" Grid.Column="0" />
+                        <TextBox Grid.Row="0" Grid.Column="1" />
+                        <TextBox Grid.Row="0" Grid.Column="2" />
+
+                        <TextBox Grid.Row="1" Grid.Column="0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" />
+                        <TextBox Grid.Row="1" Grid.Column="2" />
+
+                        <TextBox Grid.Row="2" Grid.Column="0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" />
+                        <TextBox Grid.Row="2" Grid.Column="2" />
                     </Grid>
                 </Border>
             </Grid>

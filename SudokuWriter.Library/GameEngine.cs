@@ -45,7 +45,10 @@ public class GameEngine
                     }
                 );
 
-                if (result == GameResult.Unsolvable) continue;
+                if (result == GameResult.Unsolvable)
+                {
+                    continue;
+                }
 
                 GameState simplified = next;
                 var reduced = true;
@@ -83,7 +86,10 @@ public class GameEngine
                         continue;
                 }
 
-                if (!seenStates.Add(simplified.GetStateHash())) continue;
+                if (!seenStates.Add(simplified.GetStateHash()))
+                {
+                    continue;
+                }
 
                 searchStates.Enqueue(simplified, GetPossibilities(simplified));
             }
@@ -127,7 +133,10 @@ public class GameEngine
 
         for (var d = 0; d < nDigits; d++)
         {
-            if (!Cells.IsDigitSet(minMask, d)) continue;
+            if (!Cells.IsDigitSet(minMask, d))
+            {
+                continue;
+            }
 
             yield return initial.WithCells(initial.Cells.SetCell(minRow, minColumn, d));
         }

@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SudokuWriter.Library\SudokuWriter.Library.csproj" />
+        <ProjectReference Include="..\SudokuWriter.Library\SudokuWriter.Library.csproj"/>
     </ItemGroup>
 
 </Project>

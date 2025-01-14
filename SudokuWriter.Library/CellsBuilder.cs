@@ -2,6 +2,9 @@ namespace SudokuWriter.Library;
 
 public readonly struct CellsBuilder
 {
+    public int Rows => _cells.Rows;
+    public int Columns => _cells.Columns;
+    
     private readonly ImmutableArray2.Builder<ushort> _cells;
 
     public CellsBuilder(ImmutableArray2.Builder<ushort> cells)
@@ -20,5 +23,10 @@ public readonly struct CellsBuilder
     public Cells MoveToImmutable()
     {
         return new Cells(_cells.MoveToImmutable());
+    }
+
+    public void SetSingle(int row, int column, ushort value)
+    {
+        _cells[row, column] = Cells.GetDigitMask(value);
     }
 }
