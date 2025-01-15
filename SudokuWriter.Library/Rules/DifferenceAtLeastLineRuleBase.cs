@@ -6,21 +6,27 @@ using System.Text.Json.Nodes;
 namespace SudokuWriter.Library.Rules;
 
 [GameRule("diff-line")]
-public class DifferenceAtLeastLineRule<T> : LineRule<T>, ILineRule<T>
+public class DifferenceAtLeastLineRule : DifferenceAtLeastLineRuleBase<DifferenceAtLeastLineRule>, ILineRule<DifferenceAtLeastLineRule>
+{
+    protected DifferenceAtLeastLineRule(ImmutableList<LineRuleSegment> segments, ushort minDifference) : base(segments, minDifference)
+    {
+    }
+
+    public static IGameRule Create(ImmutableList<LineRuleSegment> parts, JsonObject jsonObject) => new DifferenceAtLeastLineRule(parts, jsonObject["diff"].GetValue<ushort>());
+}
+
+public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
     where T : ILineRule<T>
 {
     public ushort MinDifference { get; }
     
-    protected DifferenceAtLeastLineRule(ImmutableList<LineRuleSegment> segments, ushort minDifference) : base(segments)
+    protected DifferenceAtLeastLineRuleBase(ImmutableList<LineRuleSegment> segments, ushort minDifference) : base(segments)
     {
         MinDifference = minDifference;
     }
 
-    public static IGameRule Create(ImmutableList<LineRuleSegment> parts, JsonObject jsonObject) => new DifferenceAtLeastLineRule<T>(parts, jsonObject["diff"].GetValue<ushort>());
-
     public override GameResult Evaluate(GameState state)
     {
-        GameResult overallState = GameResult.Solved;
         foreach (LineRuleSegment segment in Segments)
         {
             ushort startMask = state.Cells.GetMask(segment.Start.Row, segment.Start.Col);
@@ -36,14 +42,9 @@ public class DifferenceAtLeastLineRule<T> : LineRule<T>, ILineRule<T>
             int startOverlap = startMask & startAllowedMask;
             if (startOverlap == 0)
                 return GameResult.Unsolvable;
-
-            if (!BitOperations.IsPow2(startMask) || !BitOperations.IsPow2(endMask))
-            {
-                overallState = GameResult.Unknown;
-            }
         }
 
-        return overallState;
+        return GameResult.Solved;
     }
 
     private ushort GetAllowedMask(ushort otherMask)
@@ -53,13 +54,13 @@ public class DifferenceAtLeastLineRule<T> : LineRule<T>, ILineRule<T>
         while (shift != 0)
         {
             endAllowedMask |= shift;
-            shift >>= 0;
+            shift >>= 1;
         }
         shift = (ushort)(otherMask << MinDifference);
         while (shift != 0)
         {
             endAllowedMask |= shift;
-            shift <<= 0;
+            shift <<= 1;
         }
 
         return endAllowedMask;

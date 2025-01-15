@@ -117,12 +117,14 @@ public class GameEngineSerializer
 
     public async Task SaveGameAsync(GameEngine game, Stream destination)
     {
-        JsonObject root = new();
-        root["rows"] = game.InitialState.Structure.Rows;
-        root["columns"] = game.InitialState.Structure.Columns;
-        root["digits"] = game.InitialState.Structure.Digits;
-        root["boxRows"] = game.InitialState.Structure.BoxRows;
-        root["boxColumns"] = game.InitialState.Structure.BoxColumns;
+        JsonObject root = new()
+        {
+            ["rows"] = game.InitialState.Structure.Rows,
+            ["columns"] = game.InitialState.Structure.Columns,
+            ["digits"] = game.InitialState.Structure.Digits,
+            ["boxRows"] = game.InitialState.Structure.BoxRows,
+            ["boxColumns"] = game.InitialState.Structure.BoxColumns
+        };
         JsonArray cells = new();
         for (var r = 0; r < game.InitialState.Cells.Rows; r++)
         for (var c = 0; c < game.InitialState.Cells.Columns; c++)

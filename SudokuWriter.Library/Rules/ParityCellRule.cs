@@ -39,22 +39,22 @@ public class ParityCellRule : IGameRule
 
     public GameState? TryReduce(GameState state)
     {
-        ushort evenMask = unchecked((ushort)(0x5555 & Cells.GetAllDigitsMask(state.Digits)));
+        ushort oddMask = unchecked((ushort)(0x5555 & Cells.GetAllDigitsMask(state.Digits)));
         CellsBuilder cells = state.Cells.ToBuilder();
         bool changed = false;
         foreach (var odd in OddCells)
         {
             ref ushort mask = ref cells[odd.Row, odd.Col];
-            ushort newMask = unchecked((ushort)((evenMask << 1) & mask));
-            if (newMask != evenMask) changed = true;
+            ushort newMask = unchecked((ushort)(oddMask & mask));
+            if (newMask != mask) changed = true;
             mask = newMask;
         }
 
         foreach (var even in EvenCells)
         {
             ref ushort mask = ref cells[even.Row, even.Col];
-            ushort newMask = unchecked((ushort)(evenMask & mask));
-            if (newMask != evenMask) changed = true;
+            ushort newMask = unchecked((ushort)((oddMask << 1) & mask));
+            if (newMask != mask) changed = true;
             mask = newMask;
         }
 
