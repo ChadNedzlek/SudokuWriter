@@ -101,8 +101,8 @@ public partial class MainWindow : Window
 
         ImmutableList<TextBox> uiCells = CellBoxes;
         
-        for (var r = 0; r < state.Structure.Rows; r++)
-        for (var c = 0; c < state.Structure.Columns; c++)
+        for (int r = 0; r < state.Structure.Rows; r++)
+        for (int c = 0; c < state.Structure.Columns; c++)
         {
             TextBox uiCell = uiCells[r * 9 + c];
             CellStyle style = uiCell.Tag is CellValue value ? value.Style : CellStyle.Ambiguous;
@@ -121,7 +121,7 @@ public partial class MainWindow : Window
                     );
                     break;
                 case GameResult.MultipleSolutions:
-                    var mask = (ushort)(result.PrimaryState.Value.Cells.GetMask(r, c) |
+                    ushort mask = (ushort)(result.PrimaryState.Value.Cells.GetMask(r, c) |
                         result.ConflictingState.Value.Cells.GetMask(r, c));
                     if (BitOperations.IsPow2(mask))
                         SetCell(
@@ -152,8 +152,8 @@ public partial class MainWindow : Window
         var state = new GameState(Cells.CreateFilled(_gameEngine.InitialState.Structure), _gameEngine.InitialState.Structure);
         CellsBuilder cells = state.Cells.ToBuilder();
         ImmutableList<TextBox> uiCells = CellBoxes;
-        for (var r = 0; r < cells.Rows; r++)
-        for (var c = 0; c < cells.Columns; c++)
+        for (int r = 0; r < cells.Rows; r++)
+        for (int c = 0; c < cells.Columns; c++)
         {
             if (uiCells[r * 9 + c].Tag is CellValue { Style: CellStyle.Fixed, Text: { } cellText })
             {
@@ -304,7 +304,7 @@ public partial class MainWindow : Window
     {
         _gameEngine = GameEngine.Default;
         _selfTriggered++;
-        foreach (var cell in CellBoxes)
+        foreach (TextBox cell in CellBoxes)
         {
             cell.Text = "";
         }
@@ -326,8 +326,8 @@ public partial class MainWindow : Window
             return;
         }
         
-        var gameState = BuildGameStateFromUi();
-        await using var stream = dlg.OpenFile();
+        GameState gameState = BuildGameStateFromUi();
+        await using Stream stream = dlg.OpenFile();
         await _serializer.SaveGameAsync(_gameEngine.WithInitialState(gameState), stream);
     }
 
@@ -347,11 +347,11 @@ public partial class MainWindow : Window
         
         _queries.Clear();
             
-        await using var stream = dlg.OpenFile();
-        var gameEngine = await _serializer.LoadGameAsync(stream);
+        await using Stream stream = dlg.OpenFile();
+        GameEngine gameEngine = await _serializer.LoadGameAsync(stream);
         _gameEngine = gameEngine;
-        for (var r = 0; r < gameEngine.InitialState.Structure.Rows; r++)
-        for (var c = 0; c < gameEngine.InitialState.Structure.Columns; c++)
+        for (int r = 0; r < gameEngine.InitialState.Structure.Rows; r++)
+        for (int c = 0; c < gameEngine.InitialState.Structure.Columns; c++)
         {
             switch (gameEngine.InitialState.Cells.GetSingle(r, c))
             {

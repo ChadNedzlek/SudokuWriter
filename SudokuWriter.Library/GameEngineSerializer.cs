@@ -56,7 +56,7 @@ public class GameEngineSerializer
 
         MethodInfo create = interfaceMap.TargetMethods[index];
 
-        return new RuleMetadata(name, type, create.CreateDelegate<Func<JsonObject, IGameRule>>());
+        return new RuleMetadata(name, create.CreateDelegate<Func<JsonObject, IGameRule>>());
     }
 
     public async Task<GameEngine> LoadGameAsync(Stream source)
@@ -147,5 +147,5 @@ public class GameEngineSerializer
         root.WriteTo(writer);
     }
 
-    private record RuleMetadata(string Name, Type Type, Func<JsonObject, IGameRule> Create);
+    private record RuleMetadata(string Name, Func<JsonObject, IGameRule> Create);
 }

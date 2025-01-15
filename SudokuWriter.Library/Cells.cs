@@ -48,8 +48,8 @@ public readonly struct Cells
     public Cells FillEmpty(GameStructure structure)
     {
         ImmutableArray2.Builder<ushort> b = _cells.ToBuilder();
-        for (var r = 0; r < b.Rows; r++)
-        for (var c = 0; c < b.Columns; c++)
+        for (int r = 0; r < b.Rows; r++)
+        for (int c = 0; c < b.Columns; c++)
         {
             ref ushort cell = ref b[r, c];
             if (cell == 0) cell = GetAllDigitsMask(structure.Digits);
@@ -61,7 +61,7 @@ public readonly struct Cells
     public bool TryRemoveDigit(int row, int column, int digit, out Cells removed)
     {
         ushort c = _cells[row, column];
-        var mask = unchecked((ushort)(1 << digit));
+        ushort mask = unchecked((ushort)(1 << digit));
         if ((c & mask) == 0)
         {
             removed = default;
