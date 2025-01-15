@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using NUnit.Framework;
+using SudokuWriter.Library.Rules;
 using Shouldly;
 
 namespace SudokuWriter.Library.Tests;
@@ -125,16 +126,5 @@ public class BasicGameRuleTest
         reducedState.Value.Cells.GetMask(1, 1).ShouldBe(14);
 
         reducedState.Value.Cells.GetMask(2, 2).ShouldBe(15);
-    }
-}
-
-public static class AssertHelpers
-{
-    public static void ShouldBe(
-        this ushort actual,
-        int expected,
-        string customMessage = null)
-    {
-        ((int)actual).ShouldBe(expected, customMessage);
     }
 }

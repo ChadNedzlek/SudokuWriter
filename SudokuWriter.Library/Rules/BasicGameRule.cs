@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Immutable;
 using System.Numerics;
 using System.Text.Json.Nodes;
 
-namespace SudokuWriter.Library;
+namespace SudokuWriter.Library.Rules;
 
 [GameRule("basic")]
 public class BasicGameRule : IGameRule
@@ -127,104 +126,4 @@ public class BasicGameRule : IGameRule
     {
         return Instance;
     }
-}
-
-[GameRule("kropki")]
-public class KropkiDotRule : IGameRule
-{
-    public GameResult Evaluate(GameState state)
-    {
-        throw new NotImplementedException();
-    }
-
-    public GameState? TryReduce(GameState state)
-    {
-        throw new NotImplementedException();
-    }
-
-    public JsonObject ToJsonObject()
-    {
-        throw new NotImplementedException();
-    }
-
-    public static IGameRule FromJsonObject(JsonObject jsonObject)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-[GameRule("pcell")]
-public class EvenOddCellRule : IGameRule
-{
-    public GameResult Evaluate(GameState state)
-    {
-        throw new NotImplementedException();
-    }
-
-    public GameState? TryReduce(GameState state)
-    {
-        throw new NotImplementedException();
-    }
-
-    public JsonObject ToJsonObject()
-    {
-        throw new NotImplementedException();
-    }
-
-    public static IGameRule FromJsonObject(JsonObject jsonObject)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-[GameRule("knight")]
-public class KnightsMoveRule : IGameRule
-{
-    private static readonly ImmutableArray<(int row, int column)> s_knightOffsets =
-    [
-        // We only need half the circle, because every pair goes both ways
-        (2, 1), (1, 2), (-1, 2), (-2, 1)
-    ];  
-    
-    public GameResult Evaluate(GameState state)
-    {
-        GameResult current = GameResult.Solved;
-        for (int r = 0; r < state.Structure.Rows; r++)
-        for (int c = 0; c < state.Structure.Columns; c++)
-        {
-            int single = state.Cells.GetSingle(r, c);
-            if (single == -1)
-            {
-                continue;
-            }
-
-            foreach ((int row, int column) ko in s_knightOffsets)
-            {
-                int ro = r + ko.row;
-                int co = c + ko.column;
-                
-                if (ro < 0 || ro >= state.Structure.Rows) continue;
-                if (co < 0 || co >= state.Structure.Columns) continue;
-
-                int knightSingle = state.Cells.GetSingle(ro, co);
-                if (knightSingle == single)
-                {
-                    return GameResult.Unsolvable;
-                }
-
-                if (knightSingle == -1)
-                {
-                    current = GameResult.Unknown;
-                }
-            }
-        }
-
-        return current;
-    }
-
-    public GameState? TryReduce(GameState state) => null;
-
-    public JsonObject ToJsonObject() => new();
-
-    public static IGameRule FromJsonObject(JsonObject jsonObject) => new KnightsMoveRule();
 }

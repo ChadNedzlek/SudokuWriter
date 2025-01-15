@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
+using SudokuWriter.Library.Rules;
 
 namespace SudokuWriter.Library;
 
