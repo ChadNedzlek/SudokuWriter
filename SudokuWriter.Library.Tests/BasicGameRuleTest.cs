@@ -1,5 +1,7 @@
-using FluentAssertions;
+using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using NUnit.Framework;
+using Shouldly;
 
 namespace SudokuWriter.Library.Tests;
 
@@ -11,7 +13,7 @@ public class BasicGameRuleTest
     public void EvaluateDefault()
     {
         var state = GameState.Default;
-        BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unknown);
+        BasicGameRule.Instance.Evaluate(state).ShouldBe(GameResult.Unknown);
     }
 
     [Test]
@@ -19,7 +21,7 @@ public class BasicGameRuleTest
     {
         var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(Cells.CreateFilled(s).SetCell(0, 0, 0), s);
-        BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unknown);
+        BasicGameRule.Instance.Evaluate(state).ShouldBe(GameResult.Unknown);
     }
 
     [Test]
@@ -32,7 +34,7 @@ public class BasicGameRuleTest
                 .SetCell(2, 0, 0),
             s
         );
-        BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unsolvable);
+        BasicGameRule.Instance.Evaluate(state).ShouldBe(GameResult.Unsolvable);
     }
 
     [Test]
@@ -45,7 +47,7 @@ public class BasicGameRuleTest
                 .SetCell(0, 2, 0),
             s
         );
-        BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unsolvable);
+        BasicGameRule.Instance.Evaluate(state).ShouldBe(GameResult.Unsolvable);
     }
 
     [Test]
@@ -58,7 +60,7 @@ public class BasicGameRuleTest
                 .SetCell(1, 1, 0),
             s
         );
-        BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Unsolvable);
+        BasicGameRule.Instance.Evaluate(state).ShouldBe(GameResult.Unsolvable);
     }
 
     [Test]
@@ -85,7 +87,7 @@ public class BasicGameRuleTest
                 .SetCell(3, 3, 2),
             s
         );
-        BasicGameRule.Instance.Evaluate(state).Should().Be(GameResult.Solved);
+        BasicGameRule.Instance.Evaluate(state).ShouldBe(GameResult.Solved);
     }
 
     [Test]
@@ -96,7 +98,7 @@ public class BasicGameRuleTest
             Cells.CreateFilled(s),
             s
         );
-        BasicGameRule.Instance.TryReduce(state).Should().BeNull();
+        BasicGameRule.Instance.TryReduce(state).ShouldBeNull();
     }
 
     [Test]
@@ -109,19 +111,30 @@ public class BasicGameRuleTest
             s
         );
         GameState? reducedState = BasicGameRule.Instance.TryReduce(state);
-        reducedState.Value.Should().NotBeNull();
-        reducedState.Value.Cells.GetMask(0, 0).Should().Be(1);
+        reducedState.ShouldNotBeNull();
+        reducedState.Value.Cells.GetMask(0, 0).ShouldBe(1);
 
-        reducedState.Value.Cells.GetMask(0, 1).Should().Be(14);
-        reducedState.Value.Cells.GetMask(0, 2).Should().Be(14);
-        reducedState.Value.Cells.GetMask(0, 3).Should().Be(14);
+        reducedState.Value.Cells.GetMask(0, 1).ShouldBe(14);
+        reducedState.Value.Cells.GetMask(0, 2).ShouldBe(14);
+        reducedState.Value.Cells.GetMask(0, 3).ShouldBe(14);
 
-        reducedState.Value.Cells.GetMask(1, 0).Should().Be(14);
-        reducedState.Value.Cells.GetMask(2, 0).Should().Be(14);
-        reducedState.Value.Cells.GetMask(3, 0).Should().Be(14);
+        reducedState.Value.Cells.GetMask(1, 0).ShouldBe(14);
+        reducedState.Value.Cells.GetMask(2, 0).ShouldBe(14);
+        reducedState.Value.Cells.GetMask(3, 0).ShouldBe(14);
 
-        reducedState.Value.Cells.GetMask(1, 1).Should().Be(14);
+        reducedState.Value.Cells.GetMask(1, 1).ShouldBe(14);
 
-        reducedState.Value.Cells.GetMask(2, 2).Should().Be(15);
+        reducedState.Value.Cells.GetMask(2, 2).ShouldBe(15);
+    }
+}
+
+public static class AssertHelpers
+{
+    public static void ShouldBe(
+        this ushort actual,
+        int expected,
+        string customMessage = null)
+    {
+        ((int)actual).ShouldBe(expected, customMessage);
     }
 }
