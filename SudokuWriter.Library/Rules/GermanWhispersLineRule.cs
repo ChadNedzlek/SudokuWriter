@@ -6,7 +6,7 @@ namespace SudokuWriter.Library.Rules;
 [GameRule("german-whisper")]
 public class GermanWhispersLineRule : DifferenceAtLeastLineRuleBase<GermanWhispersLineRule>, ILineRule<GermanWhispersLineRule>
 {
-    public GermanWhispersLineRule(ImmutableArray<BranchingRuleLine> segments) : base(segments, 5)
+    public GermanWhispersLineRule(ImmutableArray<BranchingRuleLine> lines) : base(lines, 5)
     {
     }
     

@@ -40,7 +40,7 @@ public class ReadOnlyLineCellEnumerator : IEnumerator<ReadOnlyLineCellAdjacency>
 
     private bool MoveToNextSegment()
     {
-        while (_segmentIndex < _rule.Lines.Length)
+        while (_segmentIndex < _rule.Lines.Length - 1)
         {
             _segmentIndex++;
 
@@ -58,7 +58,7 @@ public class ReadOnlyLineCellEnumerator : IEnumerator<ReadOnlyLineCellAdjacency>
 
     private bool MoveToNextLine()
     {
-        while (_lineIndex < _rule.Lines.Length)
+        while (_lineIndex < _rule.Lines.Length - 1)
         {
             _lineIndex++;
 

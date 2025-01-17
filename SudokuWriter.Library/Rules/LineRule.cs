@@ -14,9 +14,9 @@ public abstract class LineRule<T> : IGameRule, ILineRule where T:ILineRule<T>
 {
     public ImmutableArray<BranchingRuleLine> Lines { get; }
 
-    protected LineRule(ImmutableArray<BranchingRuleLine> segments)
+    protected LineRule(ImmutableArray<BranchingRuleLine> lines)
     {
-        Lines = segments;
+        Lines = lines;
     }
 
     public abstract GameResult Evaluate(GameState state);

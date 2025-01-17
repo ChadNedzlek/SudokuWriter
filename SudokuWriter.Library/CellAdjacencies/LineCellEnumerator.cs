@@ -32,7 +32,7 @@ public struct LineCellEnumerator
 
     private bool MoveToNextSegment()
     {
-        while (_segmentIndex < _rule.Lines.Length)
+        while (_segmentIndex < _rule.Lines.Length - 1)
         {
             _segmentIndex++;
 
@@ -50,7 +50,7 @@ public struct LineCellEnumerator
 
     private bool MoveToNextLine()
     {
-        while (_lineIndex < _rule.Lines.Length)
+        while (_lineIndex < _rule.Lines.Length - 1)
         {
             _lineIndex++;
 

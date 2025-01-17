@@ -7,7 +7,7 @@ namespace SudokuWriter.Library.Rules;
 [GameRule("renban")]
 public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
 {
-    public RenbanLine(ImmutableArray<BranchingRuleLine> segments) : base(segments)
+    public RenbanLine(ImmutableArray<BranchingRuleLine> lines) : base(lines)
     {
     }
     

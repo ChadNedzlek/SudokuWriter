@@ -22,6 +22,8 @@ public readonly struct GameState
         Structure = structure;
     }
 
+    public static GameState CreateFilled(GameStructure structure) => new(Cells.CreateFilled(structure), structure);
+
     public Cells Cells { get; }
     public GameStructure Structure { get; }
     public int BoxRows => Structure.BoxRows;

@@ -10,7 +10,15 @@ namespace SudokuWriter.Library.Rules;
 [GameRule("diff-line")]
 public class DifferenceAtLeastLineRule : DifferenceAtLeastLineRuleBase<DifferenceAtLeastLineRule>, ILineRule<DifferenceAtLeastLineRule>
 {
-    protected DifferenceAtLeastLineRule(ImmutableArray<BranchingRuleLine> segments, ushort minDifference) : base(segments, minDifference)
+    public DifferenceAtLeastLineRule(ImmutableArray<BranchingRuleLine> lines, ushort minDifference) : base(lines, minDifference)
+    {
+    }
+    
+    public DifferenceAtLeastLineRule(ImmutableArray<LineRuleSegment> segments, ushort minDifference) : this([new BranchingRuleLine(segments)], minDifference)
+    {
+    }
+    
+    public DifferenceAtLeastLineRule(ImmutableArray<GridCoord> cells, ushort minDifference) : this([new LineRuleSegment(cells)], minDifference)
     {
     }
 
@@ -26,7 +34,7 @@ public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
 {
     public ushort MinDifference { get; }
     
-    protected DifferenceAtLeastLineRuleBase(ImmutableArray<BranchingRuleLine> segments, ushort minDifference) : base(segments)
+    protected DifferenceAtLeastLineRuleBase(ImmutableArray<BranchingRuleLine> lines, ushort minDifference) : base(lines)
     {
         MinDifference = minDifference;
     }
