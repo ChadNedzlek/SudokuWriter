@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
 using NUnit.Framework;
 using SudokuWriter.Library.Rules;
 using Shouldly;

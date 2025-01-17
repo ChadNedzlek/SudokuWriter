@@ -63,11 +63,11 @@ public class GameEngineSerializer
     public async Task<GameEngine> LoadGameAsync(Stream source)
     {
         JsonNode root = await JsonNode.ParseAsync(source) ?? throw new InvalidDataException();
-        var rows = GetOrThrow<int>(root, "rows");
-        var columns = GetOrThrow<int>(root, "columns");
-        var digits = GetOrThrow<int>(root, "digits");
-        var boxRows = GetOrThrow<int>(root, "boxRows");
-        var boxColumns = GetOrThrow<int>(root, "boxColumns");
+        int rows = GetOrThrow<int>(root, "rows");
+        int columns = GetOrThrow<int>(root, "columns");
+        int digits = GetOrThrow<int>(root, "digits");
+        int boxRows = GetOrThrow<int>(root, "boxRows");
+        int boxColumns = GetOrThrow<int>(root, "boxColumns");
 
         var structure = new GameStructure(rows, columns, digits, boxRows, boxColumns);
         CellsBuilder cells = Cells.CreateFilled(rows, columns, digits).ToBuilder();
@@ -83,7 +83,7 @@ public class GameEngineSerializer
             {
                 if (r is JsonArray { Count: 2 } a)
                 {
-                    var ruleName = r[0].GetValue<string>();
+                    string ruleName = r[0].GetValue<string>();
                     if (_rules.FirstOrDefault(m => m.Name.Equals(ruleName)) is not {} rule)
                     {
                         throw new InvalidDataException($"Unknown rule type {ruleName} in file");
@@ -126,11 +126,11 @@ public class GameEngineSerializer
             ["boxColumns"] = game.InitialState.Structure.BoxColumns
         };
         JsonArray cells = new();
-        for (var r = 0; r < game.InitialState.Cells.Rows; r++)
-        for (var c = 0; c < game.InitialState.Cells.Columns; c++)
+        for (int r = 0; r < game.InitialState.Cells.Rows; r++)
+        for (int c = 0; c < game.InitialState.Cells.Columns; c++)
         {
             int single = game.InitialState.Cells.GetSingle(r, c);
-            if (single != -1) cells.Add(new JsonArray(r, c, single));
+            if (single != Cells.NoSingleValue) cells.Add(new JsonArray(r, c, single));
         }
 
         root["cells"] = cells;

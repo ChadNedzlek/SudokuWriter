@@ -1,57 +1,96 @@
 using System.Collections.Immutable;
 using System.IO;
 using System.Text.Json.Nodes;
+using SudokuWriter.Library.CellAdjacencies;
 
 namespace SudokuWriter.Library.Rules;
 
-public abstract class LineRule<T> : IGameRule where T:ILineRule<T>
+public interface ILineRule
 {
-    public readonly ImmutableList<LineRuleSegment> Segments;
+    ImmutableArray<BranchingRuleLine> Lines { get; }
+}
 
-    protected LineRule(ImmutableList<LineRuleSegment> segments)
+public abstract class LineRule<T> : IGameRule, ILineRule where T:ILineRule<T>
+{
+    public ImmutableArray<BranchingRuleLine> Lines { get; }
+
+    protected LineRule(ImmutableArray<BranchingRuleLine> segments)
     {
-        Segments = segments;
+        Lines = segments;
     }
 
     public abstract GameResult Evaluate(GameState state);
     public abstract GameState? TryReduce(GameState state);
 
+    public abstract void SaveToJsonObject(JsonObject obj);
+
     public JsonObject ToJsonObject()
     {
         JsonObject o = new();
-        JsonArray arr = new();
-        foreach (LineRuleSegment part in Segments)
+        JsonArray lines = new();
+        foreach (BranchingRuleLine segment in Lines)
         {
-            arr.Add(new JsonArray(part.Start.Row, part.Start.Col, part.End.Row, part.End.Col));
+            JsonArray branches = new();
+            foreach (LineRuleSegment branch in segment.Branches)
+            {
+                JsonArray cells = new JsonArray();
+                foreach (var cell in branch.Cells)
+                {
+                    cells.Add(new JsonArray(cell.Row, cell.Col));
+                }
+                branches.Add(cells);
+            }
+            lines.Add(branches);
         }
 
-        o["segments"] = arr;
+        SaveToJsonObject(o);
+        
+        o["lines"] = lines;
         return o;
     }
 
     public static IGameRule FromJsonObject(JsonObject jsonObject)
     {
-        if (jsonObject["segments"] is not JsonArray arr)
+        if (jsonObject["lines"] is not JsonArray arr)
         {
-            throw new InvalidDataException("Missing 'segments'");
+            throw new InvalidDataException("Missing 'lines'");
         }
 
-        ImmutableList<LineRuleSegment>.Builder b = ImmutableList.CreateBuilder<LineRuleSegment>();
-        foreach (JsonNode o in arr)
+        var lines = ImmutableArray.CreateBuilder<BranchingRuleLine>();
+        foreach (JsonNode lineNode in arr)
         {
-            if (o is not JsonArray { Count: 4 } part)
+            if (lineNode is not JsonArray lineArray)
             {
-                throw new InvalidDataException("Invalid 'segments'");
+                throw new InvalidDataException("Invalid 'lines'");
             }
 
-            b.Add(
-                new LineRuleSegment(
-                    new GridCoord(part[0].GetValue<ushort>(), part[1].GetValue<ushort>()),
-                    new GridCoord(part[2].GetValue<ushort>(), part[3].GetValue<ushort>())
-                )
-            );
+            var branches = ImmutableArray.CreateBuilder<LineRuleSegment>();
+            foreach (JsonNode branchNode in lineArray)
+            {
+                if (branchNode is not JsonArray branchArray)
+                {
+                    throw new InvalidDataException("Invalid 'lines'");
+                }
+
+                var cells = ImmutableArray.CreateBuilder<GridCoord>();
+                foreach (JsonNode cellNode in branchArray)
+                {
+                    if (cellNode is not JsonArray { Count: 2 } cellArray)
+                    {
+                        throw new InvalidDataException("Invalid 'lines'");
+                    }
+
+                    cells.Add(new GridCoord(cellArray[0].GetValue<ushort>(), cellArray[1].GetValue<ushort>()));
+                }
+
+                branches.Add(new LineRuleSegment(cells.ToImmutable()));
+            }
+            lines.Add(new BranchingRuleLine(branches.ToImmutable()));
         }
 
-        return T.Create(b.ToImmutable(), jsonObject);
+        return T.Create(lines.ToImmutable(), jsonObject);
     }
+
+    public LineCellEnumerable GetLineAdjacencies(CellsBuilder cells) => new(cells, this);
+    public ReadOnlyLineCellEnumerable GetLineAdjacencies(Cells cells) => new(cells, this);
 }

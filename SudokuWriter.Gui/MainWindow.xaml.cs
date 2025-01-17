@@ -355,7 +355,7 @@ public partial class MainWindow : Window
         {
             switch (gameEngine.InitialState.Cells.GetSingle(r, c))
             {
-                case -1:
+                case Cells.NoSingleValue:
                     SetCell(r, c, "", CellStyle.Potential);
                     break;
                 case var x:

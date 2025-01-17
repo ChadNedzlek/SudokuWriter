@@ -34,7 +34,7 @@ public class BasicGameRule : IGameRule
                 allowedInBox[b] |= allowed;
 
                 int v = state.Cells.GetSingle(r, c);
-                if (v == -1) continue;
+                if (v == Cells.NoSingleValue) continue;
 
                 ushort m = unchecked((ushort)(1 << v));
 
@@ -84,7 +84,7 @@ public class BasicGameRule : IGameRule
             for (int c = 0; c < nColumns; c++)
             {
                 int v = state.Cells.GetSingle(r, c);
-                if (v == -1) continue;
+                if (v == Cells.NoSingleValue) continue;
 
                 ushort m = unchecked((ushort)(1 << v));
                 row |= m;
@@ -106,9 +106,7 @@ public class BasicGameRule : IGameRule
 
                 int b = br + c / state.BoxColumns;
                 ushort m = unchecked((ushort)~(row | byColumn[c] | byBox[b]));
-                ushort before = cell;
-                cell &= m;
-                if (cell != before) removed = true;
+                removed |= RuleHelpers.TryUpdate(ref cell, (ushort)(cell & m));
             }
         }
 

@@ -43,17 +43,17 @@ public readonly struct GameState
     public string BoardString()
     {
         StringBuilder builder = new();
-        for (var r = 0; r < Cells.Rows; r++)
+        for (int r = 0; r < Cells.Rows; r++)
         {
             builder.Append('[');
-            for (var c = 0; c < Cells.Columns; c++)
+            for (int c = 0; c < Cells.Columns; c++)
                 if (Cells.GetMask(r, c) == 0)
                 {
                     builder.Append("X ");
                 }
                 else
                 {
-                    for (var d = 0; d < Digits; d++)
+                    for (int d = 0; d < Digits; d++)
                         if (Cells[r, c, d])
                             builder.Append((char)('1' + d));
 

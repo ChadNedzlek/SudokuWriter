@@ -6,9 +6,12 @@ namespace SudokuWriter.Library.Rules;
 [GameRule("german-whisper")]
 public class GermanWhispersLineRule : DifferenceAtLeastLineRuleBase<GermanWhispersLineRule>, ILineRule<GermanWhispersLineRule>
 {
-    public GermanWhispersLineRule(ImmutableList<LineRuleSegment> segments) : base(segments, 5)
+    public GermanWhispersLineRule(ImmutableArray<BranchingRuleLine> segments) : base(segments, 5)
     {
     }
     
-    public new static IGameRule Create(ImmutableList<LineRuleSegment> parts, JsonObject jsonObject) => new GermanWhispersLineRule(parts);
+    public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new GermanWhispersLineRule(parts);
+    public override void SaveToJsonObject(JsonObject obj)
+    {
+    }
 }

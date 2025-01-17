@@ -18,18 +18,18 @@ public class ParityCellRule : IGameRule
 
     public GameResult Evaluate(GameState state)
     {
-        foreach (var odd in OddCells)
+        foreach (GridCoord odd in OddCells)
         {
-            var single = state.Cells.GetSingle(odd.Row, odd.Col);
-            if (single == -1) continue;
+            int single = state.Cells.GetSingle(odd.Row, odd.Col);
+            if (single == Cells.NoSingleValue) continue;
             // Digits are 0 based in code, 1 based in rules
             if (single % 2 != 0) return GameResult.Unsolvable;
         }
 
-        foreach (var even in EvenCells)
+        foreach (GridCoord even in EvenCells)
         {
-            var single = state.Cells.GetSingle(even.Row, even.Col);
-            if (single == -1) continue;
+            int single = state.Cells.GetSingle(even.Row, even.Col);
+            if (single == Cells.NoSingleValue) continue;
             // Digits are 0 based in code, 1 based in rules
             if (single % 2 == 0) return GameResult.Unsolvable;
         }
@@ -42,20 +42,16 @@ public class ParityCellRule : IGameRule
         ushort oddMask = unchecked((ushort)(0x5555 & Cells.GetAllDigitsMask(state.Digits)));
         CellsBuilder cells = state.Cells.ToBuilder();
         bool changed = false;
-        foreach (var odd in OddCells)
+        foreach (GridCoord odd in OddCells)
         {
             ref ushort mask = ref cells[odd.Row, odd.Col];
-            ushort newMask = unchecked((ushort)(oddMask & mask));
-            if (newMask != mask) changed = true;
-            mask = newMask;
+            changed |= RuleHelpers.TryUpdate(ref mask, unchecked((ushort)(oddMask & mask)));
         }
 
-        foreach (var even in EvenCells)
+        foreach (GridCoord even in EvenCells)
         {
             ref ushort mask = ref cells[even.Row, even.Col];
-            ushort newMask = unchecked((ushort)((oddMask << 1) & mask));
-            if (newMask != mask) changed = true;
-            mask = newMask;
+            changed |= RuleHelpers.TryUpdate(ref mask, unchecked((ushort)((oddMask << 1) & mask)));
         }
 
         return changed ? state.WithCells(cells.MoveToImmutable()) : null;
@@ -72,8 +68,8 @@ public class ParityCellRule : IGameRule
 
     public static IGameRule FromJsonObject(JsonObject jsonObject)
     {
-        var odd = RuleHelpers.ReadGridCoords(jsonObject, "odd");
-        var even = RuleHelpers.ReadGridCoords(jsonObject, "even");
+        ImmutableList<GridCoord> odd = RuleHelpers.ReadGridCoords(jsonObject, "odd");
+        ImmutableList<GridCoord> even = RuleHelpers.ReadGridCoords(jsonObject, "even");
         return new ParityCellRule(even, odd);
     }
 }

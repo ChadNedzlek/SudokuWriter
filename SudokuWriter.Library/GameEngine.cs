@@ -55,7 +55,11 @@ public class GameEngine
                     (res, rule) => res switch
                     {
                         GameResult.Unsolvable => GameResult.Unsolvable,
-                        GameResult.Unknown => GameResult.Unknown,
+                        GameResult.Unknown => rule.Evaluate(next) switch
+                        {
+                            GameResult.Unsolvable => GameResult.Unsolvable,
+                            _ => GameResult.Unknown
+                        },
                         _ => rule.Evaluate(next),
                     }
                 );
@@ -63,7 +67,7 @@ public class GameEngine
                 if (result == GameResult.Unsolvable) continue;
 
                 GameState simplified = next;
-                var reduced = true;
+                bool reduced = true;
                 while (reduced)
                 {
                     reduced = false;
@@ -122,12 +126,12 @@ public class GameEngine
         int nDigits = initial.Digits;
 
         int minPossibilities = initial.Digits + 1;
-        var minRow = 0;
-        var minColumn = 0;
+        int minRow = 0;
+        int minColumn = 0;
         ushort minMask = 0;
 
-        for (var r = 0; r < nRows; r++)
-        for (var c = 0; c < nColumns; c++)
+        for (int r = 0; r < nRows; r++)
+        for (int c = 0; c < nColumns; c++)
         {
             ushort mask = initial.Cells.GetMask(r, c);
             int bitCount = BitOperations.PopCount(mask);
@@ -140,7 +144,7 @@ public class GameEngine
             }
         }
 
-        for (var d = 0; d < nDigits; d++)
+        for (int d = 0; d < nDigits; d++)
         {
             if (!Cells.IsDigitSet(minMask, d)) continue;
 
@@ -152,9 +156,9 @@ public class GameEngine
     {
         int nRows = state.Cells.Rows;
         int nColumns = state.Cells.Columns;
-        var possibilities = 0;
-        for (var r = 0; r < nRows; r++)
-        for (var c = 0; c < nColumns; c++)
+        int possibilities = 0;
+        for (int r = 0; r < nRows; r++)
+        for (int c = 0; c < nColumns; c++)
             possibilities += BitOperations.PopCount(state.Cells.GetMask(r, c));
 
         return possibilities;

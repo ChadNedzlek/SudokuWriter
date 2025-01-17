@@ -5,6 +5,8 @@ using NUnit.Framework;
 
 namespace SudokuWriter.Library.Tests;
 
+[TestFixture]
+[TestOf(typeof(GameEngine))]
 public class GameEngineSerializerTests
 {
     [Test]

@@ -16,16 +16,10 @@ public readonly struct Cells
     public int Columns => _cells.Columns;
 
     public bool this[int row, int col, int digit] => ((_cells[row, col] >> digit) & 1) != 0;
+    public ushort this[int row, int col] => _cells[row, col];
+    public ushort this[GridCoord coord] => _cells[coord.Row, coord.Col];
 
-    public int GetSingle(int row, int col)
-    {
-        ushort value = _cells[row, col];
-        if (value == 0) return -1;
-
-        if (!BitOperations.IsPow2(value)) return -1;
-
-        return BitOperations.Log2(value);
-    }
+    public int GetSingle(int row, int col) => GetSingle(_cells[row, col]);
 
     public CellsBuilder ToBuilder()
     {
@@ -107,5 +101,16 @@ public readonly struct Cells
     public static Cells CreateFilled(GameStructure structure)
     {
         return CreateFilled(structure.Rows, structure.Columns, structure.Digits);
+    }
+
+    public const int NoSingleValue = -1;
+    
+    public static int GetSingle(ushort mask)
+    {
+        if (mask == 0) return NoSingleValue;
+
+        if (!BitOperations.IsPow2(mask)) return NoSingleValue;
+
+        return BitOperations.Log2(mask);
     }
 }
