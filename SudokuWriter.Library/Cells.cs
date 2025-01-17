@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace SudokuWriter.Library;
 
@@ -83,16 +84,19 @@ public readonly struct Cells
         return _cells.GetHash64();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsDigitSet(ushort mask, int digit)
     {
         return (mask & (1 << digit)) != 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort GetDigitMask(int digit)
     {
         return (ushort)(1 << digit);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort GetAllDigitsMask(int digits)
     {
         return unchecked((ushort)((1 << digits) - 1));

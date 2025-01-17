@@ -75,7 +75,7 @@ public static class RuleHelpers
         ushort mask = unchecked((ushort)~inputCell);
 
         return seenCells.Aggregate(
-            (bool c, ref ushort cell) => c | TryUpdate(ref cell, (ushort)(cell & mask))
+            (bool c, ref ushort cell) => c | TryMask(ref cell, mask)
         );
     }
 
@@ -86,4 +86,9 @@ public static class RuleHelpers
         (value, newValue) = (newValue, value);
         return newValue != prev;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryMask<T>(ref T value, T mask)
+        where T : unmanaged, IEqualityOperators<T, T, bool>, IBitwiseOperators<T,T,T>
+        => TryUpdate(ref value, value & mask);
 }
