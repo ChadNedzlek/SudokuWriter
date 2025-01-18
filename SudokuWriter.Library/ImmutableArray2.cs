@@ -75,6 +75,13 @@ public readonly struct ImmutableArray2<T>
             return XxHash64.HashToUInt64(bytes);
         }
     }
+
+    public static ImmutableArray2<T> FromValues(T[,] values)
+    {
+        var flat = new T[values.Length];
+        Array.Copy(values, flat, flat.Length);
+        return new ImmutableArray2<T>(flat, values.GetLength(1));
+    }
 }
 
 public static class ImmutableArray2
@@ -82,6 +89,10 @@ public static class ImmutableArray2
     public static ImmutableArray2<T> Create<T>(int rows, int columns)
     {
         return new ImmutableArray2<T>(rows, columns);
+    }
+    public static ImmutableArray2<T> Create<T>(T[,] values)
+    {
+        return ImmutableArray2<T>.FromValues(values);
     }
 
     public static Builder<T> CreateBuilder<T>(int rows, int columns)

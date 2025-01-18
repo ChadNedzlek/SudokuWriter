@@ -63,11 +63,11 @@ public class GameEngineSerializer
     public async Task<GameEngine> LoadGameAsync(Stream source)
     {
         JsonNode root = await JsonNode.ParseAsync(source) ?? throw new InvalidDataException();
-        int rows = GetOrThrow<int>(root, "rows");
-        int columns = GetOrThrow<int>(root, "columns");
-        int digits = GetOrThrow<int>(root, "digits");
-        int boxRows = GetOrThrow<int>(root, "boxRows");
-        int boxColumns = GetOrThrow<int>(root, "boxColumns");
+        ushort rows = GetOrThrow<ushort>(root, "rows");
+        ushort columns = GetOrThrow<ushort>(root, "columns");
+        ushort digits = GetOrThrow<ushort>(root, "digits");
+        ushort boxRows = GetOrThrow<ushort>(root, "boxRows");
+        ushort boxColumns = GetOrThrow<ushort>(root, "boxColumns");
 
         var structure = new GameStructure(rows, columns, digits, boxRows, boxColumns);
         CellsBuilder cells = Cells.CreateFilled(rows, columns, digits).ToBuilder();

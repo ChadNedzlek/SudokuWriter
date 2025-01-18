@@ -1,6 +1,9 @@
 using System;
+using System.Buffers;
+using System.Collections.Immutable;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace SudokuWriter.Library;
 
@@ -108,13 +111,33 @@ public readonly struct Cells
     }
 
     public const int NoSingleValue = -1;
-    
+
+    public static bool IsSingle(ushort mask)
+    {
+        return mask == 0 || BitOperations.IsPow2(mask);
+    }
+
     public static int GetSingle(ushort mask)
     {
-        if (mask == 0) return NoSingleValue;
+        return IsSingle(mask) ?  BitOperations.Log2(mask) : NoSingleValue;
+    }
 
-        if (!BitOperations.IsPow2(mask)) return NoSingleValue;
+    public static Cells FromMasks(ushort[,] masks)
+    {
+        ushort[] cells = new ushort[masks.Length];
+        ReadOnlySpan<ushort> span = MemoryMarshal.Cast<byte, ushort>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(masks), sizeof(ushort) * masks.Length));
+        span.CopyTo(cells);
+        return new Cells(new ImmutableArray2<ushort>(cells, masks.GetLength(1)));
+    }
 
-        return BitOperations.Log2(mask);
+    public static Cells FromDigits(ushort[,] digits)
+    {
+        ushort[] cells = new ushort[digits.Length];
+        ReadOnlySpan<ushort> span = MemoryMarshal.Cast<byte, ushort>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(digits), sizeof(ushort) * digits.Length));
+        for (int i = 0; i < cells.Length; i++)
+        {
+            cells[i] = GetDigitMask(span[i]);
+        }
+        return new Cells(new ImmutableArray2<ushort>(cells, digits.GetLength(1)));
     }
 }

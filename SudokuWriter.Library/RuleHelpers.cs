@@ -3,6 +3,7 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
+using System.Threading;
 using SudokuWriter.Library.CellAdjacencies;
 using SudokuWriter.Library.Rules;
 
@@ -19,7 +20,7 @@ public static class RuleHelpers
             throw new InvalidDataException($"Expected key {key} is not an array");
         return ReadGridCoords(arr);
     }
-    
+
     public static ImmutableList<GridCoord> ReadGridCoords(JsonArray array)
     {
         ImmutableList<GridCoord>.Builder b = ImmutableList.CreateBuilder<GridCoord>();
@@ -39,7 +40,7 @@ public static class RuleHelpers
 
         return b.ToImmutable();
     }
-    
+
     public static JsonArray WriteGridCoords(ImmutableList<GridCoord> coords)
     {
         JsonArray arr = new JsonArray();
@@ -80,15 +81,12 @@ public static class RuleHelpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryUpdate<T>(ref T value, T newValue) where T:unmanaged, IEqualityOperators<T,T,bool>
-    {
-        T prev = newValue;
-        (value, newValue) = (newValue, value);
-        return newValue != prev;
-    }
+    public static bool TryUpdate<T>(ref T value, T newValue)
+        where T : unmanaged, IEqualityOperators<T, T, bool>
+        => Interlocked.Exchange(ref value, newValue) != newValue;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryMask<T>(ref T value, T mask)
-        where T : unmanaged, IEqualityOperators<T, T, bool>, IBitwiseOperators<T,T,T>
+        where T : unmanaged, IEqualityOperators<T, T, bool>, IBitwiseOperators<T, T, T>
         => TryUpdate(ref value, value & mask);
 }

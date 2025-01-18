@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SudokuWriter.Library;
 
-public readonly record struct GameStructure(int Rows, int Columns, int Digits, int BoxRows, int BoxColumns)
+public readonly record struct GameStructure(ushort Rows, ushort Columns, ushort Digits, ushort BoxRows, ushort BoxColumns)
 {
     public static GameStructure Default { get; } = new(9, 9, 9, 3, 3);
 }
@@ -28,7 +28,7 @@ public readonly struct GameState
     public GameStructure Structure { get; }
     public int BoxRows => Structure.BoxRows;
     public int BoxColumns => Structure.BoxColumns;
-    public int Digits => Structure.Digits;
+    public ushort Digits => Structure.Digits;
 
     public GameState WithCells(Cells cells)
     {
