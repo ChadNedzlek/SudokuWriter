@@ -10,7 +10,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
+using SudokuWriter.Gui.UiRules;
 using SudokuWriter.Library;
+using SudokuWriter.Library.Rules;
 
 namespace SudokuWriter.Gui;
 
@@ -45,6 +47,37 @@ public partial class MainWindow : Window
         _cellLayout = new Lazy<ImmutableList<TextBox>>(() => PopulateCells(cells));
         _solveTask = Task.Run(SolveQueries);
         _serializer = new GameEngineSerializer();
+        int cellSize = 20;
+        _ruleFactories = [
+            new RenbanUiRule(cellSize),
+            new GermanWhisperUiRule(cellSize),
+        ];
+    }
+
+    public static readonly DependencyProperty CurrentRuleTypeProperty = DependencyProperty.Register(
+        nameof(CurrentRuleType),
+        typeof(string),
+        typeof(MainWindow),
+        new PropertyMetadata(default(string))
+    );
+
+    public string CurrentRuleType
+    {
+        get => (string)GetValue(CurrentRuleTypeProperty);
+        set => SetValue(CurrentRuleTypeProperty, value);
+    }
+
+    public static readonly DependencyProperty EnableKnightsMoveProperty = DependencyProperty.Register(
+        nameof(EnableKnightsMove),
+        typeof(bool),
+        typeof(MainWindow),
+        new PropertyMetadata(default(bool))
+    );
+
+    public bool EnableKnightsMove
+    {
+        get => (bool)GetValue(EnableKnightsMoveProperty);
+        set => SetValue(EnableKnightsMoveProperty, value);
     }
 
     private ImmutableList<TextBox> CellBoxes => _cellLayout.Value;
@@ -364,6 +397,85 @@ public partial class MainWindow : Window
             }
         }
 
+        await ValidateAndReportGameState();
+    }
+
+    private bool _captured = false;
+    private GameRuleCollection _ruleCollection = new();
+    private UiGameRule _currentRule;
+    private UiGameRuleFactory _currentFactory;
+
+    private List<UiGameRuleFactory> _ruleFactories = [];
+    
+    private void CellMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_currentFactory is null)
+        {
+            return;
+        }
+        
+        Point point = e.GetPosition(RuleDisplayCanvas);
+        var location = _currentFactory.TranslateFromPoint(point);
+
+        if (_ruleCollection.Rules.Where(r => r.Factory == _currentFactory).FirstOrDefault(r => r.TryAddSegment(location)) is { } ruleModified)
+        {
+            _currentRule = ruleModified;
+        }
+        else
+        {
+            if (_currentFactory.TryStart(point, out var rule))
+            {
+                RuleDrawingGroup.Children.Add(rule.Drawing);
+                _currentRule = rule;
+                _ruleCollection.Rules.Add(_currentRule);
+            }
+        }
+
+        ((Grid)sender).CaptureMouse();
+        e.Handled = true;
+        _captured = true;
+    }
+
+    private void CellMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_currentFactory is null)
+        {
+            return;
+        }
+
+        _currentRule?.Complete();
+        
+        _captured = false;
+        ((Grid)sender).ReleaseMouseCapture();
+        e.Handled = true;
+    }
+
+    private void CellMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_captured || _currentRule is null) return;
+
+        _currentRule.Continue(e.GetPosition(RuleDisplayCanvas));
+    }
+    
+    private void ChangeRuleType(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource is not RadioButton radio) return;
+        
+        if (radio.Content is not string ruleName) return;
+
+        _currentFactory = _ruleFactories.FirstOrDefault(f => string.Equals(f.Name, ruleName, StringComparison.OrdinalIgnoreCase));
+        _currentRule = null;
+    }
+
+    private async void EvaluateGame(object sender, RoutedEventArgs e)
+    {
+        await RunGameEngine();
+    }
+
+    private async Task RunGameEngine()
+    {
+        var rules = _ruleFactories.SelectMany(f => f.SerializeRules(_ruleCollection.Rules));
+        _gameEngine = _gameEngine.WithRules([BasicGameRule.Instance, ..rules.ToImmutableArray()]);
         await ValidateAndReportGameState();
     }
 }

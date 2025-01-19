@@ -131,7 +131,16 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
             int stripTooLowBits = lowDigitsToStrip < 1 ? allDigitMask : allDigitMask << lowDigitsToStrip;
             ushort allowedMask = unchecked((ushort)(stripTooHighBits & stripTooLowBits & ~alreadySetMask));
 
-            reduced = line.Branches.Aggregate(reduced, (r, segment) => segment.Cells.Aggregate(r, (r, coord) => r | RuleHelpers.TryMask(ref cells[coord], allowedMask)));
+            foreach (var branch in line.Branches)
+            {
+                foreach (GridCoord cell in branch.Cells)
+                {
+                    ref ushort mask = ref cells[cell];
+                    if (Cells.IsSingle(mask)) continue;
+
+                    reduced |= RuleHelpers.TryMask(ref mask, allowedMask);
+                }
+            }
         }
 
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;

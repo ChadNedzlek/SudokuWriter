@@ -42,6 +42,8 @@ public class GameEngine
 
     public GameResult Evaluate(GameState state, out GameState? solution, out GameState? conflict)
     {
+        state = SimlifyState(state);
+        
         PriorityQueue<GameState, int> searchStates = new();
         searchStates.Enqueue(state, GetPossibilities(state));
         HashSet<ulong> seenStates = [state.GetStateHash()];
@@ -66,19 +68,7 @@ public class GameEngine
 
                 if (result == GameResult.Unsolvable) continue;
 
-                GameState simplified = next;
-                bool reduced = true;
-                while (reduced)
-                {
-                    reduced = false;
-                    foreach (IGameRule rule in Rules)
-                        if (rule.TryReduce(simplified) is { } simpleReduce)
-                        {
-                            simplified = simpleReduce;
-                            reduced = true;
-                            break;
-                        }
-                }
+                GameState simplified = SimlifyState(next);
 
                 GameResult simplifiedResult = Rules.Aggregate(
                     GameResult.Unknown,
@@ -117,6 +107,25 @@ public class GameEngine
         solution = null;
         conflict = null;
         return GameResult.Unsolvable;
+    }
+
+    private GameState SimlifyState(GameState next)
+    {
+        GameState simplified = next;
+        bool reduced = true;
+        while (reduced)
+        {
+            reduced = false;
+            foreach (IGameRule rule in Rules)
+                if (rule.TryReduce(simplified) is { } simpleReduce)
+                {
+                    simplified = simpleReduce;
+                    reduced = true;
+                    break;
+                }
+        }
+
+        return simplified;
     }
 
     public IEnumerable<GameState> NextStates(GameState initial)
@@ -163,4 +172,6 @@ public class GameEngine
 
         return possibilities;
     }
+
+    public GameEngine WithRules(ImmutableArray<IGameRule> rules) => new(InitialState, rules);
 }

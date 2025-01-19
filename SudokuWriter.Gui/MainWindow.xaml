@@ -26,6 +26,37 @@
                 <MenuItem Header="E_xit" Command="Close" />
             </MenuItem>
         </Menu>
+        <Border DockPanel.Dock="Right" Width="150" BorderBrush="LightGray" BorderThickness="1,0,0,0" Padding="10">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Left" ToggleButton.Checked="ChangeRuleType">
+                <RadioButton Content="Digits" GroupName="RuleType" />
+                <Grid>
+                    <Separator />
+                    <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Lines</TextBlock>
+                </Grid>
+                <RadioButton Content="Renban" GroupName="RuleType" />
+                <RadioButton Content="German Whisper" GroupName="RuleType" />
+                <RadioButton Content="Thermo" GroupName="RuleType" />
+                <RadioButton Content="Arrow" GroupName="RuleType" />
+                <Grid>
+                    <Separator />
+                    <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Cells</TextBlock>
+                </Grid>
+                <RadioButton Content="Odd Cell" GroupName="RuleType" />
+                <RadioButton Content="Even Cell" GroupName="RuleType" />
+                <Grid>
+                    <Separator />
+                    <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Edges</TextBlock>
+                </Grid>
+                <RadioButton Content="White Kropki" GroupName="RuleType" />
+                <RadioButton Content="Black Kropki" GroupName="RuleType" />
+                <Grid>
+                    <Separator />
+                    <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Global Rules</TextBlock>
+                </Grid>
+                <CheckBox>Knights Move</CheckBox>
+                <Button VerticalAlignment="Bottom" Click="EvaluateGame">Test Game</Button>
+            </StackPanel>
+        </Border>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="10" />
@@ -45,8 +76,9 @@
                         <Setter Property="VerticalContentAlignment" Value="Center" />
                         <Setter Property="BorderThickness" Value="0.5" />
                         <Setter Property="MaxLength" Value="1" />
-                        <Setter Property="FontSize" Value="20" />
+                        <Setter Property="FontSize" Value="12" />
                         <Setter Property="TextWrapping" Value="Wrap" />
+                        <Setter Property="Background" Value="Transparent"></Setter>
                     </Style>
                     <Style TargetType="Border">
                         <Setter Property="BorderBrush" Value="DimGray" />
@@ -54,7 +86,7 @@
                     </Style>
                     <Style TargetType="TextBox" x:Key="Ambiguous" BasedOn="{StaticResource {x:Type TextBox}}">
                         <Setter Property="Foreground" Value="DarkRed" />
-                        <Setter Property="FontSize" Value="9" />
+                        <Setter Property="FontSize" Value="6" />
                     </Style>
                     <Style TargetType="TextBox" x:Key="Fixed" BasedOn="{StaticResource {x:Type TextBox}}" />
                     <Style TargetType="TextBox" x:Key="Solved" BasedOn="{StaticResource {x:Type TextBox}}">
@@ -73,9 +105,9 @@
                         <Setter Property="BorderBrush" Value="Red" />
                     </Style>
                 </Viewbox.Resources>
-                <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="300" Width="300"
-                      TextBoxBase.TextChanged="CellChanged" UIElement.GotFocus="CellFocused"
-                      UIElement.LostFocus="CellUnfocused" Name="GameGrid" PreviewKeyDown="GridPreviewKeyDown">
+                <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="180" Width="180"
+                      TextBoxBase.TextChanged="CellChanged" GotFocus="CellFocused"
+                      LostFocus="CellUnfocused" Name="GameGrid" PreviewKeyDown="GridPreviewKeyDown" PreviewMouseDown="CellMouseDown" PreviewMouseUp="CellMouseUp" PreviewMouseMove="CellMouseMove">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="*" />
@@ -86,6 +118,16 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
+                    <Canvas Name="RuleDisplayCanvas" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Canvas.Background>
+                            <DrawingBrush Stretch="Fill" Viewbox="0,0,180,180" Viewport="0,0,180,180" ViewboxUnits="Absolute" ViewportUnits="Absolute">
+                                <DrawingBrush.Drawing>
+                                    <DrawingGroup x:Name="RuleDrawingGroup" />
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Canvas.Background>
+                        
+                    </Canvas>
                     <Border Grid.Row="0" Grid.Column="0">
                         <Grid>
                             <Grid.RowDefinitions>
