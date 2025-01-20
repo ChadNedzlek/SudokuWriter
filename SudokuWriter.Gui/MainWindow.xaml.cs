@@ -359,6 +359,7 @@ public partial class MainWindow : Window
             return;
         }
         
+        UpdateGameRules();
         GameState gameState = BuildGameStateFromUi();
         await using Stream stream = dlg.OpenFile();
         await _serializer.SaveGameAsync(_gameEngine.WithInitialState(gameState), stream);
@@ -486,6 +487,12 @@ public partial class MainWindow : Window
 
     private async Task RunGameEngine()
     {
+        UpdateGameRules();
+        await ValidateAndReportGameState();
+    }
+
+    private void UpdateGameRules()
+    {
         var rules = ImmutableArray.CreateBuilder<IGameRule>();
         rules.Add(BasicGameRule.Instance);
         rules.AddRange(_ruleFactories.SelectMany(f => f.SerializeRules(_ruleCollection.Rules.Where(r => r.IsValid))));
@@ -494,6 +501,5 @@ public partial class MainWindow : Window
             rules.Add(new KnightsMoveRule());
         }
         _gameEngine = _gameEngine.WithRules(rules.ToImmutable());
-        await ValidateAndReportGameState();
     }
 }
