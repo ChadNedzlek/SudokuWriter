@@ -32,5 +32,8 @@ public readonly record struct GridEdge(ushort EdgeRow, ushort EdgeCol)
         return null;
     }
 
+    public static GridEdge RightOf(GridCoord coord) => new((ushort)(coord.Row * 2), coord.Col);
+    public static GridEdge BottomOf(GridCoord coord) => new((ushort)(coord.Row * 2 + 1), coord.Col);
+
     public static implicit operator GridEdge((ushort row, ushort col) e) => new(e.row, e.col);
 }

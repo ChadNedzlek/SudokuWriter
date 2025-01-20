@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 
 namespace SudokuWriter.Library.Rules;
@@ -43,18 +41,18 @@ public class KropkiDotRule : IGameRule
 
     private static ushort GetDoubles(ushort mask)
     {
-        return (ushort)(((mask & Cells.GetDigitMask(1)) << 1) |
-            (ushort)((mask & Cells.GetDigitMask(2)) << 2) |
-            (ushort)((mask & Cells.GetDigitMask(3)) << 3) |
-            (ushort)((mask & Cells.GetDigitMask(4)) << 4));
+        return (ushort)(((mask & Cells.GetDigitMask(0)) << 1) |
+            (ushort)((mask & Cells.GetDigitMask(1)) << 2) |
+            (ushort)((mask & Cells.GetDigitMask(2)) << 3) |
+            (ushort)((mask & Cells.GetDigitMask(3)) << 4));
     }
 
     private static ushort GetHalves(ushort mask)
     {
-        return (ushort)(((mask & Cells.GetDigitMask(2)) >> 1) |
-            (ushort)((mask & Cells.GetDigitMask(4)) >> 2) |
-            (ushort)((mask & Cells.GetDigitMask(6)) >> 3) |
-            (ushort)((mask & Cells.GetDigitMask(8)) >> 4));
+        return (ushort)(((mask & Cells.GetDigitMask(1)) >> 1) |
+            (ushort)((mask & Cells.GetDigitMask(3)) >> 2) |
+            (ushort)((mask & Cells.GetDigitMask(5)) >> 3) |
+            (ushort)((mask & Cells.GetDigitMask(7)) >> 4));
     }
 
     private static ushort GetSequential(ushort mask)

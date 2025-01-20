@@ -8,7 +8,7 @@ namespace SudokuWriter.Gui.UiRules;
 
 public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, ILineRule<T>
 {
-    protected class Rule : UiGameRule
+    protected abstract class Rule : UiGameRule
     {
         public PathFigure Path { get; }
 
@@ -29,15 +29,15 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
             Point endPoint = Path.Segments.LastOrDefault() is LineSegment seg ? seg.Point : Path.StartPoint;
             if (endPoint != p)
             {
-                Path.Segments.Add(new LineSegment(p, true));
+                Path.Segments.Add(new LineSegment(p, false));
             }
 
             return true;
         }
 
-        public override void Continue(CellLocation loc)
+        public override bool TryContinue(CellLocation loc)
         {
-            if (!loc.IsCenter) return;
+            if (!loc.IsCenter) return false;
             
             Point p = Factory.TranslateToPoint(loc);
             Point endPoint = Path.Segments.LastOrDefault() is LineSegment seg ? seg.Point : Path.StartPoint;
@@ -47,13 +47,18 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
                 if (Math.Abs(endLocation.Row - loc.Row) <= 1 && Math.Abs(endLocation.Col - loc.Col) <= 1)
                 {
                     Path.Segments.Add(new LineSegment(p, true));
+                    return true;
                 }
             }
+
+            return false;
         }
 
         public override void Complete()
         {
         }
+
+        public override bool IsValid => Path.Segments.Count > 0;
     }
 
     protected Brush LineBrush { get; }
@@ -89,7 +94,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
     protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> rules)
     {
         var ruleBuilder = ImmutableArray.CreateBuilder<BranchingRuleLine>();
-        foreach (var rule in rules.OfType<Rule>())
+        foreach (var rule in rules.OfType<Rule>().Where(r => r.IsValid))
         {
             var line = ImmutableArray.CreateBuilder<LineRuleSegment>();
             var segment = ImmutableArray.CreateBuilder<GridCoord>();
@@ -98,7 +103,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
             {
                 if (pathSegment is not LineSegment lineSeg) continue;
                 
-                if (!pathSegment.IsStroked)
+                if (!pathSegment.IsStroked && segment.Count != 0)
                 {
                     line.Add(new LineRuleSegment(segment.ToImmutable()));
                     segment.Clear();
@@ -110,6 +115,8 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
             ruleBuilder.Add(new BranchingRuleLine(line.ToImmutable()));
         }
 
+        if (ruleBuilder.Count == 0) return [];
+
         return [SerializeLineRule(ruleBuilder.ToImmutable())];
     }
 
@@ -117,7 +124,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
 
     protected override IEnumerable<UiGameRule> DeserializeCore(IGameRule rule)
     {
-        if (rule is not T lineRule) return null;
+        if (rule is not T lineRule) return [];
 
         return lineRule.Lines.Select(CreateUiRule).Where(x => x is not null);
     }
@@ -143,7 +150,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
                     continue;
                 }
                 
-                rule.Continue(location);
+                rule.TryContinue(location);
             }
         }
 

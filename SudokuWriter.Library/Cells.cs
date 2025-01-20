@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace SudokuWriter.Library;
 
@@ -139,5 +140,19 @@ public readonly struct Cells
             cells[i] = GetDigitMask(span[i]);
         }
         return new Cells(new ImmutableArray2<ushort>(cells, digits.GetLength(1)));
+    }
+
+    public static string GetDigitDisplay(ushort mask)
+    {
+        StringBuilder b = new();
+        for (int i = 0; (1 << i) <= mask; i++)
+        {
+            if (((1 << i) & mask) != 0)
+            {
+                b.Append((char)('1' + i));
+            }
+        }
+
+        return b.ToString();
     }
 }

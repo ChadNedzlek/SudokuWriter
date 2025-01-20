@@ -12,7 +12,7 @@ public class GermanWhisperUiRule : LineUiRule<GermanWhispersLineRule>
         }
     }
 
-    public GermanWhisperUiRule(int cellSize) : base(cellSize, "German Whisper", Brushes.GreenYellow)
+    public GermanWhisperUiRule(int cellSize, string name) : base(cellSize, name, Brushes.GreenYellow)
     {
     }
     

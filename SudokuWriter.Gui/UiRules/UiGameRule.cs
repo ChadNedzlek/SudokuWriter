@@ -14,12 +14,13 @@ public abstract class UiGameRule
     }
 
     public Drawing Drawing { get; }
+    public abstract bool IsValid { get; }
 
     public bool TryAddSegment(Point point) => TryAddSegment(Factory.TranslateFromPoint(point));
     public abstract bool TryAddSegment(CellLocation location);
 
-    public void Continue(Point point) => Continue(Factory.TranslateFromPoint(point));
-    public abstract void Continue(CellLocation location);
+    public bool TryContinue(Point point) => TryContinue(Factory.TranslateFromPoint(point));
+    public abstract bool TryContinue(CellLocation location);
 
     public abstract void Complete();
 }

@@ -57,7 +57,7 @@ public abstract class UiGameRuleFactory
 
     public IEnumerable<IGameRule> SerializeRules(IEnumerable<UiGameRule> rules)
     {
-        return SerializeCore(rules.Where(r => r.Factory == this));
+        return SerializeCore(rules.Where(r => r.Factory.GetType() == GetType()));
     }
 
     public IEnumerable<UiGameRule> DeserializeRules(IEnumerable<IGameRule> rules)

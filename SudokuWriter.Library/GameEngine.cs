@@ -42,7 +42,7 @@ public class GameEngine
 
     public GameResult Evaluate(GameState state, out GameState? solution, out GameState? conflict)
     {
-        state = SimlifyState(state);
+        state = SimplifyState(state);
         
         PriorityQueue<GameState, int> searchStates = new();
         searchStates.Enqueue(state, GetPossibilities(state));
@@ -68,7 +68,7 @@ public class GameEngine
 
                 if (result == GameResult.Unsolvable) continue;
 
-                GameState simplified = SimlifyState(next);
+                GameState simplified = SimplifyState(next);
 
                 GameResult simplifiedResult = Rules.Aggregate(
                     GameResult.Unknown,
@@ -109,7 +109,7 @@ public class GameEngine
         return GameResult.Unsolvable;
     }
 
-    private GameState SimlifyState(GameState next)
+    private GameState SimplifyState(GameState next)
     {
         GameState simplified = next;
         bool reduced = true;

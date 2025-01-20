@@ -12,7 +12,7 @@ public class RenbanUiRule : LineUiRule<RenbanLine>
         }
     }
 
-    public RenbanUiRule(int cellSize) : base(cellSize, "Renban", Brushes.MediumPurple)
+    public RenbanUiRule(int cellSize, string name) : base(cellSize, name, Brushes.MediumPurple)
     {
     }
     

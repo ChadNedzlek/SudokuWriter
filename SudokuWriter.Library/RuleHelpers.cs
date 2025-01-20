@@ -11,7 +11,7 @@ namespace SudokuWriter.Library;
 
 public static class RuleHelpers
 {
-    public static ImmutableList<GridCoord> ReadGridCoords(JsonNode node, string key)
+    public static ImmutableArray<GridCoord> ReadGridCoords(JsonNode node, string key)
     {
         JsonNode prop = node[key];
         if (prop is null)
@@ -21,9 +21,9 @@ public static class RuleHelpers
         return ReadGridCoords(arr);
     }
 
-    public static ImmutableList<GridCoord> ReadGridCoords(JsonArray array)
+    public static ImmutableArray<GridCoord> ReadGridCoords(JsonArray array)
     {
-        ImmutableList<GridCoord>.Builder b = ImmutableList.CreateBuilder<GridCoord>();
+        ImmutableArray<GridCoord>.Builder b = ImmutableArray.CreateBuilder<GridCoord>();
         for (int i = 0; i < array.Count; i++)
         {
             switch (array[i])
@@ -41,7 +41,7 @@ public static class RuleHelpers
         return b.ToImmutable();
     }
 
-    public static JsonArray WriteGridCoords(ImmutableList<GridCoord> coords)
+    public static JsonArray WriteGridCoords(ImmutableArray<GridCoord> coords)
     {
         JsonArray arr = new JsonArray();
         foreach (GridCoord c in coords)

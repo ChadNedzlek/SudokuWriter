@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:gui="clr-namespace:SudokuWriter.Gui"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Window.CommandBindings>
@@ -35,8 +36,8 @@
                 </Grid>
                 <RadioButton Content="Renban" GroupName="RuleType" />
                 <RadioButton Content="German Whisper" GroupName="RuleType" />
-                <RadioButton Content="Thermo" GroupName="RuleType" />
-                <RadioButton Content="Arrow" GroupName="RuleType" />
+                <RadioButton Content="Thermo" GroupName="RuleType" IsEnabled="False" />
+                <RadioButton Content="Arrow" GroupName="RuleType" IsEnabled="False" />
                 <Grid>
                     <Separator />
                     <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Cells</TextBlock>
@@ -53,7 +54,7 @@
                     <Separator />
                     <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Global Rules</TextBlock>
                 </Grid>
-                <CheckBox>Knights Move</CheckBox>
+                <CheckBox IsChecked="{Binding RelativeSource={RelativeSource AncestorType=gui:MainWindow}, Path=EnableKnightsMove}">Knights Move</CheckBox>
                 <Button VerticalAlignment="Bottom" Click="EvaluateGame">Test Game</Button>
             </StackPanel>
         </Border>
@@ -74,15 +75,14 @@
                         <Setter Property="Foreground" Value="Black" />
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
                         <Setter Property="VerticalContentAlignment" Value="Center" />
-                        <Setter Property="BorderThickness" Value="0.5" />
+                        <Setter Property="BorderThickness" Value="0" />
                         <Setter Property="MaxLength" Value="1" />
                         <Setter Property="FontSize" Value="12" />
                         <Setter Property="TextWrapping" Value="Wrap" />
                         <Setter Property="Background" Value="Transparent"></Setter>
                     </Style>
                     <Style TargetType="Border">
-                        <Setter Property="BorderBrush" Value="DimGray" />
-                        <Setter Property="BorderThickness" Value="0.5" />
+                        <Setter Property="BorderThickness" Value="0" />
                     </Style>
                     <Style TargetType="TextBox" x:Key="Ambiguous" BasedOn="{StaticResource {x:Type TextBox}}">
                         <Setter Property="Foreground" Value="DarkRed" />
@@ -90,10 +90,10 @@
                     </Style>
                     <Style TargetType="TextBox" x:Key="Fixed" BasedOn="{StaticResource {x:Type TextBox}}" />
                     <Style TargetType="TextBox" x:Key="Solved" BasedOn="{StaticResource {x:Type TextBox}}">
-                        <Setter Property="Foreground" Value="LightBlue" />
+                        <Setter Property="Foreground" Value="Blue" />
                     </Style>
                     <Style TargetType="TextBox" x:Key="Potential" BasedOn="{StaticResource {x:Type TextBox}}">
-                        <Setter Property="Foreground" Value="CadetBlue" />
+                        <Setter Property="Foreground" Value="BlueViolet" />
                         <Setter Property="FontSize" Value="9" />
                     </Style>
                     <Style TargetType="Border" x:Key="SolvedGame" BasedOn="{StaticResource {x:Type Border}}">
@@ -122,7 +122,47 @@
                         <Canvas.Background>
                             <DrawingBrush Stretch="Fill" Viewbox="0,0,180,180" Viewport="0,0,180,180" ViewboxUnits="Absolute" ViewportUnits="Absolute">
                                 <DrawingBrush.Drawing>
-                                    <DrawingGroup x:Name="RuleDrawingGroup" />
+                                    <DrawingGroup x:Name="RuleDrawingGroup">
+                                        <GeometryDrawing>
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="DarkGray" Thickness="0.5"></Pen>
+                                            </GeometryDrawing.Pen>
+                                            <GeometryDrawing.Geometry>
+                                                <GeometryGroup>
+                                                    <LineGeometry StartPoint="0,20" EndPoint="180,20"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,40" EndPoint="180,40"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,80" EndPoint="180,80"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,100" EndPoint="180,100"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,140" EndPoint="180,140"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,160" EndPoint="180,160"></LineGeometry>
+                                                    
+                                                    <LineGeometry StartPoint="20,0" EndPoint="20,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="40,0" EndPoint="40,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="80,0" EndPoint="80,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="100,0" EndPoint="100,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="140,0" EndPoint="140,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="160,0" EndPoint="160,180"></LineGeometry>
+                                                </GeometryGroup>
+                                            </GeometryDrawing.Geometry>
+                                        </GeometryDrawing>
+                                        <GeometryDrawing>
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="DarkGray" Thickness="1"></Pen>
+                                            </GeometryDrawing.Pen>
+                                            <GeometryDrawing.Geometry>
+                                                <GeometryGroup>
+                                                    <LineGeometry StartPoint="0,0" EndPoint="180,0"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,60" EndPoint="180,60"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,120" EndPoint="180,120"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,180" EndPoint="180,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="0,0" EndPoint="0,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="60,0" EndPoint="60,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="120,0" EndPoint="120,180"></LineGeometry>
+                                                    <LineGeometry StartPoint="180,0" EndPoint="180,180"></LineGeometry>
+                                                </GeometryGroup>
+                                            </GeometryDrawing.Geometry>
+                                        </GeometryDrawing>
+                                    </DrawingGroup>
                                 </DrawingBrush.Drawing>
                             </DrawingBrush>
                         </Canvas.Background>

@@ -7,14 +7,14 @@ namespace SudokuWriter.Library.Rules;
 [GameRule("pcell")]
 public class ParityCellRule : IGameRule
 {
-    public ParityCellRule(ImmutableList<GridCoord> evenCells, ImmutableList<GridCoord> oddCells)
+    public ParityCellRule(ImmutableArray<GridCoord> evenCells, ImmutableArray<GridCoord> oddCells)
     {
         EvenCells = evenCells;
         OddCells = oddCells;
     }
 
-    public ImmutableList<GridCoord> EvenCells { get; }
-    public ImmutableList<GridCoord> OddCells { get; }
+    public ImmutableArray<GridCoord> EvenCells { get; }
+    public ImmutableArray<GridCoord> OddCells { get; }
 
     public GameResult Evaluate(GameState state)
     {
@@ -66,8 +66,8 @@ public class ParityCellRule : IGameRule
 
     public static IGameRule FromJsonObject(JsonObject jsonObject)
     {
-        ImmutableList<GridCoord> odd = RuleHelpers.ReadGridCoords(jsonObject, "odd");
-        ImmutableList<GridCoord> even = RuleHelpers.ReadGridCoords(jsonObject, "even");
+        ImmutableArray<GridCoord> odd = RuleHelpers.ReadGridCoords(jsonObject, "odd");
+        ImmutableArray<GridCoord> even = RuleHelpers.ReadGridCoords(jsonObject, "even");
         return new ParityCellRule(even, odd);
     }
 }

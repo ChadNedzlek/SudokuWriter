@@ -48,23 +48,15 @@ public partial class MainWindow : Window
         _solveTask = Task.Run(SolveQueries);
         _serializer = new GameEngineSerializer();
         int cellSize = 20;
-        _ruleFactories = [
-            new RenbanUiRule(cellSize),
-            new GermanWhisperUiRule(cellSize),
+        _ruleFactories =
+        [
+            new RenbanUiRule(cellSize, "Renban"),
+            new GermanWhisperUiRule(cellSize, "German Whisper"),
+            new EvenOddCellUiRule(cellSize, "Odd Cell", isEven: false),
+            new EvenOddCellUiRule(cellSize, "Even Cell", isEven: true),
+            new KropkiDotUiRule(cellSize, "Black Kropki", isDouble: true),
+            new KropkiDotUiRule(cellSize, "White Kropki", isDouble: false),
         ];
-    }
-
-    public static readonly DependencyProperty CurrentRuleTypeProperty = DependencyProperty.Register(
-        nameof(CurrentRuleType),
-        typeof(string),
-        typeof(MainWindow),
-        new PropertyMetadata(default(string))
-    );
-
-    public string CurrentRuleType
-    {
-        get => (string)GetValue(CurrentRuleTypeProperty);
-        set => SetValue(CurrentRuleTypeProperty, value);
     }
 
     public static readonly DependencyProperty EnableKnightsMoveProperty = DependencyProperty.Register(
@@ -228,9 +220,17 @@ public partial class MainWindow : Window
             if (_queries.TryDequeue(out GameQuery s))
             {
                 Debug.WriteLine("Found state to query", "INFO");
-                GameResult result = _gameEngine.Evaluate(s.State, out GameState? solution, out GameState? conflict);
-                Debug.WriteLine($"Query complete result={result}", "INFO");
-                s.OnSolved.TrySetResult(new GameQueryResult(result, solution, conflict));
+                try
+                {
+                    GameResult result = _gameEngine.Evaluate(s.State, out GameState? solution, out GameState? conflict);
+                    Debug.WriteLine($"Query complete result={result}", "INFO");
+                    s.OnSolved.TrySetResult(new GameQueryResult(result, solution, conflict));
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine($"EXCEPTION IN GAME STATE: {e}");
+                }
+
                 Debug.WriteLine($"Dispatch query complete", "INFO");
             }
             else
@@ -407,7 +407,7 @@ public partial class MainWindow : Window
 
     private List<UiGameRuleFactory> _ruleFactories = [];
     
-    private void CellMouseDown(object sender, MouseButtonEventArgs e)
+    private async void CellMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (_currentFactory is null)
         {
@@ -416,10 +416,13 @@ public partial class MainWindow : Window
         
         Point point = e.GetPosition(RuleDisplayCanvas);
         var location = _currentFactory.TranslateFromPoint(point);
+        bool modified = false;
 
         if (_ruleCollection.Rules.Where(r => r.Factory == _currentFactory).FirstOrDefault(r => r.TryAddSegment(location)) is { } ruleModified)
         {
             _currentRule = ruleModified;
+            modified = true;
+
         }
         else
         {
@@ -427,6 +430,7 @@ public partial class MainWindow : Window
             {
                 RuleDrawingGroup.Children.Add(rule.Drawing);
                 _currentRule = rule;
+                modified = true;
                 _ruleCollection.Rules.Add(_currentRule);
             }
         }
@@ -434,6 +438,11 @@ public partial class MainWindow : Window
         ((Grid)sender).CaptureMouse();
         e.Handled = true;
         _captured = true;
+
+        if (modified && !_currentFactory.IsContinuous)
+        {
+            await RunGameEngine();
+        }
     }
 
     private void CellMouseUp(object sender, MouseButtonEventArgs e)
@@ -450,11 +459,14 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void CellMouseMove(object sender, MouseEventArgs e)
+    private async void CellMouseMove(object sender, MouseEventArgs e)
     {
         if (!_captured || _currentRule is null) return;
 
-        _currentRule.Continue(e.GetPosition(RuleDisplayCanvas));
+        if (_currentRule.TryContinue(e.GetPosition(RuleDisplayCanvas)))
+        {
+            await RunGameEngine();
+        }
     }
     
     private void ChangeRuleType(object sender, RoutedEventArgs e)
@@ -474,8 +486,14 @@ public partial class MainWindow : Window
 
     private async Task RunGameEngine()
     {
-        var rules = _ruleFactories.SelectMany(f => f.SerializeRules(_ruleCollection.Rules));
-        _gameEngine = _gameEngine.WithRules([BasicGameRule.Instance, ..rules.ToImmutableArray()]);
+        var rules = ImmutableArray.CreateBuilder<IGameRule>();
+        rules.Add(BasicGameRule.Instance);
+        rules.AddRange(_ruleFactories.SelectMany(f => f.SerializeRules(_ruleCollection.Rules.Where(r => r.IsValid))));
+        if (EnableKnightsMove)
+        {
+            rules.Add(new KnightsMoveRule());
+        }
+        _gameEngine = _gameEngine.WithRules(rules.ToImmutable());
         await ValidateAndReportGameState();
     }
 }
