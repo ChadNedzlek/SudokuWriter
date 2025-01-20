@@ -398,6 +398,9 @@ public partial class MainWindow : Window
             }
         }
 
+        _ruleCollection.Rules.Clear();
+        _ruleCollection.Rules.AddRange(_ruleFactories.SelectMany(f => f.DeserializeRules(gameEngine.Rules)));
+
         await ValidateAndReportGameState();
     }
 
