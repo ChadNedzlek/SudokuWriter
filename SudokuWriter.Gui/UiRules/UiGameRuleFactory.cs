@@ -7,6 +7,7 @@ public abstract class UiGameRuleFactory
 {
     public string Name { get; }
     public bool IsContinuous { get; }
+    public virtual Range? VariationRange => null;
 
     public int CellSize { get; }
     public int CenterPadding { get; }

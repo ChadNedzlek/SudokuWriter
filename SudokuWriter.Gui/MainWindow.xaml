@@ -404,7 +404,7 @@
                     </Border>
                 </Grid>
             </Viewbox>
-            <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="3">
+            <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="3" Margin="4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -412,12 +412,18 @@
                 <TextBox Grid.Row="0"
                     Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationValue}"
                     MaxLength="2"
-                    IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationAllowed}" />
+                    IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationAllowed}"
+                    BorderThickness="0"
+                    Margin="0,0,0,2"/>
                 <Slider Grid.Row="1"
                     Orientation="Vertical"
                     IsDirectionReversed="True"
                     TickPlacement="BottomRight"
                     TickFrequency="1"
+                    SmallChange="1"
+                    IsSnapToTickEnabled="True"
+                    AutoToolTipPlacement="TopLeft"
+                    AutoToolTipPrecision="0"
                     Minimum="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationMin}"
                     Maximum="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationMax}"
                     Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationValue}"

@@ -568,6 +568,20 @@ public partial class MainWindow
         if (radio.Content is not string ruleName) return;
 
         _currentFactory = _ruleFactories.FirstOrDefault(f => string.Equals(f.Name, ruleName, StringComparison.OrdinalIgnoreCase));
+        if (_currentFactory?.VariationRange is { } variations)
+        {
+            var (start, length) = variations.GetOffsetAndLength(45);
+            VariationAllowed = true;
+            VariationMin = start;
+            VariationMax = start + length;
+        }
+        else
+        {
+            VariationAllowed = false;
+            VariationMin = 0;
+            VariationMax = 0;
+        }
+
         _currentRule = null;
     }
 
