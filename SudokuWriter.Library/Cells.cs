@@ -155,4 +155,19 @@ public readonly struct Cells
 
         return b.ToString();
     }
+
+    public static ushort GetReversed(ushort mask, ushort digits)
+    {
+        unchecked
+        {
+            uint x = mask;
+            x |= (x & 0x000000FF) << 16;
+            x = (x & 0xF0F0F0F0) | ((x & 0x0F0F0F0F) << 8);
+            x = (x & 0xCCCCCCCC) | ((x & 0x33333333) << 4);
+            x = (x & 0XAAAAAAAA) | ((x & 0x55555555) << 2);
+            x <<= 1;
+            x >>= 32 - digits;
+            return (ushort)x;
+        }
+    }
 }
