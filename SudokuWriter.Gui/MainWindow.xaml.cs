@@ -583,7 +583,7 @@ public partial class MainWindow
         _currentFactory = _ruleFactories.FirstOrDefault(f => string.Equals(f.Name, ruleName, StringComparison.OrdinalIgnoreCase));
         if (_currentFactory?.VariationRange is { } variations)
         {
-            var (start, length) = variations.GetOffsetAndLength(45);
+            var (start, length) = variations.GetOffsetAndLength(int.MaxValue);
             VariationAllowed = true;
             VariationMin = start;
             VariationMax = start + length;
