@@ -140,6 +140,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
                 if (rule is null)
                 {
                     TryStart(location, out rule);
+                    restart = false;
                     continue;
                 }
 

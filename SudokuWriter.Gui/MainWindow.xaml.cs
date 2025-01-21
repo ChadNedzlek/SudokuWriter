@@ -16,7 +16,7 @@ using SudokuWriter.Library.Rules;
 
 namespace SudokuWriter.Gui;
 
-public partial class MainWindow : Window
+public partial class MainWindow
 {
     public enum CellStyle
     {
@@ -70,6 +70,58 @@ public partial class MainWindow : Window
     {
         get => (bool)GetValue(EnableKnightsMoveProperty);
         set => SetValue(EnableKnightsMoveProperty, value);
+    }
+
+    public static readonly DependencyProperty VariationValueProperty = DependencyProperty.Register(
+        nameof(VariationValue),
+        typeof(int),
+        typeof(MainWindow),
+        new PropertyMetadata(10)
+    );
+
+    public int VariationValue
+    {
+        get => (int)GetValue(VariationValueProperty);
+        set => SetValue(VariationValueProperty, value);
+    }
+
+    public static readonly DependencyProperty VariationMinProperty = DependencyProperty.Register(
+        nameof(VariationMin),
+        typeof(int),
+        typeof(MainWindow),
+        new PropertyMetadata(0)
+    );
+
+    public int VariationMin
+    {
+        get => (int)GetValue(VariationMinProperty);
+        set => SetValue(VariationMinProperty, value);
+    }
+
+    public static readonly DependencyProperty VariationMaxProperty = DependencyProperty.Register(
+        nameof(VariationMax),
+        typeof(int),
+        typeof(MainWindow),
+        new PropertyMetadata(45)
+    );
+
+    public int VariationMax
+    {
+        get => (int)GetValue(VariationMaxProperty);
+        set => SetValue(VariationMaxProperty, value);
+    }
+
+    public static readonly DependencyProperty VariationAllowedProperty = DependencyProperty.Register(
+        nameof(VariationAllowed),
+        typeof(bool),
+        typeof(MainWindow),
+        new PropertyMetadata(default(bool))
+    );
+
+    public bool VariationAllowed
+    {
+        get => (bool)GetValue(VariationAllowedProperty);
+        set => SetValue(VariationAllowedProperty, value);
     }
 
     private ImmutableList<TextBox> CellBoxes => _cellLayout.Value;
@@ -132,41 +184,18 @@ public partial class MainWindow : Window
             TextBox uiCell = uiCells[r * 9 + c];
             CellStyle style = uiCell.Tag is CellValue value ? value.Style : CellStyle.Ambiguous;
             if (style == CellStyle.Fixed) continue;
-            switch (result.Result)
+            switch (result)
             {
-                case GameResult.Unsolvable:
+                case UnsolvableQueryResult:
                     SetCell(r, c, "", CellStyle.Potential);
                     break;
-                case GameResult.Solved:
-                    SetCell(
-                        r,
-                        c,
-                        TextFromDigit(result.PrimaryState.Value.Cells.GetSingle(r, c)),
-                        CellStyle.Solved
-                    );
+                case SolvedQueryResult solved:
+                    SetCell(r, c, TextFromDigit(solved.Solution.Cells.GetSingle(r, c)), CellStyle.Solved);
                     break;
-                case GameResult.MultipleSolutions:
-                    ushort mask = (ushort)(result.PrimaryState.Value.Cells.GetMask(r, c) |
-                        result.ConflictingState.Value.Cells.GetMask(r, c));
-                    if (BitOperations.IsPow2(mask))
-                        SetCell(
-                            r,
-                            c,
-                            TextFromDigitMask(
-                                mask
-                            ),
-                            CellStyle.Solved
-                        );
-                    else
-                        SetCell(
-                            r,
-                            c,
-                            TextFromDigitMask(
-                                mask
-                            ),
-                            CellStyle.Ambiguous
-                        );
-
+                case MultipleSolutionsQueryResult multi:
+                    ushort mask = (ushort)(multi.Solution1.Cells.GetMask(r, c) |
+                        multi.Solution2.Cells.GetMask(r, c));
+                    SetCell(r, c, TextFromDigitMask(mask), BitOperations.IsPow2(mask) ? CellStyle.Solved : CellStyle.Ambiguous);
                     break;
             }
         }
@@ -211,6 +240,7 @@ public partial class MainWindow : Window
     }
 
     [DoesNotReturn]
+    [SuppressMessage("ReSharper", "PossibleInvalidOperationException")]
     private async Task SolveQueries()
     {
         while (true)
@@ -224,7 +254,14 @@ public partial class MainWindow : Window
                 {
                     GameResult result = _gameEngine.Evaluate(s.State, out GameState? solution, out GameState? conflict);
                     Debug.WriteLine($"Query complete result={result}", "INFO");
-                    s.OnSolved.TrySetResult(new GameQueryResult(result, solution, conflict));
+                    GameQueryResult queryResult = result switch {
+                        GameResult.Unknown => UnknownQueryResult.Instance,
+                        GameResult.Unsolvable => UnsolvableQueryResult.Instance,
+                        GameResult.Solved => new SolvedQueryResult(solution.Value),
+                        GameResult.MultipleSolutions => new MultipleSolutionsQueryResult(solution.Value, conflict.Value),
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                    s.OnSolved.TrySetResult(queryResult);
                 }
                 catch (Exception e)
                 {
@@ -238,9 +275,10 @@ public partial class MainWindow : Window
                 Debug.WriteLine("No query found", "ERROR");
             }
         }
+        // ReSharper disable once FunctionNeverReturns
     }
 
-    public void SetCell(int row, int column, string text, CellStyle style)
+    private void SetCell(int row, int column, string text, CellStyle style)
     {
         TextBox cell = CellBoxes[row * 9 + column];
         SetCellTextAndStyle(cell, text, style);
@@ -324,8 +362,20 @@ public partial class MainWindow : Window
 
         e.Handled = true;
     }
+    
+    private record class GameQueryResult(GameResult Result);
+    private record class SolvedQueryResult(GameState Solution) : GameQueryResult(GameResult.Solved);
+    private record class MultipleSolutionsQueryResult(GameState Solution1, GameState Solution2) : GameQueryResult(GameResult.MultipleSolutions);
 
-    private record class GameQueryResult(GameResult Result, GameState? PrimaryState, GameState? ConflictingState);
+    private record class UnsolvableQueryResult() : GameQueryResult(GameResult.Unsolvable)
+    {
+        public static readonly UnsolvableQueryResult Instance = new();
+    }
+
+    private record class UnknownQueryResult() : GameQueryResult(GameResult.Unknown)
+    {
+        public static readonly UnknownQueryResult Instance = new();
+    }
 
     private record class GameQuery(GameState State, TaskCompletionSource<GameQueryResult> OnSolved);
 
@@ -346,106 +396,137 @@ public partial class MainWindow : Window
 
     private async void SaveGame(object sender, ExecutedRoutedEventArgs e)
     {
-        var dlg = new SaveFileDialog()
+        try
         {
-            Filter = "Sudoku Game (*.sdku)|*.sdku|All Files (*.*)|*.*",
-            DefaultExt = ".sdku",
-            AddExtension = true,
-            ValidateNames = true,
-        };
+            var dlg = new SaveFileDialog
+            {
+                Filter = "Sudoku Game (*.sdku)|*.sdku|All Files (*.*)|*.*",
+                DefaultExt = ".sdku",
+                AddExtension = true,
+                ValidateNames = true,
+            };
         
-        if (dlg.ShowDialog() is not true)
-        {
-            return;
+            if (dlg.ShowDialog() is not true)
+            {
+                return;
+            }
+        
+            UpdateGameRules();
+            GameState gameState = BuildGameStateFromUi();
+            await using Stream stream = dlg.OpenFile();
+            await _serializer.SaveGameAsync(_gameEngine.WithInitialState(gameState), stream);
         }
-        
-        UpdateGameRules();
-        GameState gameState = BuildGameStateFromUi();
-        await using Stream stream = dlg.OpenFile();
-        await _serializer.SaveGameAsync(_gameEngine.WithInitialState(gameState), stream);
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Failed to save game: \n\nDetails: {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private async void OpenGame(object sender, ExecutedRoutedEventArgs e)
     {
-        var dlg = new OpenFileDialog
+        try
         {
-            Filter = "Sudoku Game (*.sdku)|*.sdku|All Files (*.*)|*.*",
-            DefaultExt = ".sdku",
-            Multiselect = false,
-        };
-        
-        if (dlg.ShowDialog() is not true)
-        {
-            return;
-        }
-        
-        _queries.Clear();
-            
-        await using Stream stream = dlg.OpenFile();
-        GameEngine gameEngine = await _serializer.LoadGameAsync(stream);
-        _gameEngine = gameEngine;
-        for (int r = 0; r < gameEngine.InitialState.Structure.Rows; r++)
-        for (int c = 0; c < gameEngine.InitialState.Structure.Columns; c++)
-        {
-            switch (gameEngine.InitialState.Cells.GetSingle(r, c))
+            var dlg = new OpenFileDialog
             {
-                case Cells.NoSingleValue:
-                    SetCell(r, c, "", CellStyle.Potential);
-                    break;
-                case var x:
-                    SetCell(r, c, TextFromDigit(x), CellStyle.Fixed);
-                    break;
+                Filter = "Sudoku Game (*.sdku)|*.sdku|All Files (*.*)|*.*",
+                DefaultExt = ".sdku",
+                Multiselect = false,
+            };
+        
+            if (dlg.ShowDialog() is not true)
+            {
+                return;
             }
+        
+            _queries.Clear();
+            
+            await using Stream stream = dlg.OpenFile();
+            GameEngine gameEngine = await _serializer.LoadGameAsync(stream);
+            _gameEngine = gameEngine;
+            for (int r = 0; r < gameEngine.InitialState.Structure.Rows; r++)
+            for (int c = 0; c < gameEngine.InitialState.Structure.Columns; c++)
+            {
+                switch (gameEngine.InitialState.Cells.GetSingle(r, c))
+                {
+                    case Cells.NoSingleValue:
+                        SetCell(r, c, "", CellStyle.Potential);
+                        break;
+                    case var x:
+                        SetCell(r, c, TextFromDigit(x), CellStyle.Fixed);
+                        break;
+                }
+            }
+
+            _ruleCollection.Rules.Clear();
+            var uiRules = _ruleFactories.SelectMany(f => f.DeserializeRules(gameEngine.Rules)).ToList();
+            _ruleCollection.Rules.AddRange(uiRules);
+            while (RuleDrawingGroup.Children.Count > 2)
+            {
+                RuleDrawingGroup.Children.RemoveAt(2);
+            }
+
+            foreach (var uiRule in uiRules)
+            {
+                RuleDrawingGroup.Children.Add(uiRule.Drawing);
+            }
+
+            await ValidateAndReportGameState();
         }
-
-        _ruleCollection.Rules.Clear();
-        _ruleCollection.Rules.AddRange(_ruleFactories.SelectMany(f => f.DeserializeRules(gameEngine.Rules)));
-
-        await ValidateAndReportGameState();
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Failed to load game: \n\nDetails: {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
-    private bool _captured = false;
-    private GameRuleCollection _ruleCollection = new();
+    private bool _captured;
+    private readonly GameRuleCollection _ruleCollection = new();
+    private readonly List<UiGameRuleFactory> _ruleFactories;
     private UiGameRule _currentRule;
     private UiGameRuleFactory _currentFactory;
 
-    private List<UiGameRuleFactory> _ruleFactories = [];
-    
+
     private async void CellMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (_currentFactory is null)
+        try
         {
-            return;
-        }
-        
-        Point point = e.GetPosition(RuleDisplayCanvas);
-        var location = _currentFactory.TranslateFromPoint(point);
-        bool modified = false;
-
-        if (_ruleCollection.Rules.Where(r => r.Factory == _currentFactory).FirstOrDefault(r => r.TryAddSegment(location)) is { } ruleModified)
-        {
-            _currentRule = ruleModified;
-            modified = true;
-
-        }
-        else
-        {
-            if (_currentFactory.TryStart(point, out var rule))
+            if (_currentFactory is null)
             {
-                RuleDrawingGroup.Children.Add(rule.Drawing);
-                _currentRule = rule;
+                return;
+            }
+        
+            Point point = e.GetPosition(RuleDisplayCanvas);
+            var location = _currentFactory.TranslateFromPoint(point);
+            bool modified = false;
+
+            if (_ruleCollection.Rules.Where(r => r.Factory == _currentFactory).FirstOrDefault(r => r.TryAddSegment(location)) is { } ruleModified)
+            {
+                _currentRule = ruleModified;
                 modified = true;
-                _ruleCollection.Rules.Add(_currentRule);
+
+            }
+            else
+            {
+                if (_currentFactory.TryStart(point, out var rule))
+                {
+                    RuleDrawingGroup.Children.Add(rule.Drawing);
+                    _currentRule = rule;
+                    modified = true;
+                    _ruleCollection.Rules.Add(_currentRule);
+                }
+            }
+
+            ((Grid)sender).CaptureMouse();
+            e.Handled = true;
+            _captured = true;
+
+            if (modified && !_currentFactory.IsContinuous)
+            {
+                await RunGameEngine();
             }
         }
-
-        ((Grid)sender).CaptureMouse();
-        e.Handled = true;
-        _captured = true;
-
-        if (modified && !_currentFactory.IsContinuous)
+        catch (Exception ex)
         {
-            await RunGameEngine();
+            MessageBox.Show(this, $"Error while updating game state: \n\nDetails: {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -465,11 +546,18 @@ public partial class MainWindow : Window
 
     private async void CellMouseMove(object sender, MouseEventArgs e)
     {
-        if (!_captured || _currentRule is null) return;
-
-        if (_currentRule.TryContinue(e.GetPosition(RuleDisplayCanvas)))
+        try
         {
-            await RunGameEngine();
+            if (!_captured || _currentRule is null) return;
+
+            if (_currentRule.TryContinue(e.GetPosition(RuleDisplayCanvas)))
+            {
+                await RunGameEngine();
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Error while updating game state: \n\nDetails: {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     
@@ -485,7 +573,14 @@ public partial class MainWindow : Window
 
     private async void EvaluateGame(object sender, RoutedEventArgs e)
     {
-        await RunGameEngine();
+        try
+        {
+            await RunGameEngine();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Error while updating game state: \n\nDetails: {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private async Task RunGameEngine()

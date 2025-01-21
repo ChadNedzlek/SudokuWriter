@@ -43,7 +43,27 @@ public class GameEngine
     public GameResult Evaluate(GameState state, out GameState? solution, out GameState? conflict)
     {
         state = SimplifyState(state);
-        
+        GameResult initialState = Rules.Aggregate(
+            GameResult.Solved,
+            (res, rule) => res switch
+            {
+                GameResult.Unsolvable => GameResult.Unsolvable,
+                GameResult.Unknown => rule.Evaluate(state) switch
+                {
+                    GameResult.Unsolvable => GameResult.Unsolvable,
+                    _ => GameResult.Unknown
+                },
+                _ => rule.Evaluate(state),
+            }
+        );
+
+        if (initialState != GameResult.Unknown)
+        {
+            solution = state;
+            conflict = null;
+            return initialState;
+        }
+
         PriorityQueue<GameState, int> searchStates = new();
         searchStates.Enqueue(state, GetPossibilities(state));
         HashSet<ulong> seenStates = [state.GetStateHash()];
@@ -52,34 +72,13 @@ public class GameEngine
         while (searchStates.TryDequeue(out GameState s, out _))
             foreach (GameState next in NextStates(s))
             {
-                GameResult result = Rules.Aggregate(
-                    GameResult.Solved,
-                    (res, rule) => res switch
-                    {
-                        GameResult.Unsolvable => GameResult.Unsolvable,
-                        GameResult.Unknown => rule.Evaluate(next) switch
-                        {
-                            GameResult.Unsolvable => GameResult.Unsolvable,
-                            _ => GameResult.Unknown
-                        },
-                        _ => rule.Evaluate(next),
-                    }
-                );
+                GameResult result = EvaluateState(next);
 
                 if (result == GameResult.Unsolvable) continue;
 
                 GameState simplified = SimplifyState(next);
 
-                GameResult simplifiedResult = Rules.Aggregate(
-                    GameResult.Unknown,
-                    (res, rule) => res switch
-                    {
-                        GameResult.Unsolvable => GameResult.Unsolvable,
-                        _ => rule.Evaluate(simplified)
-                    }
-                );
-
-                switch (simplifiedResult)
+                switch (EvaluateState(simplified))
                 {
                     case GameResult.Unsolvable:
                         continue;
@@ -107,6 +106,23 @@ public class GameEngine
         solution = null;
         conflict = null;
         return GameResult.Unsolvable;
+    }
+
+    private GameResult EvaluateState(GameState state)
+    {
+        return Rules.Aggregate(
+            GameResult.Solved,
+            (res, rule) => res switch
+            {
+                GameResult.Unsolvable => GameResult.Unsolvable,
+                GameResult.Unknown => rule.Evaluate(state) switch
+                {
+                    GameResult.Unsolvable => GameResult.Unsolvable,
+                    _ => GameResult.Unknown
+                },
+                _ => rule.Evaluate(state),
+            }
+        );
     }
 
     private GameState SimplifyState(GameState next)
