@@ -124,6 +124,19 @@ public partial class MainWindow
         set => SetValue(VariationAllowedProperty, value);
     }
 
+    public static readonly DependencyProperty HasVariationDigitsProperty = DependencyProperty.Register(
+        nameof(HasVariationDigits),
+        typeof(bool),
+        typeof(MainWindow),
+        new PropertyMetadata(default(bool))
+    );
+
+    public bool HasVariationDigits
+    {
+        get { return (bool)GetValue(HasVariationDigitsProperty); }
+        set { SetValue(HasVariationDigitsProperty, value); }
+    }
+
     private ImmutableList<TextBox> CellBoxes => _cellLayout.Value;
 
     protected override void OnClosing(CancelEventArgs e)
@@ -581,6 +594,8 @@ public partial class MainWindow
             VariationMin = 0;
             VariationMax = 0;
         }
+
+        HasVariationDigits = _currentFactory?.HasVariationDigits ?? false;
 
         _currentRule = null;
     }

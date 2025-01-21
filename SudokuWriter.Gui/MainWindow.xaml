@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:gui="clr-namespace:SudokuWriter.Gui"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="500" Width="800">
     <Window.CommandBindings>
         <CommandBinding Command="New" Executed="NewGame" />
         <CommandBinding Command="Save" Executed="SaveGame" />
@@ -28,6 +28,7 @@
             </MenuItem>
         </Menu>
         <Border DockPanel.Dock="Right" Width="150" BorderBrush="LightGray" BorderThickness="1,0,0,0" Padding="10">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel Orientation="Vertical" HorizontalAlignment="Left" ToggleButton.Checked="ChangeRuleType">
                 <RadioButton Content="Digits" GroupName="RuleType" />
                 <Grid>
@@ -43,6 +44,7 @@
                 <RadioButton Content="Alternate Parity" GroupName="RuleType" IsEnabled="False" />
                 <RadioButton Content="Div Thirds" GroupName="RuleType" IsEnabled="False" />
                 <RadioButton Content="Mod Thirds" GroupName="RuleType" IsEnabled="False" />
+                <RadioButton Content="Between" GroupName="RuleType" IsEnabled="False" />
                 <Grid>
                     <Separator />
                     <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Cells</TextBlock>
@@ -60,9 +62,38 @@
                     <Separator />
                     <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Global Rules</TextBlock>
                 </Grid>
+                <RadioButton Content="Quadruple" GroupName="RuleType" IsEnabled="False" />
+                <Grid>
+                    <Separator />
+                    <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Global Rules</TextBlock>
+                </Grid>
                 <CheckBox IsChecked="{Binding RelativeSource={RelativeSource AncestorType=gui:MainWindow}, Path=EnableKnightsMove}">Knights Move</CheckBox>
+                <Separator />
                 <Button VerticalAlignment="Bottom" Click="EvaluateGame">Test Game</Button>
+                <Separator />
+                <Grid IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=HasVariationDigits}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox Grid.Row="0" Grid.Column="0">1</CheckBox>
+                    <CheckBox Grid.Row="0" Grid.Column="1">2</CheckBox>
+                    <CheckBox Grid.Row="0" Grid.Column="2">3</CheckBox>
+                    <CheckBox Grid.Row="1" Grid.Column="0">4</CheckBox>
+                    <CheckBox Grid.Row="1" Grid.Column="1">5</CheckBox>
+                    <CheckBox Grid.Row="1" Grid.Column="2">6</CheckBox>
+                    <CheckBox Grid.Row="2" Grid.Column="0">7</CheckBox>
+                    <CheckBox Grid.Row="2" Grid.Column="1">8</CheckBox>
+                    <CheckBox Grid.Row="2" Grid.Column="2">9</CheckBox>
+                </Grid>
             </StackPanel>
+            </ScrollViewer>
         </Border>
         <Grid>
             <Grid.RowDefinitions>
@@ -410,24 +441,24 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <TextBox Grid.Row="0"
-                    Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationValue}"
-                    MaxLength="2"
-                    IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationAllowed}"
-                    BorderThickness="0"
-                    Margin="0,0,0,2"/>
+                         Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationValue}"
+                         MaxLength="2"
+                         IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationAllowed}"
+                         BorderThickness="0"
+                         Margin="0,0,0,2"/>
                 <Slider Grid.Row="1"
-                    Orientation="Vertical"
-                    IsDirectionReversed="True"
-                    TickPlacement="BottomRight"
-                    TickFrequency="1"
-                    SmallChange="1"
-                    IsSnapToTickEnabled="True"
-                    AutoToolTipPlacement="TopLeft"
-                    AutoToolTipPrecision="0"
-                    Minimum="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationMin}"
-                    Maximum="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationMax}"
-                    Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationValue}"
-                    IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationAllowed}" />
+                        Orientation="Vertical"
+                        IsDirectionReversed="True"
+                        TickPlacement="BottomRight"
+                        TickFrequency="1"
+                        SmallChange="1"
+                        IsSnapToTickEnabled="True"
+                        AutoToolTipPlacement="TopLeft"
+                        AutoToolTipPrecision="0"
+                        Minimum="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationMin}"
+                        Maximum="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationMax}"
+                        Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationValue}"
+                        IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=VariationAllowed}" />
             </Grid>
         </Grid>
     </DockPanel>

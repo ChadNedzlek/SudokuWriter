@@ -37,6 +37,7 @@ public class RenbanLineTest
         var reduced = new RenbanLine((0,0),(1,1),(2,2)).TryReduce(state).ShouldNotBeNull();
         int nearCells = Cells.GetDigitMask(1) | Cells.GetDigitMask(2) | Cells.GetDigitMask(4) | Cells.GetDigitMask(5);
         reduced.Cells[0,0].ShouldBe(nearCells);
+        reduced.Cells[1,1].ShouldBe(Cells.GetDigitMask(3));
         reduced.Cells[2,2].ShouldBe(nearCells);
     }
     
@@ -52,6 +53,7 @@ public class RenbanLineTest
         var reduced = new RenbanLine((0,0),(1,1),(2,2)).TryReduce(state).ShouldNotBeNull();
         int nearCells = Cells.GetDigitMask(3) | Cells.GetDigitMask(4) | Cells.GetDigitMask(6) | Cells.GetDigitMask(7);
         reduced.Cells[0,0].ShouldBe(nearCells);
+        reduced.Cells[1,1].ShouldBe(Cells.GetDigitMask(5));
         reduced.Cells[2,2].ShouldBe(nearCells);
     }
     
