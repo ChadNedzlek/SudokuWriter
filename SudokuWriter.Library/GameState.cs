@@ -9,7 +9,7 @@ public readonly record struct GameStructure(ushort Rows, ushort Columns, ushort 
     public static GameStructure Default { get; } = new(9, 9, 9, 3, 3);
 }
 
-[DebuggerDisplay("Board: {BoardString(),nq}")]
+[DebuggerDisplay("{BoardString(),nq}")]
 public readonly struct GameState
 {
     public static GameState Default { get; } = new(Cells.CreateFilled(), GameStructure.Default);
@@ -44,6 +44,7 @@ public readonly struct GameState
 
     public string BoardString()
     {
+        bool breakLines = Digits > 2 && Structure.Rows > 2;
         StringBuilder builder = new();
         for (int r = 0; r < Cells.Rows; r++)
         {
@@ -63,6 +64,10 @@ public readonly struct GameState
                 }
 
             builder.Append(']');
+            if (breakLines)
+            {
+                builder.Append('\n');
+            }
         }
 
         return builder.ToString();
