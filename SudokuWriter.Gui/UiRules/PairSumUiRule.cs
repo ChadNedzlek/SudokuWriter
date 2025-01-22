@@ -1,11 +1,13 @@
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using SudokuWriter.Library;
+using SudokuWriter.Library.Rules;
 
 namespace SudokuWriter.Gui.UiRules;
 
-public class PairSumUiRule : UiGameRuleFactory
+public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
 {
     public override Range? VariationRange => 3..17;
 
@@ -30,94 +32,103 @@ public class PairSumUiRule : UiGameRuleFactory
             _ => "I" + ToRomanNumeral(value - 1),
         };
 
-    protected override bool TryStart(CellLocation location, RuleParameters parameters, out UiGameRule createdRule)
+    protected override RuleBase CreateRule(RuleParameters parameters, GeometryDrawing drawing, GeometryGroup grp)
     {
-        if (!IsOnEdge(location))
-        {
-            createdRule = null;
-            return false;
-        }
+        return new Rule(this, drawing, grp, parameters.SingleValue);
+    }
 
-        var drawing = new GeometryDrawing
+    protected override GeometryDrawing CreateInitialDrawing()
+    {
+        return new GeometryDrawing
         {
             Brush = Brushes.Black,
         };
-        
-
-        var grp = new GeometryGroup();
-        drawing.Geometry = grp;
-        createdRule = new Rule(this, drawing, grp, parameters.SingleValue);
-        createdRule.TryAddSegment(location, parameters);
-        return true;
     }
-
-    private static bool IsOnEdge(CellLocation location)
+    
+    protected override ImmutableArray<GridEdge> GetEdgesFromRule(PairSumRule rule)
     {
-        var isLeftRight = location.ColSide != 0;
-        var isTopBottom = location.RowSide != 0;
-        var isValid = isLeftRight != isTopBottom;
-        return isValid;
+        return rule.Pairs;
     }
 
     protected override IEnumerable<UiGameRule> DeserializeCore(IGameRule rule)
     {
-        return [];
+        if (rule is not PairSumRule pair) return [];
+        UiGameRule uiRule = null;
+        foreach (GridEdge r in pair.Pairs)
+        {
+            CellLocation location = GetLocation(r);
+            var ruleParameters = new RuleParameters(0, pair.Sum);
+            if (uiRule is null)
+            {
+                TryStart(location, ruleParameters, out uiRule);
+            }
+            else
+            {
+                uiRule.TryAddSegment(location, ruleParameters);
+            }
+        }
+
+        return [uiRule];
     }
 
     protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> rules)
     {
-        return [];
-    }
-
-    private GridEdge GetGridEdge(Point dotCenter)
-    {
-        var location = TranslateFromPoint(dotCenter);
-        if (location.ColSide < 0)
+        List<PairSumRule> gameRules = [];
+        foreach (Rule dotRule in rules.OfType<Rule>())
         {
-            location = location with { ColSide = 1, Col = location.Col - 1 };
-        }
-        
-        if (location.RowSide < 0)
-        {
-            location = location with { RowSide = 1, Row = location.Row - 1 };
+            ImmutableArray<GridEdge>.Builder edges = ImmutableArray.CreateBuilder<GridEdge>();
+            foreach (Geometry geometry in dotRule.GeometryGroup.Children)
+            {
+                Rect b = geometry.Bounds;
+                (double x, double y) = (b.Left + b.Width / 2, b.Top + b.Height / 2);
+                edges.Add(GetGridEdge(new Point(x, y)));
+            }
+            gameRules.Add(new PairSumRule(dotRule.Sum, edges.ToImmutable()));
         }
 
-        return location.RowSide != 0 ? GridEdge.BottomOf(location.ToCoord()) : GridEdge.RightOf(location.ToCoord());
+        return gameRules;
     }
 
-    private class Rule : UiGameRule
+    private class Rule : RuleBase
     {
         public ushort Sum { get; }
         public PairSumUiRule PairSumUiRule { get; }
-        public GeometryGroup GeometryGroup { get; }
 
-        public Rule(PairSumUiRule factory, Drawing drawing, GeometryGroup geometryGroup, ushort sum) : base(factory, drawing)
+        private static readonly Typeface s_typeface = BuildTypeface();
+
+        private static Typeface BuildTypeface()
+        {
+            Typeface verdanaDefault = new Typeface("Verdana");
+            return new Typeface(verdanaDefault.FontFamily, verdanaDefault.Style, FontWeights.Bold, verdanaDefault.Stretch, null);
+        }
+
+        public Rule(PairSumUiRule factory, Drawing drawing, GeometryGroup geometryGroup, ushort sum) : base(factory, drawing, geometryGroup)
         {
             PairSumUiRule = factory;
-            GeometryGroup = geometryGroup;
             Sum = sum;
         }
 
         public override bool IsValid => true;
-        
-        public override bool TryAddSegment(CellLocation location, RuleParameters parameters)
+
+        protected override Geometry BuildEdgeDisplayGeometry(CellLocation location)
         {
-            if (!IsOnEdge(location)) return false;
-
-            Typeface verdanaDefault = new Typeface("Verdana");
-            Typeface typeface = new Typeface(verdanaDefault.FontFamily, verdanaDefault.Style, FontWeights.Bold, verdanaDefault.Stretch, null);
-
-            FormattedText txt = new FormattedText(ToRomanNumeral(parameters.SingleValue),
+            FormattedText txt = new FormattedText(ToRomanNumeral(Sum),
                 CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
-                typeface,
+                s_typeface,
                 Factory.CellSize / 3.0,
                 Brushes.Black,
                 1);
             Geometry textGeo = txt.BuildGeometry(Factory.TranslateToPoint(location));
-            textGeo.Transform = new TranslateTransform(-textGeo.Bounds.Width / 2, -textGeo.Bounds.Height / 2);
-            GeometryGroup.Children.Add(textGeo);
-            return true;
+            textGeo.Transform = new TranslateTransform(-textGeo.Bounds.Width / 2, -textGeo.Bounds.Height / 2 - Factory.CellSize / 10.0);
+            return textGeo;
+        }
+
+        public override bool TryAddSegment(CellLocation location, RuleParameters parameters)
+        {
+            if (parameters.SingleValue != Sum) return false;
+
+            return base.TryAddSegment(location, parameters);
         }
 
         public override bool TryContinue(CellLocation location) => false;

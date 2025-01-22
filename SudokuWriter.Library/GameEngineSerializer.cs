@@ -117,6 +117,7 @@ public class GameEngineSerializer
 
     public async Task SaveGameAsync(GameEngine game, Stream destination)
     {
+        await Task.Yield();
         JsonObject root = new()
         {
             ["rows"] = game.InitialState.Structure.Rows,

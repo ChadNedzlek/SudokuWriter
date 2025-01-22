@@ -10,16 +10,20 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Win32;
 using SudokuWriter.Gui.UiRules;
 using SudokuWriter.Library;
 using SudokuWriter.Library.Rules;
+using Velopack;
 
 namespace SudokuWriter.Gui;
 
 public partial class MainWindow
 {
     private readonly ILogger<MainWindow> _logger;
+    private readonly UpdateManager _updateManager;
+    private readonly IOptions<StartupOptions> _startupOptions;
 
     public enum CellStyle
     {
@@ -42,9 +46,11 @@ public partial class MainWindow
     private Task _solveTask;
     private readonly GameEngineSerializer _serializer;
 
-    public MainWindow(ILogger<MainWindow> logger)
+    public MainWindow(ILogger<MainWindow> logger, UpdateManager updateManager, IOptions<StartupOptions> startupOptions)
     {
         _logger = logger;
+        _updateManager = updateManager;
+        _startupOptions = startupOptions;
         InitializeComponent();
 
         List<TextBox> cells = GetDescendants<TextBox>(GameGrid);
@@ -62,6 +68,11 @@ public partial class MainWindow
             new KropkiDotUiRule(cellSize, "White Kropki", isDouble: false),
             new PairSumUiRule(cellSize, "Sums"),
         ];
+
+        if (_startupOptions.Value.LoadFileName is not null)
+        {
+            _ = LoadGameFromStream(File.OpenRead(_startupOptions.Value.LoadFileName));
+        }
     }
 
     public int VariationValue
@@ -423,36 +434,7 @@ public partial class MainWindow
             _queries.Clear();
             
             await using Stream stream = dlg.OpenFile();
-            GameEngine gameEngine = await _serializer.LoadGameAsync(stream);
-            _gameEngine = gameEngine;
-            for (int r = 0; r < gameEngine.InitialState.Structure.Rows; r++)
-            for (int c = 0; c < gameEngine.InitialState.Structure.Columns; c++)
-            {
-                switch (gameEngine.InitialState.Cells.GetSingle(r, c))
-                {
-                    case Cells.NoSingleValue:
-                        SetCell(r, c, "", CellStyle.Potential);
-                        break;
-                    case var x:
-                        SetCell(r, c, TextFromDigit(x), CellStyle.Fixed);
-                        break;
-                }
-            }
-
-            _ruleCollection.Rules.Clear();
-            var uiRules = _ruleFactories.SelectMany(f => f.DeserializeRules(gameEngine.Rules)).ToList();
-            _ruleCollection.Rules.AddRange(uiRules);
-            while (RuleDrawingGroup.Children.Count > 2)
-            {
-                RuleDrawingGroup.Children.RemoveAt(2);
-            }
-
-            foreach (var uiRule in uiRules)
-            {
-                RuleDrawingGroup.Children.Add(uiRule.Drawing);
-            }
-
-            await ValidateAndReportGameState();
+            await LoadGameFromStream(stream);
         }
         catch (Exception ex)
         {
@@ -460,12 +442,45 @@ public partial class MainWindow
         }
     }
 
+    private async Task LoadGameFromStream(Stream stream)
+    {
+        GameEngine gameEngine = await _serializer.LoadGameAsync(stream);
+        _gameEngine = gameEngine;
+        for (int r = 0; r < gameEngine.InitialState.Structure.Rows; r++)
+        for (int c = 0; c < gameEngine.InitialState.Structure.Columns; c++)
+        {
+            switch (gameEngine.InitialState.Cells.GetSingle(r, c))
+            {
+                case Cells.NoSingleValue:
+                    SetCell(r, c, "", CellStyle.Potential);
+                    break;
+                case var x:
+                    SetCell(r, c, TextFromDigit(x), CellStyle.Fixed);
+                    break;
+            }
+        }
+
+        _ruleCollection.Rules.Clear();
+        List<UiGameRule> uiRules = _ruleFactories.SelectMany(f => f.DeserializeRules(gameEngine.Rules)).ToList();
+        _ruleCollection.Rules.AddRange(uiRules);
+        while (RuleDrawingGroup.Children.Count > 2)
+        {
+            RuleDrawingGroup.Children.RemoveAt(2);
+        }
+
+        foreach (UiGameRule uiRule in uiRules)
+        {
+            RuleDrawingGroup.Children.Add(uiRule.Drawing);
+        }
+
+        await ValidateAndReportGameState();
+    }
+
     private bool _captured;
     private readonly GameRuleCollection _ruleCollection = new();
     private readonly List<UiGameRuleFactory> _ruleFactories;
     private UiGameRule _currentRule;
     private UiGameRuleFactory _currentFactory;
-
 
     private async void CellMouseDown(object sender, MouseButtonEventArgs e)
     {
@@ -477,7 +492,7 @@ public partial class MainWindow
             }
         
             Point point = e.GetPosition(RuleDisplayCanvas);
-            var location = _currentFactory.TranslateFromPoint(point);
+            CellLocation location = _currentFactory.TranslateFromPoint(point);
             bool modified = false;
 
             if (_ruleCollection.Rules.Where(r => r.Factory == _currentFactory).FirstOrDefault(r => r.TryAddSegment(location, BuildParameters())) is { } ruleModified)
@@ -488,7 +503,7 @@ public partial class MainWindow
             }
             else
             {
-                if (_currentFactory.TryStart(point, BuildParameters(), out var rule))
+                if (_currentFactory.TryStart(point, BuildParameters(), out UiGameRule rule))
                 {
                     RuleDrawingGroup.Children.Add(rule.Drawing);
                     _currentRule = rule;
@@ -557,7 +572,7 @@ public partial class MainWindow
         _currentFactory = _ruleFactories.FirstOrDefault(f => string.Equals(f.Name, ruleName, StringComparison.OrdinalIgnoreCase));
         if (_currentFactory?.VariationRange is { } variations)
         {
-            var (start, length) = variations.GetOffsetAndLength(int.MaxValue);
+            (int start, int length) = variations.GetOffsetAndLength(int.MaxValue);
             VariationAllowed = true;
             VariationMin = start;
             VariationMax = start + length;
@@ -594,7 +609,7 @@ public partial class MainWindow
 
     private void UpdateGameRules()
     {
-        var rules = ImmutableArray.CreateBuilder<IGameRule>();
+        ImmutableArray<IGameRule>.Builder rules = ImmutableArray.CreateBuilder<IGameRule>();
         rules.Add(BasicGameRule.Instance);
         rules.AddRange(_ruleFactories.SelectMany(f => f.SerializeRules(_ruleCollection.Rules.Where(r => r.IsValid))));
         if (EnableKnightsMove)
@@ -602,5 +617,61 @@ public partial class MainWindow
             rules.Add(new KnightsMoveRule());
         }
         _gameEngine = _gameEngine.WithRules(rules.ToImmutable());
+    }
+
+    private async void UpdateApp(object sender, RoutedEventArgs e)
+    {
+        var menuItem = e.OriginalSource as MenuItem;
+        try
+        {
+            if (menuItem != null) menuItem.IsEnabled = false;
+            GameState gameState = BuildGameStateFromUi();
+            string tempFile = Path.GetTempFileName();
+            await using Stream stream = File.Create(tempFile);
+            Task saveTask = _serializer.SaveGameAsync(_gameEngine.WithInitialState(gameState), stream);
+            UpdateInfo updateInfo = await _updateManager.CheckForUpdatesAsync();
+            if (updateInfo is null)
+            {
+                UpdateAvailable = false;
+                await saveTask;
+                File.Delete(tempFile);
+                return;
+            }
+
+            await _updateManager.DownloadUpdatesAsync(updateInfo);
+            _updateManager.ApplyUpdatesAndRestart(null, ["--load", tempFile]);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update app.");
+            MessageBox.Show(this, "Error while updating app.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            if (menuItem != null) menuItem.IsEnabled = true;
+        }
+    }
+
+    private async void CheckForUpdates(object sender, RoutedEventArgs e)
+    {
+        var menuItem = e.OriginalSource as MenuItem;
+        try
+        {
+            if (menuItem != null) menuItem.IsEnabled = false;
+            UpdateInfo updateInfo = await _updateManager.CheckForUpdatesAsync();
+            if (updateInfo is not null)
+            {
+                UpdateAvailable = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check update state.");
+            MessageBox.Show(this, "Error while checking update state.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            if (menuItem != null) menuItem.IsEnabled = true;
+        }
     }
 }

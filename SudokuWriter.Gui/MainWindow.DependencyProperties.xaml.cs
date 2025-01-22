@@ -1,4 +1,7 @@
 using System.Windows;
+using Microsoft.Extensions.Logging;
+using Velopack;
+using Velopack.Sources;
 
 namespace SudokuWriter.Gui;
 

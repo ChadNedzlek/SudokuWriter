@@ -31,7 +31,7 @@ public class EvenOddCellUiRule : UiGameRuleFactory
 
     private Geometry CreateGeometry(CellLocation location)
     {
-        var point = TranslateToPoint(location.Center);
+        Point point = TranslateToPoint(location.Center);
         return !IsEven
             ? new EllipseGeometry(new(point.X, point.Y), CellSize / 3, CellSize / 3)
             : new RectangleGeometry(new Rect(point.X - CellSize / 3, point.Y - CellSize / 3, 2 * CellSize / 3, 2 * CellSize / 3));
@@ -41,7 +41,7 @@ public class EvenOddCellUiRule : UiGameRuleFactory
     {
         if (rule is not ParityCellRule parity) return [];
 
-        var cells = IsEven ? parity.EvenCells : parity.OddCells;
+        ImmutableArray<GridCoord> cells = IsEven ? parity.EvenCells : parity.OddCells;
 
         if (cells.IsEmpty) return [];
 
@@ -49,7 +49,7 @@ public class EvenOddCellUiRule : UiGameRuleFactory
         var geometryGroup = new GeometryGroup();
         drawingGroup.Geometry = geometryGroup;
         Rule uiRule = new Rule(this, drawingGroup, geometryGroup);
-        foreach (var coord in cells)
+        foreach (GridCoord coord in cells)
         {
             uiRule.TryAddSegment(new CellLocation(coord.Row, coord.Col), default);
         }
@@ -62,8 +62,8 @@ public class EvenOddCellUiRule : UiGameRuleFactory
         // Odd serializes both even and odd, so just skip the evens
         if (IsEven) return [];
         
-        var even = ImmutableArray.CreateBuilder<GridCoord>();
-        var odd = ImmutableArray.CreateBuilder<GridCoord>();
+        ImmutableArray<GridCoord>.Builder even = ImmutableArray.CreateBuilder<GridCoord>();
+        ImmutableArray<GridCoord>.Builder odd = ImmutableArray.CreateBuilder<GridCoord>();
         foreach (Rule rule in rules.OfType<Rule>())
         {
             ref ImmutableArray<GridCoord>.Builder list = ref rule.IsEven ? ref even : ref odd;

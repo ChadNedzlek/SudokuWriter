@@ -43,7 +43,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
             Point endPoint = Path.Segments.LastOrDefault() is LineSegment seg ? seg.Point : Path.StartPoint;
             if (endPoint != p)
             {
-                var endLocation = Factory.TranslateFromPoint(endPoint);
+                CellLocation endLocation = Factory.TranslateFromPoint(endPoint);
                 if (Math.Abs(endLocation.Row - loc.Row) <= 1 && Math.Abs(endLocation.Col - loc.Col) <= 1)
                 {
                     Path.Segments.Add(new LineSegment(p, true));
@@ -93,13 +93,13 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
 
     protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> rules)
     {
-        var ruleBuilder = ImmutableArray.CreateBuilder<BranchingRuleLine>();
-        foreach (var rule in rules.OfType<Rule>().Where(r => r.IsValid))
+        ImmutableArray<BranchingRuleLine>.Builder ruleBuilder = ImmutableArray.CreateBuilder<BranchingRuleLine>();
+        foreach (Rule rule in rules.OfType<Rule>().Where(r => r.IsValid))
         {
-            var line = ImmutableArray.CreateBuilder<LineRuleSegment>();
-            var segment = ImmutableArray.CreateBuilder<GridCoord>();
+            ImmutableArray<LineRuleSegment>.Builder line = ImmutableArray.CreateBuilder<LineRuleSegment>();
+            ImmutableArray<GridCoord>.Builder segment = ImmutableArray.CreateBuilder<GridCoord>();
             segment.Add(TranslateFromPoint(rule.Path.StartPoint).ToCoord());
-            foreach (var pathSegment in rule.Path.Segments)
+            foreach (PathSegment pathSegment in rule.Path.Segments)
             {
                 if (pathSegment is not LineSegment lineSeg) continue;
                 
