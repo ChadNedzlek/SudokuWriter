@@ -657,6 +657,12 @@ public partial class MainWindow
         var menuItem = e.OriginalSource as MenuItem;
         try
         {
+            if (!_updateManager.IsInstalled)
+            {
+                MessageBox.Show(this, "Application is not installed, so cannot be automatically updated.", "Not Installed", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+
             if (menuItem != null) menuItem.IsEnabled = false;
             UpdateInfo updateInfo = await _updateManager.CheckForUpdatesAsync();
             if (updateInfo is not null)
