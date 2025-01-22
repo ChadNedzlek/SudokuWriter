@@ -16,8 +16,8 @@ public abstract class UiGameRule
     public Drawing Drawing { get; }
     public abstract bool IsValid { get; }
 
-    public bool TryAddSegment(Point point) => TryAddSegment(Factory.TranslateFromPoint(point));
-    public abstract bool TryAddSegment(CellLocation location);
+    public bool TryAddSegment(Point point, RuleParameters parameters) => TryAddSegment(Factory.TranslateFromPoint(point), parameters);
+    public abstract bool TryAddSegment(CellLocation location, RuleParameters parameters);
 
     public bool TryContinue(Point point) => TryContinue(Factory.TranslateFromPoint(point));
     public abstract bool TryContinue(CellLocation location);

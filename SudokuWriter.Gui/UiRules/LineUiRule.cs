@@ -17,7 +17,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
             Path = path;
         }
 
-        public override bool TryAddSegment(CellLocation location)
+        public override bool TryAddSegment(CellLocation location, RuleParameters _)
         {
             if (!Path.Segments.Any(p => p is LineSegment line && Factory.TranslateFromPoint(line.Point).Center == location) &&
                 Factory.TranslateFromPoint(Path.StartPoint).Center != location.Center)
@@ -68,7 +68,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
         LineBrush = lineBrush;
     }
 
-    protected override bool TryStart(CellLocation location, out UiGameRule createdRule)
+    protected override bool TryStart(CellLocation location, RuleParameters _, out UiGameRule createdRule)
     {
         var drawing = new GeometryDrawing
         {
@@ -139,14 +139,14 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
             {
                 if (rule is null)
                 {
-                    TryStart(location, out rule);
+                    TryStart(location, default, out rule);
                     restart = false;
                     continue;
                 }
 
                 if (restart)
                 {
-                    rule.TryAddSegment(location);
+                    rule.TryAddSegment(location, default);
                     restart = false;
                     continue;
                 }

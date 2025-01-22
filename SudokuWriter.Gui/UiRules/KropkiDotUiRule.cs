@@ -15,7 +15,7 @@ public class KropkiDotUiRule : UiGameRuleFactory
         IsDouble = isDouble;
     }
 
-    protected override bool TryStart(CellLocation location, out UiGameRule createdRule)
+    protected override bool TryStart(CellLocation location, RuleParameters parameters, out UiGameRule createdRule)
     {
         if (!IsOnEdge(location))
         {
@@ -36,7 +36,7 @@ public class KropkiDotUiRule : UiGameRuleFactory
         var grp = new GeometryGroup();
         drawing.Geometry = grp;
         createdRule = new Rule(this, drawing, grp);
-        createdRule.TryAddSegment(location);
+        createdRule.TryAddSegment(location, parameters);
         return true;
     }
 
@@ -60,12 +60,12 @@ public class KropkiDotUiRule : UiGameRuleFactory
             CellLocation location = new CellLocation(a.Row, a.Col, b.Row - a.Row, b.Col - a.Col);
             if (uiRule is null)
             {
-                TryStart(location, out var r);
+                TryStart(location, default, out var r);
                 uiRule = (Rule)r;
             }
             else
             {
-                uiRule.TryAddSegment(location);
+                uiRule.TryAddSegment(location, default);
             }
         }
 
@@ -122,7 +122,7 @@ public class KropkiDotUiRule : UiGameRuleFactory
 
         public override bool IsValid => true;
         
-        public override bool TryAddSegment(CellLocation location)
+        public override bool TryAddSegment(CellLocation location, RuleParameters _)
         {
             if (!IsOnEdge(location)) return false;
             

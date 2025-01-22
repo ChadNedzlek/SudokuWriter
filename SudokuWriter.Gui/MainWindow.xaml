@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:gui="clr-namespace:SudokuWriter.Gui"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
         Title="MainWindow" Height="500" Width="800">
     <Window.CommandBindings>
@@ -26,6 +27,17 @@
                 <Separator />
                 <MenuItem Header="E_xit" Command="Close" />
             </MenuItem>
+            <MenuItem Visibility="{Binding Converter={StaticResource VisConv}, RelativeSource={RelativeSource AncestorType=gui:MainWindow}, Path=UpdateAvailable}">
+                <MenuItem.Header>
+                    <Border BorderThickness="1" BorderBrush="ForestGreen" CornerRadius="3" Padding="2">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconCodicons Kind="ArrowCircleUp" Padding="0,0,3,0" Foreground="Green" />
+                            <TextBlock Foreground="Green" Text="Update" />
+                        </StackPanel>
+                    </Border>
+                </MenuItem.Header>
+            </MenuItem >
+            <MenuItem Header="Check for Updates"  Visibility="{Binding Converter={StaticResource VisConv}, ConverterParameter=True, RelativeSource={RelativeSource AncestorType=gui:MainWindow}, Path=UpdateAvailable}" />
         </Menu>
         <Border DockPanel.Dock="Right" Width="150" BorderBrush="LightGray" BorderThickness="1,0,0,0" Padding="10">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">

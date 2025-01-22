@@ -11,4 +11,17 @@
         <ProjectReference Include="..\SudokuWriter.Library\SudokuWriter.Library.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MahApps.Metro.IconPacks.Codicons" Version="5.1.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
+      <PackageReference Include="Velopack" Version="0.0.1053" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="MainWindow.DependencyProperties.xaml.cs">
+        <DependentUpon>MainWindow.xaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

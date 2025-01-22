@@ -9,6 +9,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using SudokuWriter.Gui.UiRules;
 using SudokuWriter.Library;
@@ -18,6 +19,8 @@ namespace SudokuWriter.Gui;
 
 public partial class MainWindow
 {
+    private readonly ILogger<MainWindow> _logger;
+
     public enum CellStyle
     {
         Fixed,
@@ -39,8 +42,9 @@ public partial class MainWindow
     private Task _solveTask;
     private readonly GameEngineSerializer _serializer;
 
-    public MainWindow()
+    public MainWindow(ILogger<MainWindow> logger)
     {
+        _logger = logger;
         InitializeComponent();
 
         List<TextBox> cells = GetDescendants<TextBox>(GameGrid);
@@ -56,28 +60,9 @@ public partial class MainWindow
             new EvenOddCellUiRule(cellSize, "Even Cell", isEven: true),
             new KropkiDotUiRule(cellSize, "Black Kropki", isDouble: true),
             new KropkiDotUiRule(cellSize, "White Kropki", isDouble: false),
+            new PairSumUiRule(cellSize, "Sums"),
         ];
     }
-
-    public static readonly DependencyProperty EnableKnightsMoveProperty = DependencyProperty.Register(
-        nameof(EnableKnightsMove),
-        typeof(bool),
-        typeof(MainWindow),
-        new PropertyMetadata(default(bool))
-    );
-
-    public bool EnableKnightsMove
-    {
-        get => (bool)GetValue(EnableKnightsMoveProperty);
-        set => SetValue(EnableKnightsMoveProperty, value);
-    }
-
-    public static readonly DependencyProperty VariationValueProperty = DependencyProperty.Register(
-        nameof(VariationValue),
-        typeof(int),
-        typeof(MainWindow),
-        new PropertyMetadata(10)
-    );
 
     public int VariationValue
     {
@@ -85,25 +70,11 @@ public partial class MainWindow
         set => SetValue(VariationValueProperty, value);
     }
 
-    public static readonly DependencyProperty VariationMinProperty = DependencyProperty.Register(
-        nameof(VariationMin),
-        typeof(int),
-        typeof(MainWindow),
-        new PropertyMetadata(0)
-    );
-
     public int VariationMin
     {
         get => (int)GetValue(VariationMinProperty);
         set => SetValue(VariationMinProperty, value);
     }
-
-    public static readonly DependencyProperty VariationMaxProperty = DependencyProperty.Register(
-        nameof(VariationMax),
-        typeof(int),
-        typeof(MainWindow),
-        new PropertyMetadata(45)
-    );
 
     public int VariationMax
     {
@@ -111,30 +82,28 @@ public partial class MainWindow
         set => SetValue(VariationMaxProperty, value);
     }
 
-    public static readonly DependencyProperty VariationAllowedProperty = DependencyProperty.Register(
-        nameof(VariationAllowed),
-        typeof(bool),
-        typeof(MainWindow),
-        new PropertyMetadata(default(bool))
-    );
-
     public bool VariationAllowed
     {
         get => (bool)GetValue(VariationAllowedProperty);
         set => SetValue(VariationAllowedProperty, value);
     }
 
-    public static readonly DependencyProperty HasVariationDigitsProperty = DependencyProperty.Register(
-        nameof(HasVariationDigits),
-        typeof(bool),
-        typeof(MainWindow),
-        new PropertyMetadata(default(bool))
-    );
-
     public bool HasVariationDigits
     {
-        get { return (bool)GetValue(HasVariationDigitsProperty); }
-        set { SetValue(HasVariationDigitsProperty, value); }
+        get => (bool)GetValue(HasVariationDigitsProperty);
+        set => SetValue(HasVariationDigitsProperty, value);
+    }
+
+    public bool EnableKnightsMove
+    {
+        get => (bool)GetValue(EnableKnightsMoveProperty);
+        set => SetValue(EnableKnightsMoveProperty, value);
+    }
+
+    public bool UpdateAvailable
+    {
+        get => (bool)GetValue(UpdateAvailableProperty);
+        set => SetValue(UpdateAvailableProperty, value);
     }
 
     private ImmutableList<TextBox> CellBoxes => _cellLayout.Value;
@@ -511,7 +480,7 @@ public partial class MainWindow
             var location = _currentFactory.TranslateFromPoint(point);
             bool modified = false;
 
-            if (_ruleCollection.Rules.Where(r => r.Factory == _currentFactory).FirstOrDefault(r => r.TryAddSegment(location)) is { } ruleModified)
+            if (_ruleCollection.Rules.Where(r => r.Factory == _currentFactory).FirstOrDefault(r => r.TryAddSegment(location, BuildParameters())) is { } ruleModified)
             {
                 _currentRule = ruleModified;
                 modified = true;
@@ -519,7 +488,7 @@ public partial class MainWindow
             }
             else
             {
-                if (_currentFactory.TryStart(point, out var rule))
+                if (_currentFactory.TryStart(point, BuildParameters(), out var rule))
                 {
                     RuleDrawingGroup.Children.Add(rule.Drawing);
                     _currentRule = rule;
@@ -541,6 +510,11 @@ public partial class MainWindow
         {
             MessageBox.Show(this, $"Error while updating game state: \n\nDetails: {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private RuleParameters BuildParameters()
+    {
+        return new RuleParameters(0, (ushort)VariationValue);
     }
 
     private void CellMouseUp(object sender, MouseButtonEventArgs e)

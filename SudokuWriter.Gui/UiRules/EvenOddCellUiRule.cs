@@ -15,7 +15,7 @@ public class EvenOddCellUiRule : UiGameRuleFactory
         IsEven = isEven;
     }
 
-    protected override bool TryStart(CellLocation location, out UiGameRule createdRule)
+    protected override bool TryStart(CellLocation location, RuleParameters _,  out UiGameRule createdRule)
     {
         var drawing = new GeometryDrawing
         {
@@ -51,7 +51,7 @@ public class EvenOddCellUiRule : UiGameRuleFactory
         Rule uiRule = new Rule(this, drawingGroup, geometryGroup);
         foreach (var coord in cells)
         {
-            uiRule.TryAddSegment(new CellLocation(coord.Row, coord.Col));
+            uiRule.TryAddSegment(new CellLocation(coord.Row, coord.Col), default);
         }
 
         return [uiRule];
@@ -96,7 +96,7 @@ public class EvenOddCellUiRule : UiGameRuleFactory
 
         public override bool IsValid => true;
         
-        public override bool TryAddSegment(CellLocation location)
+        public override bool TryAddSegment(CellLocation location, RuleParameters _)
         {
             GeometryGroup.Children.Add(_factory.CreateGeometry(location));
             return true;

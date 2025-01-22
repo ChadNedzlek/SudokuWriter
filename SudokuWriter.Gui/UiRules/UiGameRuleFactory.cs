@@ -3,6 +3,8 @@ using SudokuWriter.Library;
 
 namespace SudokuWriter.Gui.UiRules;
 
+public readonly record struct RuleParameters(ushort MultipleValues, ushort SingleValue);
+
 public abstract class UiGameRuleFactory
 {
     public string Name { get; }
@@ -54,8 +56,8 @@ public abstract class UiGameRuleFactory
         );
     }
     
-    public bool TryStart(Point location, out UiGameRule createdRule) => TryStart(TranslateFromPoint(location), out createdRule);
-    protected abstract bool TryStart(CellLocation location, out UiGameRule createdRule);
+    public bool TryStart(Point location, RuleParameters parameters, out UiGameRule createdRule) => TryStart(TranslateFromPoint(location), parameters, out createdRule);
+    protected abstract bool TryStart(CellLocation location, RuleParameters parameters,out UiGameRule createdRule);
 
     public IEnumerable<IGameRule> SerializeRules(IEnumerable<UiGameRule> rules)
     {
