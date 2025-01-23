@@ -174,11 +174,10 @@ public static class ImmutableArray2
         {
             ThrowIfDisposed();
             MultiRef<T> refs = new MultiRef<T>(_array.Span);
-            for (int r = 0; r < Rows; r++)
+            checked
             {
-                refs.Include(CalcIndex(r, column));
+                refs.IncludeStrides((ushort)CalcIndex(0, column), 1, (ushort)Columns, (ushort)Rows);
             }
-
             return refs;
         }
 
@@ -186,28 +185,23 @@ public static class ImmutableArray2
         {
             ThrowIfDisposed();
             MultiRef<T> refs = new MultiRef<T>(_array.Span);
-            for (int c = 0; c < Columns; c++)
+            checked
             {
-                refs.Include(CalcIndex(row, c));
+                refs.IncludeStride((ushort)CalcIndex(row, 0), (ushort)Rows);
             }
-
             return refs;
         }
 
         public MultiRef<T> GetRectangle(Range rows, Range columns)
         {
             ThrowIfDisposed();
-            MultiRef<T> refs = new MultiRef<T>(_array.Span);
             var (startRow, numRows) = rows.GetOffsetAndLength(Rows);
             var (startCol, numCols) = columns.GetOffsetAndLength(Columns);
-            var endRow = startRow + numRows;
-            var endCol = startCol + numCols;
-            for(int r=startRow; r<endRow;r++)
-            for (int c = startCol; c < endCol; c++)
+            MultiRef<T> refs = new MultiRef<T>(_array.Span);
+            checked
             {
-                refs.Include(CalcIndex(r, c));
+                refs.IncludeStrides((ushort)CalcIndex(startRow, startCol), (ushort)numCols, (ushort)Columns, (ushort)numRows);
             }
-
             return refs;
         }
     }

@@ -35,7 +35,8 @@ public partial class App : Application
         collection.Configure<StartupOptions>(o => o.LoadFileName = loadFileOnStartup);
         collection.AddSingleton(VelopackApp.Build().SetArgs(e.Args));
         _serviceProvider = collection.BuildServiceProvider();
-        _serviceProvider.GetRequiredService<VelopackApp>().Run(_serviceProvider.GetRequiredService<ILogger<VelopackApp>>());
+        var velopackApp = _serviceProvider.GetRequiredService<VelopackApp>();
+        velopackApp.Run(_serviceProvider.GetRequiredService<ILogger<VelopackApp>>());
         var win = ActivatorUtilities.CreateInstance<MainWindow>(_serviceProvider);
         win.Show();
         MainWindow = win;

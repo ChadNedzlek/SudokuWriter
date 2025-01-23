@@ -1,4 +1,4 @@
-using System.Numerics;
+using System;
 
 namespace SudokuWriter.Library;
 
@@ -29,7 +29,8 @@ public readonly struct CellsBuilder
 
     public MultiRef<ushort> GetEmptyReferences() => _cells.GetEmptyReference();
     public MultiRef<ushort> GetRow(int row) => _cells.GetRowReference(row);
-    public MultiRef<ushort> GetColumn(int columns) => _cells.GetRowReference(columns);
+    public MultiRef<ushort> GetColumn(int columns) => _cells.GetColumnReference(columns);
+    public MultiRef<ushort> GetRange(Range rows, Range columns) => _cells.GetRectangle(rows, columns);
 
     public Cells MoveToImmutable()
     {
