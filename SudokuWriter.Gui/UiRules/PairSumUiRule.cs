@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Globalization;
+using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using SudokuWriter.Library;
@@ -15,22 +16,31 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
     {
     }
 
-    private static string ToRomanNumeral(uint value) =>
-        value switch
+    private static string ToRomanNumeral(uint value)
+    {
+        if (value == 0) return "0";
+        StringBuilder builder = new StringBuilder(5, 20);
+        while (value != 0)
         {
-            >= 1000 => "M" + ToRomanNumeral(value - 1000),
-            >= 900 => "C" + ToRomanNumeral(value + 100),
-            >= 500 => "D" + ToRomanNumeral(value - 500),
-            >= 100 => "C" + ToRomanNumeral(value - 100),
-            >= 90 => "X" + ToRomanNumeral(value + 10),
-            >= 50 => "L" + ToRomanNumeral(value - 50),
-            >= 10 => "X" + ToRomanNumeral(value - 10),
-            >= 9 => "I" + ToRomanNumeral(value + 1),
-            >= 5 => "V" + ToRomanNumeral(value - 5),
-            4 => "IV",
-            0 => "",
-            _ => "I" + ToRomanNumeral(value - 1),
-        };
+            (string digit, value) = ((string, uint))(value switch
+            {
+                >= 1000 => ("M", value - 1000),
+                >= 900 => ("C", value + 100),
+                >= 500 => ("D", value - 500),
+                >= 100 => ("C", value - 100),
+                >= 90 => ("X", value + 10),
+                >= 50 => ("L", value - 50),
+                >= 10 => ("X", value - 10),
+                >= 9 => ("I", value + 1),
+                >= 5 => ("V", value - 5),
+                4 => ("IV", 0),
+                _ => ("I", value - 1),
+            });
+            builder.Append(digit);
+        }
+
+        return builder.ToString();
+    }
 
     protected override RuleBase CreateRule(RuleParameters parameters, GeometryDrawing drawing, GeometryGroup grp)
     {

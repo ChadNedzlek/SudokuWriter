@@ -40,10 +40,10 @@ public class KropkiDotRuleTest
         cells[1, 0] = 13;
         cells[1, 1] = 13;
         var state = new GameState(cells.MoveToImmutable(), structure);
-        GameState reduced = new KropkiDotRule([(0,0)], [(2,0)]).TryReduce(state).ShouldNotBeNull();
-        reduced.Cells.GetMask(0,0).ShouldBe(6);
-        reduced.Cells.GetMask(0,1).ShouldBe(6);
-        reduced.Cells.GetMask(1,0).ShouldBe(12);
-        reduced.Cells.GetMask(1,1).ShouldBe(12);
+        GameState reduced = new KropkiDotRule(doubles: [(0,0)], sequential: [(2,0)]).TryReduce(state).ShouldNotBeNull();
+        Cells.GetDigitDisplay(reduced.Cells.GetMask(0,0)).ShouldBe("124");
+        Cells.GetDigitDisplay(reduced.Cells.GetMask(0,1)).ShouldBe("124");
+        Cells.GetDigitDisplay(reduced.Cells.GetMask(1,0)).ShouldBe("34");
+        Cells.GetDigitDisplay(reduced.Cells.GetMask(1,1)).ShouldBe("34");
     }
 }

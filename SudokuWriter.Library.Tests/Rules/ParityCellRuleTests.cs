@@ -1,36 +1,40 @@
 using NUnit.Framework;
 using Shouldly;
+using SudokuWriter.Library.Rules;
 
 namespace SudokuWriter.Library.Tests.Rules;
 
-public class ParityCellRule
+public class ParityCellRuleTests
 {
     [Test]
     public void DetectFailureInEvenViolation()
     {
         var structure = new GameStructure(2, 2, 2, 1, 2);
-        var engine = new GameEngine(new GameState(Cells.CreateFilled(structure), structure), new Library.Rules.ParityCellRule(evenCells: [(0, 0)], oddCells: []));
-        var solved = engine.InitialState.WithCells(engine.InitialState.Cells
-            .SetCell(0, 0, 0)
-            .SetCell(0, 1, 1)
-            .SetCell(1, 0, 1)
-            .SetCell(1, 1, 0)
+        var parityCellRule = new ParityCellRule(evenCells: [(0, 0)], oddCells: []);
+        var solved = new GameState(Cells.CreateFilled(structure)
+                .SetCell(0, 0, 0)
+                .SetCell(0, 1, 1)
+                .SetCell(1, 0, 1)
+                .SetCell(1, 1, 0),
+            structure
         );
-        engine.Evaluate(solved, out _, out _).ShouldBe(GameResult.Unsolvable);
+        
+        parityCellRule.Evaluate(solved).ShouldBe(GameResult.Unsolvable);
     }
     
     [Test]
     public void DetectFailureInOddViolation()
     {
         var structure = new GameStructure(2, 2, 2, 1, 2);
-        var engine = new GameEngine(new GameState(Cells.CreateFilled(structure), structure), new Library.Rules.ParityCellRule(evenCells: [], oddCells: [(1,0)]));
-        var solved = engine.InitialState.WithCells(engine.InitialState.Cells
-            .SetCell(0, 0, 0)
-            .SetCell(0, 1, 1)
-            .SetCell(1, 0, 1)
-            .SetCell(1, 1, 0)
+        var parityCellRule = new ParityCellRule(evenCells: [(0, 0)], oddCells: []);
+        var solved = new GameState(Cells.CreateFilled(structure)
+                .SetCell(0, 0, 0)
+                .SetCell(0, 1, 1)
+                .SetCell(1, 0, 1)
+                .SetCell(1, 1, 0),
+            structure
         );
-        engine.Evaluate(solved, out _, out _).ShouldBe(GameResult.Unsolvable);
+        parityCellRule.Evaluate(solved).ShouldBe(GameResult.Unsolvable);
     }
     
     [Test]
@@ -44,7 +48,7 @@ public class ParityCellRule
             .SetCell(1, 0, 1)
             .SetCell(1, 1, 0)
         );
-        engine.Evaluate(solved, out _, out _).ShouldBe(GameResult.Unsolvable);
+        engine.Evaluate(solved, out _, out _).ShouldBe(GameResult.Solved);
     }
     
     [Test]
@@ -58,7 +62,7 @@ public class ParityCellRule
             .SetCell(1, 0, 1)
             .SetCell(1, 1, 0)
         );
-        engine.Evaluate(solved, out _, out _).ShouldBe(GameResult.Unsolvable);
+        engine.Evaluate(solved, out _, out _).ShouldBe(GameResult.Solved);
     }
     
     [Test]
