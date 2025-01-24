@@ -43,4 +43,11 @@ public readonly struct CellsBuilder
     }
 
     public int GetSingle(int row, int column) => Cells.GetSingle(_cells[row, column]);
+
+    public static CellsBuilder CreateFilled(GameStructure gameStructure)
+    {
+        ImmutableArray2.Builder<ushort> cells = ImmutableArray2.CreateBuilder<ushort>(gameStructure.Rows, gameStructure.Columns);
+        cells.Fill(unchecked((ushort)((1 << gameStructure.Digits) - 1)));
+        return new CellsBuilder(cells);
+    }
 }

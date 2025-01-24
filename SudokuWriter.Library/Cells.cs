@@ -120,7 +120,7 @@ public readonly struct Cells
 
     public static int GetSingle(ushort mask)
     {
-        return IsSingle(mask) ?  BitOperations.Log2(mask) : NoSingleValue;
+        return IsSingle(mask) ? BitOperations.Log2(mask) : NoSingleValue;
     }
 
     public static Cells FromMasks(ushort[,] masks)

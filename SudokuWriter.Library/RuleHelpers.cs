@@ -89,4 +89,14 @@ public static class RuleHelpers
     public static bool TryMask<T>(ref T value, T mask)
         where T : unmanaged, IEqualityOperators<T, T, bool>, IBitwiseOperators<T, T, T>
         => TryUpdate(ref value, value & mask);
+
+    public static ushort MinValue(ushort value)
+    {
+        return (ushort)(1 << ushort.TrailingZeroCount(value));
+    }
+    
+    public static ushort MaxValue(ushort value)
+    {
+        return (ushort)(1 << (16 - ushort.LeadingZeroCount(value) - 1));
+    }
 }
