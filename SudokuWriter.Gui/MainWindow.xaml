@@ -137,8 +137,29 @@
                         <Setter Property="TextWrapping" Value="Wrap" />
                         <Setter Property="Background" Value="Transparent" />
                     </Style>
+                    <!-- ReSharper disable once Xaml.RedundantResource -->
+                    <Style TargetType="TextBox" x:Key="Ambiguous" BasedOn="{StaticResource {x:Type TextBox}}">
+                        <Setter Property="Foreground" Value="DarkRed" />
+                        <Setter Property="FontSize" Value="6" />
+                    </Style>
+                    <Style TargetType="TextBox" x:Key="Fixed" BasedOn="{StaticResource {x:Type TextBox}}" />
+                    <Style TargetType="TextBox" x:Key="Solved" BasedOn="{StaticResource {x:Type TextBox}}">
+                        <Setter Property="Foreground" Value="Blue" />
+                    </Style>
+                    <Style TargetType="TextBox" x:Key="Potential" BasedOn="{StaticResource {x:Type TextBox}}">
+                        <Setter Property="Foreground" Value="BlueViolet" />
+                        <Setter Property="FontSize" Value="9" />
+                    </Style>
                     <Style TargetType="Border">
                         <Setter Property="BorderThickness" Value="0" />
+                    </Style>
+                    <Style TargetType="Border" x:Key="SolvedGame" BasedOn="{StaticResource {x:Type Border}}">
+                        <Setter Property="BorderBrush" Value="Green" />
+                    </Style>
+                    <Style TargetType="Border" x:Key="AmbiguousGame" BasedOn="{StaticResource {x:Type Border}}">
+                    </Style>
+                    <Style TargetType="Border" x:Key="UnsolvableGame" BasedOn="{StaticResource {x:Type Border}}">
+                        <Setter Property="BorderBrush" Value="Red" />
                     </Style>
                 </Viewbox.Resources>
                 <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="180" Width="180"
