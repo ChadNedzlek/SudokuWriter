@@ -60,7 +60,7 @@ public class ParityCellRule : IGameRule
         return new JsonObject
         {
             ["odd"] = RuleHelpers.WriteGridCoords(OddCells),
-            ["event"] = RuleHelpers.WriteGridCoords(EvenCells),
+            ["even"] = RuleHelpers.WriteGridCoords(EvenCells),
         };
     }
 

@@ -17,16 +17,21 @@ public class EvenOddCellUiRule : UiGameRuleFactory
 
     protected override bool TryStart(CellLocation location, RuleParameters _,  out UiGameRule createdRule)
     {
-        var drawing = new GeometryDrawing
-        {
-            Brush = Brushes.LightGray,
-        };
-
-        var grp = new GeometryGroup();
-        drawing.Geometry = grp;
+        CreateBaseDrawing(out GeometryDrawing drawing, out GeometryGroup grp);
         grp.Children.Add(CreateGeometry(location));
         createdRule = new Rule(this, drawing, grp);
         return true;
+    }
+
+    private static void CreateBaseDrawing(out GeometryDrawing drawing, out GeometryGroup grp)
+    {
+        drawing = new GeometryDrawing
+        {
+            Brush = new SolidColorBrush(Color.FromArgb(40, 0, 0, 0)),
+        };
+
+        grp = new GeometryGroup();
+        drawing.Geometry = grp;
     }
 
     private Geometry CreateGeometry(CellLocation location)
@@ -45,9 +50,7 @@ public class EvenOddCellUiRule : UiGameRuleFactory
 
         if (cells.IsEmpty) return [];
 
-        var drawingGroup = new GeometryDrawing();
-        var geometryGroup = new GeometryGroup();
-        drawingGroup.Geometry = geometryGroup;
+        CreateBaseDrawing(out GeometryDrawing drawingGroup, out GeometryGroup geometryGroup);
         Rule uiRule = new Rule(this, drawingGroup, geometryGroup);
         foreach (GridCoord coord in cells)
         {

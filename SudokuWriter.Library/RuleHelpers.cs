@@ -32,7 +32,7 @@ public static class RuleHelpers
                     b.Add(ValuesOrThrow<ushort, ushort>(a));
                     break;
                 case var row:
-                    ushort col = array[i++].GetValue<ushort>();
+                    ushort col = array[++i].GetValue<ushort>();
                     b.Add(new GridCoord(row.GetValue<ushort>(), col));
                     break;
             }
