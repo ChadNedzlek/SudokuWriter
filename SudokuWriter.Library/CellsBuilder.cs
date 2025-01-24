@@ -31,6 +31,7 @@ public readonly struct CellsBuilder
     public MultiRef<ushort> GetRow(int row) => _cells.GetRowReference(row);
     public MultiRef<ushort> GetColumn(int columns) => _cells.GetColumnReference(columns);
     public MultiRef<ushort> GetRange(Range rows, Range columns) => _cells.GetRectangle(rows, columns);
+    public MultiRef<ushort> Unbox(MultiRefBox<ushort> box) => _cells.Unbox(box);
 
     public Cells MoveToImmutable()
     {

@@ -1,17 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace SudokuWriter.Library;
 
 public readonly ref struct MultiRef<T>
 {
     private readonly Span<T> _ref;
-    private readonly List<ulong> _offsets = new(10);
+    private readonly List<ulong> _offsets;
 
     public MultiRef(Span<T> validSpace)
     {
+        _offsets = new List<ulong>(10);
         _ref = validSpace;
+    }
+
+    internal MultiRef(Span<T> validSpace, List<ulong> offsets)
+    {
+        _ref = validSpace;
+        _offsets = offsets;
     }
 
     public void Include(ref T target)
@@ -93,7 +99,23 @@ public readonly ref struct MultiRef<T>
 
         return seed;
     }
+
+    public MultiRefBox<T> Box() => new(_offsets);
 }
 
 public delegate void RefAction<T>(scoped ref T value);
 public delegate TOut RefAggregator<TIn, TOut>(TOut input, scoped ref TIn value);
+
+public readonly struct MutexGroup
+{
+    public MutexGroup(MultiRefBox<ushort> cells)
+    {
+        Cells = cells;
+    }
+
+    public MultiRefBox<ushort> Cells { get; }
+}
+
+public static class MutualExclusion
+{
+}

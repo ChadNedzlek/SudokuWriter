@@ -204,5 +204,7 @@ public static class ImmutableArray2
             }
             return refs;
         }
+
+        public MultiRef<T> Unbox(MultiRefBox<T> box) => box.Unbox(_array.Span);
     }
 }
