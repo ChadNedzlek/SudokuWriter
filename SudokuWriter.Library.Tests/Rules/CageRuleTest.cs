@@ -63,6 +63,6 @@ public class CageRuleTest
         GameStructure s = new(1, 2, 9, 1, 2);
         var cells = CellsBuilder.CreateFilled(s);
         cells[0, 1] = Cells.GetDigitMask(1);
-        new CageRule(11, [(0, 0), (0, 1)]).Evaluate(new GameState(cells.MoveToImmutable(), s)).ShouldBe(GameResult.Unsolvable);
+        new CageRule(12, [(0, 0), (0, 1)]).Evaluate(new GameState(cells.MoveToImmutable(), s)).ShouldBe(GameResult.Unsolvable);
     }
 }

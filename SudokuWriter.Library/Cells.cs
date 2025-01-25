@@ -170,4 +170,8 @@ public readonly struct Cells
             return (ushort)x;
         }
     }
+
+    public static ushort GetMaxDigitMask(ushort mask) => (ushort)(1 << (15 - ushort.LeadingZeroCount(mask)));
+
+    public static ushort GetMinDigitMask(ushort mask) => (ushort)~(~mask | (mask - 1));
 }

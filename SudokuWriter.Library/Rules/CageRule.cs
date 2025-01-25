@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Text.Json.Nodes;
@@ -23,10 +27,11 @@ public class CageRule : IGameRule
     {
         ushort simpleSum = 0;
         bool allSet = true;
-        ushort present = 0;
+        List<ushort> highCellValues = new (Cage.Length);
         foreach (GridCoord cell in Cage)
         {
             ushort value = state.Cells[cell];
+            highCellValues.Add(value);
             var v = Cells.GetSingle(value);
             if (v != Cells.NoSingleValue)
             {
@@ -36,8 +41,6 @@ public class CageRule : IGameRule
             {
                 allSet = false;
             }
-
-            present |= value;
         }
 
         if (allSet)
@@ -45,32 +48,40 @@ public class CageRule : IGameRule
             return simpleSum == Sum ? GameResult.Solved : GameResult.Unsolvable;
         }
 
-        ushort cBits = ushort.PopCount(present);
-        int usedBits = 0;
-        int minSum = 0;
-        int maxSum = 0;
-        for (int i = 0; i < state.Digits; i++)
-        {
-            ushort mask = Cells.GetDigitMask(i);
-            if ((present & mask) != 0)
-            {
-                int single = Cells.GetSingle(mask);
-                if (usedBits < Cage.Length)
-                {
-                    minSum += single + 1;
-                }
-                if (usedBits < cBits - Cage.Length)
-                {
-                    maxSum += single + 1;
-                }
+        List<ushort> lowCellValues = highCellValues.ToList();
 
-                usedBits++;
-                if (minSum > Sum) return GameResult.Unsolvable;
+
+        highCellValues.Sort(HighestHighBitComparison);
+        lowCellValues.Sort(LowestLowBitComparison);
+        Span<ushort> highSpan = CollectionsMarshal.AsSpan(highCellValues);
+        Span<ushort> lowSpan = CollectionsMarshal.AsSpan(lowCellValues);
+        
+        ushort minValue = 0;
+        ushort maxValue = 0;
+
+        for (int i = 0; i < Cage.Length; i++)
+        {
+            ushort max = Cells.GetMaxDigitMask(highSpan[i]);
+            ushort min = Cells.GetMinDigitMask(lowSpan[i]);
+            minValue += (ushort)(Cells.GetSingle(min) + 1);
+            maxValue += (ushort)(Cells.GetSingle(max) + 1);
+            for (int j = i + 1; j < Cage.Length; j++)
+            {
+                highSpan[j] &= (ushort)~max;
+                lowSpan[j] &= (ushort)~min;
             }
+            highCellValues.Sort(HighestHighBitComparison);
+            lowCellValues.Sort(LowestLowBitComparison);
         }
 
-        if (maxSum < Sum) return GameResult.Unsolvable;
-        return minSum == maxSum ? GameResult.Solved : GameResult.Unknown;
+        return minValue > Sum || maxValue < Sum
+            ? GameResult.Unsolvable
+            : minValue == maxValue
+                ? GameResult.Solved
+                : GameResult.Unknown;
+        
+        int HighestHighBitComparison(ushort a, ushort b) => b.CompareTo(a);
+        int LowestLowBitComparison(ushort a, ushort b) => ushort.TrailingZeroCount(a).CompareTo(ushort.TrailingZeroCount(b));
     }
 
     public GameState? TryReduce(GameState state)
@@ -92,7 +103,7 @@ public class CageRule : IGameRule
         Vec needMax = needMin;
         bool reduced = false;
         Vec minDigit = Vec.One;
-        Vec maxDigit = Vector256.Create((ushort)(state.Digits));
+        Vec maxDigit = Vector256.Create(state.Digits);
         Vec minMask = Vec.One;
         Vec maxMask = Vector256.ShiftLeft(Vec.One, state.Digits - 1);
         for (int i = 0; i < state.Digits; i++)
