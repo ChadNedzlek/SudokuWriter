@@ -77,9 +77,10 @@
                     <RadioButton Content="Sums" GroupName="RuleType" />
                     <Grid>
                         <Separator />
-                        <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Global Rules</TextBlock>
+                        <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Other Rules</TextBlock>
                     </Grid>
                     <RadioButton Content="Quadruple" GroupName="RuleType" IsEnabled="False" />
+                    <RadioButton Content="Cage" GroupName="RuleType" />
                     <Grid>
                         <Separator />
                         <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Global Rules</TextBlock>

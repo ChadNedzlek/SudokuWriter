@@ -81,10 +81,10 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
         return [uiRule];
     }
 
-    protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> rules)
+    protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> uiRules)
     {
         List<PairSumRule> gameRules = [];
-        foreach (Rule dotRule in rules.OfType<Rule>())
+        foreach (Rule dotRule in uiRules.OfType<Rule>())
         {
             ImmutableArray<GridEdge>.Builder edges = ImmutableArray.CreateBuilder<GridEdge>();
             foreach (Geometry geometry in dotRule.GeometryGroup.Children)

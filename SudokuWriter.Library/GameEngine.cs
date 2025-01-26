@@ -139,6 +139,21 @@ public class GameEngine
                     reduced = true;
                     break;
                 }
+
+            if (!reduced)
+            {
+                var cellBuilder = simplified.Cells.ToBuilder();
+                foreach (IGameRule rule in Rules)
+                foreach (MultiRefBox<ushort> mutexGroup in rule.GetMutualExclusionGroups(simplified))
+                {
+                    reduced |= MutualExclusion.ApplyMutualExclusionRules(cellBuilder.Unbox(mutexGroup));
+                }
+
+                if (reduced)
+                {
+                    simplified = simplified.WithCells(cellBuilder.MoveToImmutable());
+                }
+            }
         }
 
         return simplified;

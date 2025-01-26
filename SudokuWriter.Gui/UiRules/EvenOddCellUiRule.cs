@@ -60,14 +60,14 @@ public class EvenOddCellUiRule : UiGameRuleFactory
         return [uiRule];
     }
 
-    protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> rules)
+    protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> uiRules)
     {
         // Odd serializes both even and odd, so just skip the evens
         if (IsEven) return [];
         
         ImmutableArray<GridCoord>.Builder even = ImmutableArray.CreateBuilder<GridCoord>();
         ImmutableArray<GridCoord>.Builder odd = ImmutableArray.CreateBuilder<GridCoord>();
-        foreach (Rule rule in rules.OfType<Rule>())
+        foreach (Rule rule in uiRules.OfType<Rule>())
         {
             ref ImmutableArray<GridCoord>.Builder list = ref rule.IsEven ? ref even : ref odd;
             foreach (Geometry geo in rule.GeometryGroup.Children)

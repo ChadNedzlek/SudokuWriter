@@ -91,10 +91,10 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
 
     protected abstract Rule CreateRule(GeometryDrawing drawing, PathFigure figure);
 
-    protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> rules)
+    protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> uiRules)
     {
         ImmutableArray<BranchingRuleLine>.Builder ruleBuilder = ImmutableArray.CreateBuilder<BranchingRuleLine>();
-        foreach (Rule rule in rules.OfType<Rule>().Where(r => r.IsValid))
+        foreach (Rule rule in uiRules.OfType<Rule>().Where(r => r.IsValid))
         {
             ImmutableArray<LineRuleSegment>.Builder line = ImmutableArray.CreateBuilder<LineRuleSegment>();
             ImmutableArray<GridCoord>.Builder segment = ImmutableArray.CreateBuilder<GridCoord>();

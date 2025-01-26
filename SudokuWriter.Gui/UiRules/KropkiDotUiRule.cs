@@ -14,14 +14,14 @@ public class KropkiDotUiRule : EdgeUiRuleFactoryBase<KropkiDotRule>
         IsDouble = isDouble;
     }
 
-    protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> rules)
+    protected override IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> uiRules)
     {
         // Both dots are handled by the same factory, so skip it for one of them
         if (IsDouble) return [];
 
         ImmutableArray<GridEdge>.Builder doubles = ImmutableArray.CreateBuilder<GridEdge>();
         ImmutableArray<GridEdge>.Builder sequence = ImmutableArray.CreateBuilder<GridEdge>();
-        foreach (Rule dotRule in rules.OfType<Rule>())
+        foreach (Rule dotRule in uiRules.OfType<Rule>())
         {
             ref ImmutableArray<GridEdge>.Builder builder = ref dotRule.KropkiDotUiRule.IsDouble ? ref doubles : ref sequence; 
             foreach (EllipseGeometry geometry in dotRule.GeometryGroup.Children.OfType<EllipseGeometry>())

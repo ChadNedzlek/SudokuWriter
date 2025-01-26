@@ -79,5 +79,5 @@ public abstract class UiGameRuleFactory
 
     protected abstract IEnumerable<UiGameRule> DeserializeCore(IGameRule rule);
 
-    protected abstract IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> rules);
+    protected abstract IEnumerable<IGameRule> SerializeCore(IEnumerable<UiGameRule> uiRules);
 }
