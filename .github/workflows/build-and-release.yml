@@ -76,7 +76,7 @@ jobs:
       
       # Execute all unit tests in the solution
     - name: Build
-      run: dotnet build -c Release --no-restore -p:IsLocal=false -p:Version=${{ steps.version.outputs.SemVer }} -p:PackageVersion=${{ steps.version.outputs.SemVer }}
+      run: dotnet build -c Release --no-restore -p:IsLocal=false -p:Version=${{ steps.version.outputs.AssemblySemVer }} -p:PackageVersion=${{ steps.version.outputs.SemVer }}
 
     # Execute all unit tests in the solution
     - name: Unit Test
@@ -84,7 +84,7 @@ jobs:
       
       # Execute all unit tests in the solution
     - name: Build
-      run: dotnet publish -c Release --no-build -r win-x64 -o ./.out/publish
+      run: dotnet publish ./SudokuWriter.Gui/ -c Release --no-build -r win-x64 -o ./.out/publish
 
     # Decode the base 64 encoded pfx and save the Signing_Certificate
     # - name: Decode the pfx
