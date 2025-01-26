@@ -186,8 +186,8 @@ public partial class MainWindow
                     SetCell(r, c, TextFromDigit(solved.Solution.Cells.GetSingle(r, c)), CellStyle.Solved);
                     break;
                 case MultipleSolutionsQueryResult multi:
-                    ushort mask = (ushort)(multi.Solution1.Cells.GetMask(r, c) |
-                        multi.Solution2.Cells.GetMask(r, c));
+                    ushort mask = (ushort)(multi.Solution1.Cells[r, c] |
+                        multi.Solution2.Cells[r, c]);
                     SetCell(r, c, TextFromDigitMask(mask), BitOperations.IsPow2(mask) ? CellStyle.Solved : CellStyle.Ambiguous);
                     break;
             }

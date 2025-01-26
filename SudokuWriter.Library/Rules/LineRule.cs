@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text.Json.Nodes;
@@ -21,6 +22,7 @@ public abstract class LineRule<T> : IGameRule, ILineRule where T:ILineRule<T>
 
     public abstract GameResult Evaluate(GameState state);
     public abstract GameState? TryReduce(GameState state);
+    public abstract IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state);
 
     public abstract void SaveToJsonObject(JsonObject obj);
 

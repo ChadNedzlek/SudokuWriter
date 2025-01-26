@@ -1,10 +1,10 @@
-using System.Collections.Immutable;
-using SudokuWriter.Library.CellAdjacencies;
+using System.Collections.Generic;
 
 namespace SudokuWriter.Library;
 
 public interface IGameStateReducer
 {
     GameState? TryReduce(GameState state);
-    // ImmutableList<ReadOnlyCellGroup> GetBoundGroups(GameState state);
+
+    IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state);
 }

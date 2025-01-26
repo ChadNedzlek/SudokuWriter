@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Text.Json.Nodes;
 
@@ -28,7 +29,7 @@ public class BasicGameRule : IGameRule
             for (int c = 0; c < nColumns; c++)
             {
                 int b = br + c / state.BoxColumns;
-                ushort allowed = state.Cells.GetMask(r, c);
+                ushort allowed = state.Cells[r, c];
                 allowedRow |= allowed;
                 allowedInColumns[c] |= allowed;
                 allowedInBox[b] |= allowed;
@@ -113,6 +114,26 @@ public class BasicGameRule : IGameRule
         if (removed) return state.WithCells(cellBuilder.MoveToImmutable());
 
         return null;
+    }
+
+    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state)
+    {
+        for (int r = 0; r < state.Structure.Rows; r++)
+        {
+            yield return state.Cells.GetRow(r).Box();
+        }
+        for (int c = 0; c < state.Structure.Columns; c++)
+        {
+            yield return state.Cells.GetColumn(c).Box();
+        }
+
+        for (int r = 0; r < state.Structure.Rows; r += state.BoxRows)
+        {
+            for (int c = 0; c < state.Structure.Columns; c+=state.BoxColumns)
+            {
+                yield return state.Cells.GetRange(r..(r + state.BoxRows), c..(c + state.BoxColumns)).Box();
+            }
+        }
     }
 
     public JsonObject ToJsonObject()

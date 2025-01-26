@@ -13,4 +13,5 @@ public readonly struct MultiRefBox<T>
     }
 
     public MultiRef<T> Unbox(Span<T> references) => new(references, _offsets);
+    public ReadOnlyMultiRef<T> Unbox(ReadOnlySpan<T> references) => new(references, _offsets);
 }

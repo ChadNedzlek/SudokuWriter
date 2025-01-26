@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.Json.Nodes;
 
@@ -54,6 +55,8 @@ public class ParityCellRule : IGameRule
 
         return changed ? state.WithCells(cells.MoveToImmutable()) : null;
     }
+
+    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state) => [];
 
     public JsonObject ToJsonObject()
     {

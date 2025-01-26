@@ -135,6 +135,17 @@ public class CageRule : IGameRule
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
+    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state)
+    {
+        var refs = state.Cells.GetEmptyReferences();
+        foreach (var cell in Cage)
+        {
+            refs.Include(in state.Cells[cell]);
+        }
+
+        return [refs.Box()];
+    }
+
     private Vec CalculateValidMask(Vec maxSumExcept, Vec minSumExcept, int digits)
     {
         if (Avx10v1.IsSupported)

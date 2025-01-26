@@ -50,7 +50,7 @@ public readonly struct GameState
         {
             builder.Append('[');
             for (int c = 0; c < Cells.Columns; c++)
-                if (Cells.GetMask(r, c) == 0)
+                if (Cells[r, c] == 0)
                 {
                     builder.Append("X ");
                 }

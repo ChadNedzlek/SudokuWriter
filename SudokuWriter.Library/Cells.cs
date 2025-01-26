@@ -21,10 +21,16 @@ public readonly struct Cells
     public int Columns => _cells.Columns;
 
     public bool this[int row, int col, int digit] => ((_cells[row, col] >> digit) & 1) != 0;
-    public ushort this[int row, int col] => _cells[row, col];
-    public ushort this[GridCoord coord] => _cells[coord.Row, coord.Col];
+    public ref readonly ushort this[int row, int col] => ref _cells[row, col];
+    public ref readonly  ushort this[GridCoord coord] => ref _cells[coord.Row, coord.Col];
 
     public int GetSingle(int row, int col) => GetSingle(_cells[row, col]);
+    
+    public ReadOnlyMultiRef<ushort> GetEmptyReferences() => _cells.GetEmptyReference();
+    public ReadOnlyMultiRef<ushort> GetRow(int row) => _cells.GetRowReference(row);
+    public ReadOnlyMultiRef<ushort> GetColumn(int columns) => _cells.GetColumnReference(columns);
+    public ReadOnlyMultiRef<ushort> GetRange(Range rows, Range columns) => _cells.GetRectangle(rows, columns);
+    public ReadOnlyMultiRef<ushort> Unbox(MultiRefBox<ushort> box) => _cells.Unbox(box);
 
     public CellsBuilder ToBuilder()
     {
@@ -76,11 +82,6 @@ public readonly struct Cells
 
         removed = new Cells(_cells.SetItem(row, column, c));
         return true;
-    }
-
-    public ushort GetMask(int row, int column)
-    {
-        return _cells[row, column];
     }
 
     public ulong GetCellHash()

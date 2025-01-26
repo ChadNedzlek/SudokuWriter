@@ -4,18 +4,18 @@ using System.Collections.Immutable;
 
 namespace SudokuWriter.Library;
 
-public readonly ref struct MultiRef<T>
+public readonly ref struct ReadOnlyMultiRef<T>
 {
-    private readonly Span<T> _ref;
+    private readonly ReadOnlySpan<T> _ref;
     private readonly List<ulong> _offsets;
     
-    public MultiRef(Span<T> validSpace)
+    public ReadOnlyMultiRef(ReadOnlySpan<T> validSpace)
     {
         _offsets = new List<ulong>(10);
         _ref = validSpace;
     }
 
-    internal MultiRef(Span<T> validSpace, List<ulong> offsets)
+    internal ReadOnlyMultiRef(ReadOnlySpan<T> validSpace, List<ulong> offsets)
     {
         _ref = validSpace;
         _offsets = offsets;
@@ -40,9 +40,9 @@ public readonly ref struct MultiRef<T>
         return cnt;
     }
 
-    public void Include(ref T target)
+    public void Include(ref readonly T target)
     {
-        if (!_ref.Overlaps(new ReadOnlySpan<T>(ref target), out int offset))
+        if (!_ref.Overlaps(new ReadOnlySpan<T>(in target), out int offset))
         {
             throw new ArgumentException("target is not contained in this MultiRef", nameof(target));
         }
@@ -68,13 +68,13 @@ public readonly ref struct MultiRef<T>
         _offsets.Add((ulong)start << 48 | (ulong)runLength << 32 | 1);
     }
 
-    public void ForEach(RefAction<T> callback)
+    public void ForEach(Action<T> callback)
     {
         foreach (ulong ptr in _offsets)
         {
             if (ptr <= int.MaxValue)
             {
-                callback(ref _ref[(int)ptr]);
+                callback(_ref[(int)ptr]);
                 continue;
             }
 
@@ -86,21 +86,21 @@ public readonly ref struct MultiRef<T>
             {
                 for (int i = 0; i < runLength; i++)
                 {
-                    callback(ref _ref[iStride * strideLength + i + start]);
+                    callback(_ref[iStride * strideLength + i + start]);
                 }
             }
         }
     }
 
-    public TOut Aggregate<TOut>(RefAggregator<T, TOut> callback) => Aggregate(default, callback);
+    public TOut Aggregate<TOut>(Func<TOut, T, TOut> callback) => Aggregate(default, callback);
 
-    public TOut Aggregate<TOut>(TOut seed, RefAggregator<T, TOut> callback)
+    public TOut Aggregate<TOut>(TOut seed, Func<TOut, T, TOut> callback)
     {
         foreach (ulong ptr in _offsets)
         {
             if (ptr <= int.MaxValue)
             {
-                seed = callback(seed, ref _ref[(int)ptr]);
+                seed = callback(seed, _ref[(int)ptr]);
                 continue;
             }
 
@@ -112,7 +112,7 @@ public readonly ref struct MultiRef<T>
             {
                 for (int i = 0; i < runLength; i++)
                 {
-                    seed = callback(seed, ref _ref[iStride * strideLength + i + start]);
+                    seed = callback(seed, _ref[iStride * strideLength + i + start]);
                 }
             }
         }
@@ -120,17 +120,17 @@ public readonly ref struct MultiRef<T>
         return seed;
     }
 
-    public TOut Aggregate<TOut, TContext>(RefContextAggregator<T, TOut, TContext> callback, TContext context)
+    public TOut Aggregate<TOut, TContext>(Func<TOut, T, TContext, TOut> callback, TContext context)
         where TContext : allows ref struct => Aggregate(default, callback, context);
 
-    public TOut Aggregate<TOut, TContext>(TOut seed, RefContextAggregator<T, TOut, TContext> callback, TContext context)
+    public TOut Aggregate<TOut, TContext>(TOut seed, Func<TOut, T, TContext, TOut> callback, TContext context)
         where TContext : allows ref struct
     {
         foreach (ulong ptr in _offsets)
         {
             if (ptr <= int.MaxValue)
             {
-                seed = callback(seed, ref _ref[(int)ptr], context);
+                seed = callback(seed, _ref[(int)ptr], context);
                 continue;
             }
 
@@ -142,7 +142,7 @@ public readonly ref struct MultiRef<T>
             {
                 for (int i = 0; i < runLength; i++)
                 {
-                    seed = callback(seed, ref _ref[iStride * strideLength + i + start], context);
+                    seed = callback(seed, _ref[iStride * strideLength + i + start], context);
                 }
             }
         }
@@ -179,8 +179,3 @@ public readonly ref struct MultiRef<T>
 
     public MultiRefBox<T> Box() => new(_offsets);
 }
-
-public delegate void RefAction<T>(scoped ref T value);
-public delegate TOut RefAggregator<TIn, TOut>(TOut input, scoped ref TIn value);
-public delegate TOut RefContextAggregator<TIn, TOut, TContext>(TOut input, scoped ref TIn value, TContext ctx)
-    where TContext : allows ref struct;

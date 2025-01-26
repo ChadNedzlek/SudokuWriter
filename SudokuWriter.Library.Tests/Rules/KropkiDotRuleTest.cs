@@ -41,9 +41,9 @@ public class KropkiDotRuleTest
         cells[1, 1] = 13;
         var state = new GameState(cells.MoveToImmutable(), structure);
         GameState reduced = new KropkiDotRule(doubles: [(0,0)], sequential: [(2,0)]).TryReduce(state).ShouldNotBeNull();
-        Cells.GetDigitDisplay(reduced.Cells.GetMask(0,0)).ShouldBe("124");
-        Cells.GetDigitDisplay(reduced.Cells.GetMask(0,1)).ShouldBe("124");
-        Cells.GetDigitDisplay(reduced.Cells.GetMask(1,0)).ShouldBe("34");
-        Cells.GetDigitDisplay(reduced.Cells.GetMask(1,1)).ShouldBe("34");
+        Cells.GetDigitDisplay(reduced.Cells[0, 0]).ShouldBe("124");
+        Cells.GetDigitDisplay(reduced.Cells[0, 1]).ShouldBe("124");
+        Cells.GetDigitDisplay(reduced.Cells[1, 0]).ShouldBe("34");
+        Cells.GetDigitDisplay(reduced.Cells[1, 1]).ShouldBe("34");
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
@@ -23,6 +24,7 @@ public class DifferenceAtLeastLineRule : DifferenceAtLeastLineRuleBase<Differenc
     }
 
     public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new DifferenceAtLeastLineRule(parts, jsonObject["diff"].GetValue<ushort>());
+
     public override void SaveToJsonObject(JsonObject obj)
     {
         obj["diff"] = MinDifference;
@@ -88,4 +90,6 @@ public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
 
         return modified ? state.WithCells(cellBuilder.MoveToImmutable()) : null;
     }
+
+    public override IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state) => [];
 }

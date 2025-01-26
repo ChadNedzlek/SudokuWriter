@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
@@ -58,6 +59,8 @@ public class PairSumRule : IGameRule
 
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
+
+    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state) => [];
 
     public JsonObject ToJsonObject()
     {

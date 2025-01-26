@@ -37,7 +37,7 @@ public readonly struct ImmutableArray2<T>
         return row * Columns + col;
     }
 
-    public T this[int row, int col] => _array.Span[CalcIndex(row, col)];
+    public ref readonly T this[int row, int col] => ref _array.Span[CalcIndex(row, col)];
 
     public ImmutableArray2.Builder<T> ToBuilder()
     {
@@ -53,6 +53,42 @@ public readonly struct ImmutableArray2<T>
         array[CalcIndex(row, column)] = value;
         return new ImmutableArray2<T>(array, Columns);
     }
+
+    public ReadOnlyMultiRef<T> GetEmptyReference() => new(_array.Span);
+
+    public ReadOnlyMultiRef<T> GetColumnReference(int column)
+    {
+        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.Span);
+        checked
+        {
+            refs.IncludeStrides((ushort)CalcIndex(0, column), 1, (ushort)Columns, (ushort)Rows);
+        }
+        return refs;
+    }
+
+    public ReadOnlyMultiRef<T> GetRowReference(int row)
+    {
+        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.Span);
+        checked
+        {
+            refs.IncludeStride((ushort)CalcIndex(row, 0), (ushort)Rows);
+        }
+        return refs;
+    }
+
+    public ReadOnlyMultiRef<T> GetRectangle(Range rows, Range columns)
+    {
+        var (startRow, numRows) = rows.GetOffsetAndLength(Rows);
+        var (startCol, numCols) = columns.GetOffsetAndLength(Columns);
+        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.Span);
+        checked
+        {
+            refs.IncludeStrides((ushort)CalcIndex(startRow, startCol), (ushort)numCols, (ushort)Columns, (ushort)numRows);
+        }
+        return refs;
+    }
+
+    public ReadOnlyMultiRef<T> Unbox(MultiRefBox<T> box) => box.Unbox(_array.Span);
 
     public ulong GetHash64()
     {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
@@ -143,6 +144,23 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
         }
 
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
+    }
+
+    public override IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state)
+    {
+        foreach (var line in Lines)
+        {
+            var refs = state.Cells.GetEmptyReferences();
+            foreach (var branch in line.Branches)
+            {
+                foreach (GridCoord cell in branch.Cells)
+                {
+                    refs.Include(in state.Cells[cell]);
+                }
+            }
+
+            yield return refs.Box();
+        }
     }
 
     public override void SaveToJsonObject(JsonObject obj)

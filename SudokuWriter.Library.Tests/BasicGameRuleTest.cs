@@ -111,18 +111,18 @@ public class BasicGameRuleTest
         );
         GameState? reducedState = BasicGameRule.Instance.TryReduce(state);
         reducedState.ShouldNotBeNull();
-        reducedState.Value.Cells.GetMask(0, 0).ShouldBe(1);
+        reducedState.Value.Cells[0, 0].ShouldBe(1);
 
-        reducedState.Value.Cells.GetMask(0, 1).ShouldBe(14);
-        reducedState.Value.Cells.GetMask(0, 2).ShouldBe(14);
-        reducedState.Value.Cells.GetMask(0, 3).ShouldBe(14);
+        reducedState.Value.Cells[0, 1].ShouldBe(14);
+        reducedState.Value.Cells[0, 2].ShouldBe(14);
+        reducedState.Value.Cells[0, 3].ShouldBe(14);
 
-        reducedState.Value.Cells.GetMask(1, 0).ShouldBe(14);
-        reducedState.Value.Cells.GetMask(2, 0).ShouldBe(14);
-        reducedState.Value.Cells.GetMask(3, 0).ShouldBe(14);
+        reducedState.Value.Cells[1, 0].ShouldBe(14);
+        reducedState.Value.Cells[2, 0].ShouldBe(14);
+        reducedState.Value.Cells[3, 0].ShouldBe(14);
 
-        reducedState.Value.Cells.GetMask(1, 1).ShouldBe(14);
+        reducedState.Value.Cells[1, 1].ShouldBe(14);
 
-        reducedState.Value.Cells.GetMask(2, 2).ShouldBe(15);
+        reducedState.Value.Cells[2, 2].ShouldBe(15);
     }
 }

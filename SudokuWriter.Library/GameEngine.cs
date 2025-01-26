@@ -158,7 +158,7 @@ public class GameEngine
         for (int r = 0; r < nRows; r++)
         for (int c = 0; c < nColumns; c++)
         {
-            ushort mask = initial.Cells.GetMask(r, c);
+            ushort mask = initial.Cells[r, c];
             int bitCount = BitOperations.PopCount(mask);
             if (bitCount > 1 && bitCount < minPossibilities)
             {
@@ -184,7 +184,7 @@ public class GameEngine
         int possibilities = 0;
         for (int r = 0; r < nRows; r++)
         for (int c = 0; c < nColumns; c++)
-            possibilities += BitOperations.PopCount(state.Cells.GetMask(r, c));
+            possibilities += BitOperations.PopCount(state.Cells[r, c]);
 
         return possibilities;
     }
