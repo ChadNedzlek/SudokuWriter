@@ -59,11 +59,13 @@ jobs:
     - name: Install vpk
       run: dotnet tool install -g vpk
       
-    - name: Git Version
-      id: version
-      uses: codacy/git-version@2.7.1
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v3.1.11
       with:
-        release-branch: main
+        versionSpec: '6.0.x'
+
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v3.1.11
       
       # Execute all unit tests in the solution
     - name: Restore
