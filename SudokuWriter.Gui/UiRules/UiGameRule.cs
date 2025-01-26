@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 
-namespace SudokuWriter.Gui.UiRules;
+namespace VaettirNet.SudokuWriter.Gui.UiRules;
 
 public abstract class UiGameRule
 {

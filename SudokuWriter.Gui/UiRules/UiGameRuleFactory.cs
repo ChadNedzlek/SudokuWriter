@@ -1,7 +1,7 @@
 using System.Windows;
-using SudokuWriter.Library;
+using VaettirNet.SudokuWriter.Library;
 
-namespace SudokuWriter.Gui.UiRules;
+namespace VaettirNet.SudokuWriter.Gui.UiRules;
 
 public readonly record struct RuleParameters(ushort MultipleValues, ushort SingleValue);
 

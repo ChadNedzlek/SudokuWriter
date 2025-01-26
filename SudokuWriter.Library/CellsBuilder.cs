@@ -1,6 +1,6 @@
 using System;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public readonly struct CellsBuilder
 {

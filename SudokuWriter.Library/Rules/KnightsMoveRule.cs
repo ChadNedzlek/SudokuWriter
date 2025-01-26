@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.Json.Nodes;
 
-namespace SudokuWriter.Library.Rules;
+namespace VaettirNet.SudokuWriter.Library.Rules;
 
 [GameRule("knight")]
 public class KnightsMoveRule : IGameRule

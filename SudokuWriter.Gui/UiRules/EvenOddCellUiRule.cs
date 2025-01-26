@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 using System.Windows;
 using System.Windows.Media;
-using SudokuWriter.Library;
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Library;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Gui.UiRules;
+namespace VaettirNet.SudokuWriter.Gui.UiRules;
 
 public class EvenOddCellUiRule : UiGameRuleFactory
 {

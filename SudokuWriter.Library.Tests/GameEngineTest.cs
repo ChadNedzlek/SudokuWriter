@@ -1,9 +1,8 @@
 using System.Diagnostics;
-using System.Runtime.Intrinsics;
 using NUnit.Framework;
 using Shouldly;
 
-namespace SudokuWriter.Library.Tests;
+namespace VaettirNet.SudokuWriter.Library.Tests;
 
 [TestFixture]
 [TestOf(typeof(GameEngine))]

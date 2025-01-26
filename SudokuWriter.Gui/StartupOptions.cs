@@ -1,4 +1,4 @@
-namespace SudokuWriter.Gui;
+namespace VaettirNet.SudokuWriter.Gui;
 
 public class StartupOptions
 {

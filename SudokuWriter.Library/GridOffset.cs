@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public readonly record struct GridOffset(short Row, short Col) :
     IAdditionOperators<GridOffset, GridCoord, GridCoord>,

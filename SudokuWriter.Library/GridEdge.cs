@@ -1,6 +1,4 @@
-using System.Collections.Immutable;
-
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public readonly record struct GridEdge(ushort EdgeRow, ushort EdgeCol)
 {

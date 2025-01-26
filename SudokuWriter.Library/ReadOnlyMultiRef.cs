@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public readonly ref struct ReadOnlyMultiRef<T>
 {

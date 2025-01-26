@@ -3,23 +3,23 @@ using System.Globalization;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
-using SudokuWriter.Library;
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Library;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Gui.UiRules;
+namespace VaettirNet.SudokuWriter.Gui.UiRules;
 
 public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
 {
-    public override Range? VariationRange => 3..17;
-
     public PairSumUiRule(int cellSize, string name) : base(cellSize, name, false)
     {
     }
 
+    public override Range? VariationRange => 3..17;
+
     private static string ToRomanNumeral(uint value)
     {
         if (value == 0) return "0";
-        StringBuilder builder = new StringBuilder(5, 20);
+        var builder = new StringBuilder(5, 20);
         while (value != 0)
         {
             (string digit, value) = ((string, uint))(value switch
@@ -34,7 +34,7 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
                 >= 9 => ("I", value + 1),
                 >= 5 => ("V", value - 5),
                 4 => ("IV", 0),
-                _ => ("I", value - 1),
+                _ => ("I", value - 1)
             });
             builder.Append(digit);
         }
@@ -49,12 +49,9 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
 
     protected override GeometryDrawing CreateInitialDrawing()
     {
-        return new GeometryDrawing
-        {
-            Brush = Brushes.Black,
-        };
+        return new GeometryDrawing { Brush = Brushes.Black };
     }
-    
+
     protected override ImmutableArray<GridEdge> GetEdgesFromRule(PairSumRule rule)
     {
         return rule.Pairs;
@@ -69,13 +66,9 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
             CellLocation location = GetLocation(r);
             var ruleParameters = new RuleParameters(0, pair.Sum);
             if (uiRule is null)
-            {
                 TryStart(location, ruleParameters, out uiRule);
-            }
             else
-            {
                 uiRule.TryAddSegment(location, ruleParameters);
-            }
         }
 
         return [uiRule];
@@ -93,6 +86,7 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
                 (double x, double y) = (b.Left + b.Width / 2, b.Top + b.Height / 2);
                 edges.Add(GetGridEdge(new Point(x, y)));
             }
+
             gameRules.Add(new PairSumRule(dotRule.Sum, edges.ToImmutable()));
         }
 
@@ -101,16 +95,7 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
 
     private class Rule : RuleBase
     {
-        public ushort Sum { get; }
-        public PairSumUiRule PairSumUiRule { get; }
-
         private static readonly Typeface s_typeface = BuildTypeface();
-
-        private static Typeface BuildTypeface()
-        {
-            Typeface verdanaDefault = new Typeface("Verdana");
-            return new Typeface(verdanaDefault.FontFamily, verdanaDefault.Style, FontWeights.Bold, verdanaDefault.Stretch, null);
-        }
 
         public Rule(PairSumUiRule factory, Drawing drawing, GeometryGroup geometryGroup, ushort sum) : base(factory, drawing, geometryGroup)
         {
@@ -118,17 +103,28 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
             Sum = sum;
         }
 
+        public ushort Sum { get; }
+        public PairSumUiRule PairSumUiRule { get; }
+
         public override bool IsValid => true;
+
+        private static Typeface BuildTypeface()
+        {
+            var verdanaDefault = new Typeface("Verdana");
+            return new Typeface(verdanaDefault.FontFamily, verdanaDefault.Style, FontWeights.Bold, verdanaDefault.Stretch, null);
+        }
 
         protected override Geometry BuildEdgeDisplayGeometry(CellLocation location)
         {
-            FormattedText txt = new FormattedText(ToRomanNumeral(Sum),
+            var txt = new FormattedText(
+                ToRomanNumeral(Sum),
                 CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 s_typeface,
                 Factory.CellSize / 3.0,
                 Brushes.Black,
-                1);
+                1
+            );
             Geometry textGeo = txt.BuildGeometry(Factory.TranslateToPoint(location));
             textGeo.Transform = new TranslateTransform(-textGeo.Bounds.Width / 2, -textGeo.Bounds.Height / 2 - Factory.CellSize / 10.0);
             return textGeo;
@@ -141,7 +137,10 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
             return base.TryAddSegment(location, parameters);
         }
 
-        public override bool TryContinue(CellLocation location) => false;
+        public override bool TryContinue(CellLocation location)
+        {
+            return false;
+        }
 
         public override void Complete()
         {

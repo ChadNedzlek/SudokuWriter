@@ -1,11 +1,12 @@
 using System.Collections.Immutable;
 using System.Windows;
 using System.Windows.Media;
-using SudokuWriter.Library;
+using VaettirNet.SudokuWriter.Library;
 
-namespace SudokuWriter.Gui.UiRules;
+namespace VaettirNet.SudokuWriter.Gui.UiRules;
 
-public abstract class EdgeUiRuleFactoryBase<T> : UiGameRuleFactory where T : IGameRule
+public abstract class EdgeUiRuleFactoryBase<T> : UiGameRuleFactory
+    where T : IGameRule
 {
     public EdgeUiRuleFactoryBase(int cellSize, string name, bool isContinuous) : base(cellSize, name, isContinuous)
     {
@@ -43,15 +44,9 @@ public abstract class EdgeUiRuleFactoryBase<T> : UiGameRuleFactory where T : IGa
     protected GridEdge GetGridEdge(Point dotCenter)
     {
         CellLocation location = TranslateFromPoint(dotCenter);
-        if (location.ColSide < 0)
-        {
-            location = location with { ColSide = 1, Col = location.Col - 1 };
-        }
-        
-        if (location.RowSide < 0)
-        {
-            location = location with { RowSide = 1, Row = location.Row - 1 };
-        }
+        if (location.ColSide < 0) location = location with { ColSide = 1, Col = location.Col - 1 };
+
+        if (location.RowSide < 0) location = location with { RowSide = 1, Row = location.Row - 1 };
 
         return location.RowSide != 0 ? GridEdge.BottomOf(location.ToCoord()) : GridEdge.RightOf(location.ToCoord());
     }
@@ -68,13 +63,9 @@ public abstract class EdgeUiRuleFactoryBase<T> : UiGameRuleFactory where T : IGa
         {
             CellLocation location = GetLocation(edge);
             if (uiRule is null)
-            {
                 TryStart(location, default, out uiRule);
-            }
             else
-            {
                 uiRule.TryAddSegment(location, default);
-            }
         }
 
         return [uiRule];
@@ -83,32 +74,35 @@ public abstract class EdgeUiRuleFactoryBase<T> : UiGameRuleFactory where T : IGa
     protected static CellLocation GetLocation(GridEdge edge)
     {
         (GridCoord a, GridCoord b) = edge.GetSides();
-        CellLocation location = new CellLocation(a.Row, a.Col, b.Row - a.Row, b.Col - a.Col);
+        var location = new CellLocation(a.Row, a.Col, b.Row - a.Row, b.Col - a.Col);
         return location;
     }
 
     protected abstract class RuleBase : UiGameRule
     {
-        public GeometryGroup GeometryGroup { get; }
-
         public RuleBase(UiGameRuleFactory factory, Drawing drawing, GeometryGroup geometryGroup) : base(factory, drawing)
         {
             GeometryGroup = geometryGroup;
         }
 
+        public GeometryGroup GeometryGroup { get; }
+
         public override bool IsValid => true;
-        
+
         public override bool TryAddSegment(CellLocation location, RuleParameters _)
         {
             if (!IsOnEdge(location)) return false;
-            
+
             GeometryGroup.Children.Add(BuildEdgeDisplayGeometry(location));
             return true;
         }
 
         protected abstract Geometry BuildEdgeDisplayGeometry(CellLocation location);
 
-        public override bool TryContinue(CellLocation location) => false;
+        public override bool TryContinue(CellLocation location)
+        {
+            return false;
+        }
 
         public override void Complete()
         {

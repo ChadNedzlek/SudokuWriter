@@ -1,8 +1,8 @@
 using NUnit.Framework;
 using Shouldly;
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Library.Tests.Rules;
+namespace VaettirNet.SudokuWriter.Library.Tests.Rules;
 
 [TestFixture]
 [TestOf(typeof(CageRule))]

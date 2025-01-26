@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace SudokuWriter.Library.Tests;
+namespace VaettirNet.SudokuWriter.Library.Tests;
 
 [TestFixture]
 [TestOf(typeof(GameEngine))]

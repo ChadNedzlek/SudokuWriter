@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text.Json.Nodes;
 
-namespace SudokuWriter.Library.Rules;
+namespace VaettirNet.SudokuWriter.Library.Rules;
 
 [GameRule("basic")]
 public class BasicGameRule : IGameRule

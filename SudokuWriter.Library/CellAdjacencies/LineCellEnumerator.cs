@@ -1,6 +1,6 @@
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Library.CellAdjacencies;
+namespace VaettirNet.SudokuWriter.Library.CellAdjacencies;
 
 public struct LineCellEnumerator
 {
@@ -22,11 +22,8 @@ public struct LineCellEnumerator
     public bool MoveNext()
     {
         if (_ended) return false;
-        if (_lineIndex == -1)
-        {
-            return MoveToNextLine();
-        }
-        
+        if (_lineIndex == -1) return MoveToNextLine();
+
         return ++_cellIndex < _currentBranch.Cells.Length || MoveToNextSegment();
     }
 
@@ -44,7 +41,7 @@ public struct LineCellEnumerator
                 return true;
             }
         }
-        
+
         return MoveToNextLine();
     }
 
@@ -59,10 +56,7 @@ public struct LineCellEnumerator
             if (_currentLine.Branches.Length > 0)
             {
                 _segmentIndex = -1;
-                if (MoveToNextSegment())
-                {
-                    return true;
-                }
+                if (MoveToNextSegment()) return true;
             }
         }
 
@@ -77,22 +71,16 @@ public struct LineCellEnumerator
             GridCoord coord = _currentBranch.Cells[_cellIndex];
             MultiRef<ushort> refs = _cells.GetEmptyReferences();
 
-            
+
             AddNeighbors(in refs, _currentBranch, _cellIndex);
 
             if (_cellIndex != 0 && _cellIndex != _currentBranch.Cells.Length - 1)
             {
-                foreach (var branch in _currentLine.Branches)
+                foreach (LineRuleSegment branch in _currentLine.Branches)
                 {
-                    if (branch.Cells[0] == coord)
-                    {
-                        refs.Include(ref _cells[branch.Cells[1]]);
-                    }
+                    if (branch.Cells[0] == coord) refs.Include(ref _cells[branch.Cells[1]]);
 
-                    if (branch.Cells[^1] == coord)
-                    {
-                        refs.Include(ref _cells[branch.Cells[^2]]);
-                    }
+                    if (branch.Cells[^1] == coord) refs.Include(ref _cells[branch.Cells[^2]]);
                 }
             }
             else
@@ -104,10 +92,7 @@ public struct LineCellEnumerator
                     for (int iCell = 0; iCell < branch.Cells.Length; iCell++)
                     {
                         GridCoord cell = branch.Cells[iCell];
-                        if (cell == coord)
-                        {
-                            AddNeighbors(in refs, branch, iCell);
-                        }
+                        if (cell == coord) AddNeighbors(in refs, branch, iCell);
                     }
                 }
             }

@@ -1,4 +1,4 @@
-namespace SudokuWriter.Gui.UiRules;
+namespace VaettirNet.SudokuWriter.Gui.UiRules;
 
 public class GameRuleCollection
 {

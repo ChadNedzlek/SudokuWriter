@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace SudokuWriter.Gui;
+namespace VaettirNet.SudokuWriter.Gui;
 
 public class ConfigurableBooleanToVisibilityConverter : DependencyObject, IValueConverter
 {
@@ -10,19 +10,21 @@ public class ConfigurableBooleanToVisibilityConverter : DependencyObject, IValue
         nameof(TrueVisibility),
         typeof(Visibility),
         typeof(ConfigurableBooleanToVisibilityConverter),
-        new PropertyMetadata(Visibility.Visible));
+        new PropertyMetadata(Visibility.Visible)
+    );
+
+    public static readonly DependencyProperty FalseVisibilityProperty = DependencyProperty.Register(
+        nameof(FalseVisibility),
+        typeof(Visibility),
+        typeof(ConfigurableBooleanToVisibilityConverter),
+        new PropertyMetadata(Visibility.Collapsed)
+    );
 
     public Visibility TrueVisibility
     {
         get => (Visibility)GetValue(TrueVisibilityProperty);
         set => SetValue(TrueVisibilityProperty, value);
     }
-
-    public static readonly DependencyProperty FalseVisibilityProperty = DependencyProperty.Register(
-        nameof(FalseVisibility),
-        typeof(Visibility),
-        typeof(ConfigurableBooleanToVisibilityConverter),
-        new PropertyMetadata(Visibility.Collapsed));
 
     public Visibility FalseVisibility
     {
@@ -36,14 +38,14 @@ public class ConfigurableBooleanToVisibilityConverter : DependencyObject, IValue
         {
             string s => bool.Parse(s),
             bool b => b,
-            _ => false,
+            _ => false
         };
 
         bool invert = parameter switch
         {
             string s => bool.Parse(s),
             bool b => b,
-            _ => false,
+            _ => false
         };
 
         return visible ^ invert ? TrueVisibility : FalseVisibility;
@@ -55,13 +57,13 @@ public class ConfigurableBooleanToVisibilityConverter : DependencyObject, IValue
         {
             string s => bool.Parse(s),
             bool b => b,
-            _ => false,
+            _ => false
         };
-        
+
         bool visible = value switch
         {
             Visibility v when v == TrueVisibility => true,
-            _ => false,
+            _ => false
         };
 
         return visible ^ invert;

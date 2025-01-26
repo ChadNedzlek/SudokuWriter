@@ -1,6 +1,6 @@
-using SudokuWriter.Library;
+using VaettirNet.SudokuWriter.Library;
 
-namespace SudokuWriter.Gui.UiRules;
+namespace VaettirNet.SudokuWriter.Gui.UiRules;
 
 public readonly record struct CellLocation(int Row, int Col, int RowSide = 0, int ColSide = 0)
 {

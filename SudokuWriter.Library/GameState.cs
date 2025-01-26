@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public readonly record struct GameStructure(ushort Rows, ushort Columns, ushort Digits, ushort BoxRows, ushort BoxColumns)
 {

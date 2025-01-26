@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Library.CellAdjacencies;
+namespace VaettirNet.SudokuWriter.Library.CellAdjacencies;
 
 public class ReadOnlyLineCellEnumerable : IEnumerable<ReadOnlyLineCellAdjacency>
 {
@@ -15,8 +15,18 @@ public class ReadOnlyLineCellEnumerable : IEnumerable<ReadOnlyLineCellAdjacency>
         _rule = rule;
     }
 
-    public ReadOnlyLineCellEnumerator GetEnumerator() => new(_cells, _rule);
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    IEnumerator<ReadOnlyLineCellAdjacency> IEnumerable<ReadOnlyLineCellAdjacency>.GetEnumerator() => GetEnumerator();
+    IEnumerator<ReadOnlyLineCellAdjacency> IEnumerable<ReadOnlyLineCellAdjacency>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public ReadOnlyLineCellEnumerator GetEnumerator()
+    {
+        return new ReadOnlyLineCellEnumerator(_cells, _rule);
+    }
 }

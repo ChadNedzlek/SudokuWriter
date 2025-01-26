@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public readonly struct MultiRefBox<T>
 {

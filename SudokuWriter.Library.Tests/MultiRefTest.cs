@@ -2,7 +2,7 @@ using System;
 using NUnit.Framework;
 using Shouldly;
 
-namespace SudokuWriter.Library.Tests;
+namespace VaettirNet.SudokuWriter.Library.Tests;
 
 [TestFixture]
 [TestOf(typeof(MultiRef<>))]

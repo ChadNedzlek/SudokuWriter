@@ -1,9 +1,6 @@
 using System.Windows;
-using Microsoft.Extensions.Logging;
-using Velopack;
-using Velopack.Sources;
 
-namespace SudokuWriter.Gui;
+namespace VaettirNet.SudokuWriter.Gui;
 
 public partial class MainWindow
 {
@@ -53,5 +50,6 @@ public partial class MainWindow
         nameof(UpdateAvailable),
         typeof(bool),
         typeof(MainWindow),
-        new PropertyMetadata(default(bool)));
+        new PropertyMetadata(default(bool))
+    );
 }

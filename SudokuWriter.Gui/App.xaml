@@ -1,8 +1,8 @@
-﻿<Application x:Class="SudokuWriter.Gui.App"
+﻿<Application x:Class="VaettirNet.SudokuWriter.Gui.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:gui="clr-namespace:SudokuWriter.Gui"
-             xmlns:system="clr-namespace:System;assembly=System.Runtime">
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:gui="clr-namespace:VaettirNet.SudokuWriter.Gui;assembly=">
     <Application.Resources>
         <gui:ConfigurableBooleanToVisibilityConverter x:Key="VisConv" />
         <system:String x:Key="Workaround4457">This string is here because of a XAML bug that causes the resource dictionary not to be loaded if there is only 1 resource</system:String>

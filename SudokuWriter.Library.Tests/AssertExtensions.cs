@@ -1,6 +1,6 @@
 using Shouldly;
 
-namespace SudokuWriter.Library.Tests;
+namespace VaettirNet.SudokuWriter.Library.Tests;
 
 public static class AssertExtensions
 {

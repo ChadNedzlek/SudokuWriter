@@ -1,8 +1,8 @@
 using NUnit.Framework;
-using SudokuWriter.Library.Rules;
 using Shouldly;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Library.Tests;
+namespace VaettirNet.SudokuWriter.Library.Tests;
 
 [TestFixture]
 [TestOf(typeof(BasicGameRule))]

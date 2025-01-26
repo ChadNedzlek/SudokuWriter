@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Numerics;
 using System.Text.Json.Nodes;
-using SudokuWriter.Library.CellAdjacencies;
+using VaettirNet.SudokuWriter.Library.CellAdjacencies;
 
-namespace SudokuWriter.Library.Rules;
+namespace VaettirNet.SudokuWriter.Library.Rules;
 
 [GameRule("diff-line")]
 public class DifferenceAtLeastLineRule : DifferenceAtLeastLineRuleBase<DifferenceAtLeastLineRule>, ILineRule<DifferenceAtLeastLineRule>

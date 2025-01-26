@@ -1,11 +1,9 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 
-namespace SudokuWriter.Library.Rules;
+namespace VaettirNet.SudokuWriter.Library.Rules;
 
 [GameRule("renban")]
 public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
@@ -13,21 +11,24 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
     public RenbanLine(params ImmutableArray<BranchingRuleLine> lines) : base(lines)
     {
     }
-    
+
     public RenbanLine(params ImmutableArray<LineRuleSegment> lines) : this(new BranchingRuleLine(lines))
     {
     }
-    
+
     public RenbanLine(params ImmutableArray<GridCoord> cells) : this(new LineRuleSegment(cells))
     {
     }
-    
-    public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new RenbanLine(parts);
-    
+
+    public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject)
+    {
+        return new RenbanLine(parts);
+    }
+
     public override GameResult Evaluate(GameState state)
     {
         bool empty = false;
-        foreach (var line in Lines)
+        foreach (BranchingRuleLine line in Lines)
         {
             ushort setMask = 0;
             int length = 0;
@@ -44,17 +45,12 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
                         setMask |= mask;
                     }
                     else
-                    {
                         empty = true;
-                    }
                 }
             }
 
             int range = sizeof(ushort) * 8 - BitOperations.LeadingZeroCount(setMask) - BitOperations.TrailingZeroCount(setMask);
-            if (range > length)
-            {
-                return GameResult.Unsolvable;
-            }
+            if (range > length) return GameResult.Unsolvable;
 
             int setBitCount = BitOperations.PopCount(setMask);
             if (setCount == length)
@@ -70,11 +66,11 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
     public override GameState? TryReduce(GameState state)
     {
         bool reduced = false;
-        var cells = state.Cells.ToBuilder();
+        CellsBuilder cells = state.Cells.ToBuilder();
 
         ushort allDigitMask = Cells.GetAllDigitsMask(state.Digits);
-        
-        foreach (var line in Lines)
+
+        foreach (BranchingRuleLine line in Lines)
         {
             ushort length = 0;
             ushort alreadySetMask = 0;
@@ -89,7 +85,7 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
                     if (Cells.IsSingle(cell)) alreadySetMask |= cell;
                 }
             }
-            
+
             // Theoretically I need to "turn off" any bits that have gaps,
             // if like non of the cells can have a "3", then a renban of length 4
             // can't have 1 or 2 on it either, since it can't... fit.
@@ -108,6 +104,7 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
                     // The range fits, blit it the contiguous set 1 bits
                     noGaps |= lowestSetBits;
                 }
+
                 // We checked the bottom pile of bits, clear them to see if there's another range that works
                 checkGaps &= (ushort)~lowestSetBits;
             }
@@ -131,7 +128,7 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
             int stripTooLowBits = lowDigitsToStrip < 1 ? allDigitMask : allDigitMask << lowDigitsToStrip;
             ushort allowedMask = unchecked((ushort)(stripTooHighBits & stripTooLowBits & ~alreadySetMask));
 
-            foreach (var branch in line.Branches)
+            foreach (LineRuleSegment branch in line.Branches)
             {
                 foreach (GridCoord cell in branch.Cells)
                 {
@@ -148,16 +145,12 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
 
     public override IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state)
     {
-        foreach (var line in Lines)
+        foreach (BranchingRuleLine line in Lines)
         {
-            var refs = state.Cells.GetEmptyReferences();
-            foreach (var branch in line.Branches)
-            {
-                foreach (GridCoord cell in branch.Cells)
-                {
-                    refs.Include(in state.Cells[cell]);
-                }
-            }
+            ReadOnlyMultiRef<ushort> refs = state.Cells.GetEmptyReferences();
+            foreach (LineRuleSegment branch in line.Branches)
+            foreach (GridCoord cell in branch.Cells)
+                refs.Include(in state.Cells[cell]);
 
             yield return refs.Box();
         }
@@ -167,4 +160,3 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
     {
     }
 }
-

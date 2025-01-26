@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Nodes;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public interface IGameRule : IGameStateEvaluator, IGameStateReducer
 {

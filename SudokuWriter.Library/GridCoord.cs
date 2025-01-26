@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public readonly record struct GridCoord(ushort Row, ushort Col) :
     IAdditionOperators<GridCoord, GridOffset, GridCoord>,

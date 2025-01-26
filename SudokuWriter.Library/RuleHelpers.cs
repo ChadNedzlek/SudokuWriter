@@ -4,10 +4,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using System.Threading;
-using SudokuWriter.Library.CellAdjacencies;
-using SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public static class RuleHelpers
 {

@@ -1,10 +1,9 @@
 using System;
 using System.IO.Hashing;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public readonly struct ImmutableArray2<T>
 {

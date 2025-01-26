@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text.Json.Nodes;
-using SudokuWriter.Library.CellAdjacencies;
+using VaettirNet.SudokuWriter.Library.CellAdjacencies;
 
-namespace SudokuWriter.Library.Rules;
+namespace VaettirNet.SudokuWriter.Library.Rules;
 
 public interface ILineRule
 {

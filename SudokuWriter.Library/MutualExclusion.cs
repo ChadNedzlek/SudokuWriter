@@ -2,7 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Numerics;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public static class MutualExclusion
 {

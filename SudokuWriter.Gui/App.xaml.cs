@@ -1,11 +1,10 @@
 ﻿using System.Windows;
-using System.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
 using Velopack;
 
-namespace SudokuWriter.Gui;
+namespace VaettirNet.SudokuWriter.Gui;
 
 /// <summary>
 ///     Interaction logic for App.xaml

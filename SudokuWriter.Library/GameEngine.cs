@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public class GameEngine
 {
@@ -53,7 +53,7 @@ public class GameEngine
                     GameResult.Unsolvable => GameResult.Unsolvable,
                     _ => GameResult.Unknown
                 },
-                _ => rule.Evaluate(state),
+                _ => rule.Evaluate(state)
             }
         );
 
@@ -120,7 +120,7 @@ public class GameEngine
                     GameResult.Unsolvable => GameResult.Unsolvable,
                     _ => GameResult.Unknown
                 },
-                _ => rule.Evaluate(state),
+                _ => rule.Evaluate(state)
             }
         );
     }
@@ -133,26 +133,23 @@ public class GameEngine
         {
             reduced = false;
             foreach (IGameRule rule in Rules)
+            {
                 if (rule.TryReduce(simplified) is { } simpleReduce)
                 {
                     simplified = simpleReduce;
                     reduced = true;
                     break;
                 }
+            }
 
             if (!reduced)
             {
-                var cellBuilder = simplified.Cells.ToBuilder();
+                CellsBuilder cellBuilder = simplified.Cells.ToBuilder();
                 foreach (IGameRule rule in Rules)
                 foreach (MultiRefBox<ushort> mutexGroup in rule.GetMutualExclusionGroups(simplified))
-                {
                     reduced |= MutualExclusion.ApplyMutualExclusionRules(cellBuilder.Unbox(mutexGroup));
-                }
 
-                if (reduced)
-                {
-                    simplified = simplified.WithCells(cellBuilder.MoveToImmutable());
-                }
+                if (reduced) simplified = simplified.WithCells(cellBuilder.MoveToImmutable());
             }
         }
 
@@ -204,5 +201,8 @@ public class GameEngine
         return possibilities;
     }
 
-    public GameEngine WithRules(ImmutableArray<IGameRule> rules) => new(InitialState, rules);
+    public GameEngine WithRules(ImmutableArray<IGameRule> rules)
+    {
+        return new GameEngine(InitialState, rules);
+    }
 }

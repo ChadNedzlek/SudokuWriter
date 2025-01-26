@@ -1,6 +1,6 @@
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Library.CellAdjacencies;
+namespace VaettirNet.SudokuWriter.Library.CellAdjacencies;
 
 public readonly struct LineCellEnumerable
 {
@@ -13,5 +13,8 @@ public readonly struct LineCellEnumerable
         _rule = rule;
     }
 
-    public LineCellEnumerator GetEnumerator() => new(_cells, _rule);
+    public LineCellEnumerator GetEnumerator()
+    {
+        return new LineCellEnumerator(_cells, _rule);
+    }
 }

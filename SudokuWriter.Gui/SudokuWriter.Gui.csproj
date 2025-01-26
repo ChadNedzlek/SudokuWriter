@@ -5,24 +5,38 @@
         <TargetFramework>net9.0-windows</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
+        <AssemblyName Condition=" '$(_TargetAssemblyProjectName)' == '' ">VnSudoku</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\SudokuWriter.Library\SudokuWriter.Library.csproj"/>
+        <ProjectReference Include="..\SudokuWriter.Library\SudokuWriter.Library.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MahApps.Metro.IconPacks.Codicons" Version="5.1.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
-      <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
-      <PackageReference Include="Mono.Options" Version="6.12.0.148" />
-      <PackageReference Include="Velopack" Version="0.0.1053" />
+        <PackageReference Include="MahApps.Metro.IconPacks.Codicons" Version="5.1.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
+        <PackageReference Include="Mono.Options" Version="6.12.0.148" />
+        <PackageReference Include="Velopack" Version="0.0.1053" />
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="MainWindow.DependencyProperties.xaml.cs">
-        <DependentUpon>MainWindow.xaml</DependentUpon>
-      </Compile>
+        <Compile Update="MainWindow.DependencyProperties.xaml.cs">
+            <DependentUpon>MainWindow.xaml</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="Releases\**" />
+        <EmbeddedResource Remove="Releases\**" />
+        <Page Remove="Releases\**" />
+        <None Remove="Releases\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+    </ItemGroup>
+
+    <ItemGroup>
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public interface IGameStateEvaluator
 {

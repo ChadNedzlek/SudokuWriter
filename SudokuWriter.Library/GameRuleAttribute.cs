@@ -1,7 +1,7 @@
 using System;
 using JetBrains.Annotations;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedWithFixedConstructorSignature)]
 public class GameRuleAttribute : Attribute

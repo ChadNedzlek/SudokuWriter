@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.Json.Nodes;
 
-namespace SudokuWriter.Library.Rules;
+namespace VaettirNet.SudokuWriter.Library.Rules;
 
 [GameRule("kropki")]
 public class KropkiDotRule : IGameRule

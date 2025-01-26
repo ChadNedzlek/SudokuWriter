@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace SudokuWriter.Library.Rules;
+namespace VaettirNet.SudokuWriter.Library.Rules;
 
 public readonly record struct LineRuleSegment(ImmutableArray<GridCoord> Cells);
 

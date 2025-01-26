@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace SudokuWriter.Library;
+namespace VaettirNet.SudokuWriter.Library;
 
 public class GameEngineSerializer
 {
@@ -27,8 +27,10 @@ public class GameEngineSerializer
     public void AddRulesFromAssembly(Assembly assembly)
     {
         foreach (Type type in assembly.GetTypes())
+        {
             if (GetMetadata(type) is { } metadata)
                 _rules.Add(metadata);
+        }
     }
 
     public void AddRuleType<T>()
@@ -72,9 +74,13 @@ public class GameEngineSerializer
         var structure = new GameStructure(rows, columns, digits, boxRows, boxColumns);
         CellsBuilder cells = Cells.CreateFilled(rows, columns, digits).ToBuilder();
         if (root["cells"] is JsonArray cellArray)
+        {
             foreach (JsonNode c in cellArray)
+            {
                 if (c is JsonArray { Count: 3 } a)
                     cells.SetSingle(a[0].GetValue<int>(), a[1].GetValue<int>(), a[2].GetValue<ushort>());
+            }
+        }
 
         List<IGameRule> rules = [];
         if (root["rules"] is JsonArray ruleArray)
@@ -84,20 +90,15 @@ public class GameEngineSerializer
                 if (r is JsonArray { Count: 2 } a)
                 {
                     string ruleName = r[0].GetValue<string>();
-                    if (_rules.FirstOrDefault(m => m.Name.Equals(ruleName)) is not {} rule)
-                    {
+                    if (_rules.FirstOrDefault(m => m.Name.Equals(ruleName)) is not { } rule)
                         throw new InvalidDataException($"Unknown rule type {ruleName} in file");
-                    }
                     JsonObject jsonObject = r[1].AsObject();
                     rules.Add(rule.Create(jsonObject));
                 }
             }
         }
 
-        if (rules.Count == 0)
-        {
-            rules.Add(BasicGameRule.Instance);
-        }
+        if (rules.Count == 0) rules.Add(BasicGameRule.Instance);
 
         var state = new GameState(cells.MoveToImmutable(), structure);
 

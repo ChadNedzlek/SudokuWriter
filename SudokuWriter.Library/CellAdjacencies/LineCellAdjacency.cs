@@ -1,4 +1,4 @@
-namespace SudokuWriter.Library.CellAdjacencies;
+namespace VaettirNet.SudokuWriter.Library.CellAdjacencies;
 
 public readonly ref struct LineCellAdjacency
 {

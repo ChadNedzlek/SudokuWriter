@@ -5,6 +5,9 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Numerics;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,12 +15,12 @@ using System.Windows.Input;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Win32;
-using SudokuWriter.Gui.UiRules;
-using SudokuWriter.Library;
-using SudokuWriter.Library.Rules;
+using VaettirNet.SudokuWriter.Gui.UiRules;
+using VaettirNet.SudokuWriter.Library;
+using VaettirNet.SudokuWriter.Library.Rules;
 using Velopack;
 
-namespace SudokuWriter.Gui;
+namespace VaettirNet.SudokuWriter.Gui;
 
 public partial class MainWindow
 {
@@ -650,6 +653,21 @@ public partial class MainWindow
         finally
         {
             if (menuItem != null) menuItem.IsEnabled = true;
+        }
+    }
+
+    private X509Certificate2 GetCurrentSigner()
+    {
+        try
+        {
+            // This is the only built in way to check the authenticode signature of a file
+#pragma warning disable SYSLIB0057 
+            return new X509Certificate2(Assembly.GetEntryAssembly().Location);
+#pragma warning restore SYSLIB0057
+        }
+        catch (CryptographicException)
+        {
+            return null;
         }
     }
 

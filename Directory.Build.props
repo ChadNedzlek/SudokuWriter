@@ -1,5 +1,8 @@
 <Project>
     <PropertyGroup>
         <NoWarn>$(NoWarn);CS8509</NoWarn>
+        <!-- this is to work around a stupid WPF bug https://github.com/dotnet/wpf/issues/5711 -->
+        <AssemblyName Condition=" '$(_TargetAssemblyProjectName)' == '' ">VaettirNet.$(MSBuildProjectName)</AssemblyName>
+        <RootNamespace>VaettirNet.$(MSBuildProjectName)</RootNamespace>
     </PropertyGroup>
 </Project>
