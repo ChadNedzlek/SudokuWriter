@@ -65,7 +65,7 @@ jobs:
     - name: Install GitVersion
       uses: gittools/actions/gitversion/setup@v3.1.11
       with:
-        versionSpec: '6.0.x'
+        versionSpec: '6.1.x'
 
     - name: Determine Version
       id: version
@@ -99,7 +99,7 @@ jobs:
       run: |
         git config --global user.email "no-reply@vaettir.net"
         git config --global user.name "Tagger"
-        git tag -a ${{ steps.version.outputs.SemVer }} -m "Version ${{ steps.version.outputs.SemVer }}"
+        git tag -a v${{ steps.version.outputs.SemVer }} -m "Version ${{ steps.version.outputs.SemVer }}"
         git push --follow-tags
   
     - name: Create Velopack Release

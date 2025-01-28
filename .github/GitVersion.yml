@@ -1,4 +1,4 @@
-mode: MainLine
+mode: ContinuousDeployment
 tag-prefix: '[vV]'
 commit-message-incrementing: MergeMessageOnly
 assembly-versioning-scheme: MajorMinorPatch
@@ -13,16 +13,20 @@ commit-date-format: yyyy-MM-dd
 update-build-number: true
 branches:
   hotfix:
-    regex: hotfix?[/-]
+    mode: ContinuousDelivery
+    label: 'hotfix'
+    regex: hotfix[/-]
     source-branches: ['main']
   feature:
+    mode: ContinuousDelivery
+    label: 'alpha'
     increment: Minor
-    regex: feature?[/-]
+    regex: feature[/-]
   main:
-    is-mainline: true
+    mode: ContinuousDeployment
     is-main-branch: true
     increment: Patch
-    regex: main$
+    regex: main|master$
     pre-release-weight: 30000
     prevent-increment:
       of-merged-branch: true
