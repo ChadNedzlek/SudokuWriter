@@ -51,6 +51,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
 
     # Install the .NET Core workload
     - name: Install .NET Core
@@ -69,6 +70,9 @@ jobs:
     - name: Determine Version
       id: version
       uses: gittools/actions/gitversion/execute@v3.1.11
+      with:
+        useConfigFile: true
+        configFilePath: ./github/GitVersion.yml
       
       # Execute all unit tests in the solution
     - name: Restore
@@ -100,7 +104,7 @@ jobs:
   
     - name: Create Velopack Release
       run: |
-        vpk download github --repoUrl ${{ github.repositoryUrl }}
+        vpk download github --repoUrl ${{ github.server_url }}/${{ github.repository }}
         vpk pack `
           -u VaettirNet.SudokuWriter `
           -v ${{ steps.version.outputs.SemVer }} `
@@ -114,7 +118,7 @@ jobs:
           --shortcuts StartMenu `
           --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr https://freetsa.org/tsr"
 #        vpk upload github `
-#          --repoUrl ${{ github.repositoryUrl }} `
+#          --repoUrl ${{ github.server_url }}/${{ github.repository }} `
 #          -o ./.out/releases `
 #          --publish `
 #          --releaseName "Sudoku Writer ${{ steps.version.outputs.SemVer }}" `
