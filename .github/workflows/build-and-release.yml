@@ -101,23 +101,23 @@ jobs:
     - name: Create Velopack Release
       run: |
         vpk download github --repoUrl ${{ github.repositoryUrl }}
-        vpk pack \
-          -u VaettirNet.SudokuWriter \
-          -v ${{ steps.version.outputs.SemVer }} \
-          -p ./.out/publish \
-          -o ./.out/releases \
-          --framework net9.0-x64-desktop \
-          --delta none \
-          --packTitle "Sudoku Writer" \
-          --packAuthors Vaettir.Net \
-          --shortcuts StartMenu \
+        vpk pack `
+          -u VaettirNet.SudokuWriter `
+          -v ${{ steps.version.outputs.SemVer }} `
+          -p ./.out/publish `
+          -o ./.out/releases `
+          --framework net9.0-x64-desktop `
+          --delta none `
+          --packTitle "Sudoku Writer" `
+          --packAuthors Vaettir.Net `
+          --shortcuts StartMenu `
           --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr https://freetsa.org/tsr"
-#        vpk upload github \
-#          --repoUrl ${{ github.repositoryUrl }} \
-#          -o ./.out/releases \
-#          --publish \
-#          --releaseName "Sudoku Writer ${{ steps.version.outputs.SemVer }}" \
-#          --tag v${{ steps.version.outputs.SemVer }} \
+#        vpk upload github `
+#          --repoUrl ${{ github.repositoryUrl }} `
+#          -o ./.out/releases `
+#          --publish `
+#          --releaseName "Sudoku Writer ${{ steps.version.outputs.SemVer }}" `
+#          --tag v${{ steps.version.outputs.SemVer }} `
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
