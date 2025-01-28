@@ -110,8 +110,8 @@ jobs:
           --delta none \
           --packTitle "Sudoku Writer" \
           --packAuthors Vaettir.Net \
-          --shortcuts StartMenu
-          --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr http://freetsa.org/tsr"
+          --shortcuts StartMenu \
+          --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr https://freetsa.org/tsr"
 #        vpk upload github \
 #          --repoUrl ${{ github.repositoryUrl }} \
 #          -o ./.out/releases \
