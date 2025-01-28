@@ -72,7 +72,7 @@ jobs:
       uses: gittools/actions/gitversion/execute@v3.1.11
       with:
         useConfigFile: true
-        configFilePath: ./github/GitVersion.yml
+        configFilePath: ./.github/GitVersion.yml
       
       # Execute all unit tests in the solution
     - name: Restore
