@@ -107,6 +107,7 @@ jobs:
           -p ./.out/publish `
           -o ./.out/releases `
           --framework net9.0-x64-desktop `
+          --mainExe "VnSudoku.exe" `
           --delta none `
           --packTitle "Sudoku Writer" `
           --packAuthors Vaettir.Net `
