@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Reflection;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Windows;
@@ -12,7 +11,6 @@ using Mono.Options;
 using NuGet.Versioning;
 using Velopack;
 using Velopack.Locators;
-using Velopack.Sources;
 
 namespace VaettirNet.SudokuWriter.Gui;
 
