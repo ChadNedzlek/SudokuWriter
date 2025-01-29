@@ -95,6 +95,11 @@ jobs:
       run: |
         $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.CODE_SIGN_PFX }}")
         [IO.File]::WriteAllBytes('${{ github.workspace }}\GitHubActionsWorkflow.pfx', $pfx_cert_byte)
+      
+      # Execute all unit tests in the solution
+    - name: Build
+      run: dotnet run --project ./BuildTools/BuildTools.csproj -c Release --no-build -- manifest gen -d ./.out/publish -k ${{ github.workspace }}\GitHubActionsWorkflow.pfx
+    
     - name: Tag the commit
       run: |
         git config --global user.email "no-reply@vaettir.net"
