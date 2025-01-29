@@ -1,8 +1,18 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using System.Windows;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Mono.Options;
+using NuGet.Versioning;
 using Velopack;
+using Velopack.Locators;
+using Velopack.Sources;
 
 namespace VaettirNet.SudokuWriter.Gui;
 

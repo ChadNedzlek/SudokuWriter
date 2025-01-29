@@ -30,10 +30,15 @@ public static class MutualExclusion
             }
         }
 
+        return ApplyMasks(cells, allowedMasks);
+    }
+
+    private static bool ApplyMasks(MultiRef<ushort> cells, Span<ushort> allowedMasks)
+    {
         int iSet = 0;
-        return cells.Aggregate(
-            (bool r, scoped ref ushort cell, ReadOnlySpan<ushort> mask) => r | RuleHelpers.TryMask(ref cell, mask[iSet++]),
-            allowedMasks
-        );
+
+        bool ApplyMask(bool r, scoped ref ushort cell, ReadOnlySpan<ushort> mask) => r | RuleHelpers.TryMask(ref cell, mask[iSet++]);
+
+        return cells.Aggregate<bool, ReadOnlySpan<ushort>>(ApplyMask, allowedMasks);
     }
 }
