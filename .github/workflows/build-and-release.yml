@@ -116,14 +116,14 @@ jobs:
     - name: Created signed manifest
       run: dotnet run --project ./BuildTools/BuildTools.csproj -c Release --no-build -- vpk release sign --release ./.out/releases --key ${{ github.workspace }}\GitHubActionsWorkflow.pfx
 
-#    - name: Create Velopack Release
-#      run: |
-#        vpk upload github `
-#          --repoUrl ${{ github.server_url }}/${{ github.repository }} `
-#          -o ./.out/releases `
-#          --publish `
-#          --releaseName "Sudoku Writer ${{ steps.version.outputs.SemVer }}" `
-#          --tag v${{ steps.version.outputs.SemVer }} `
+    - name: Create Velopack Release
+      run: |
+        vpk upload github `
+          --repoUrl ${{ github.server_url }}/${{ github.repository }} `
+          -o ./.out/releases `
+          --publish `
+          --releaseName "Sudoku Writer ${{ steps.version.outputs.SemVer }}" `
+          --tag v${{ steps.version.outputs.SemVer }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
