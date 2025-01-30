@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+      <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.1" />
+      <PackageReference Include="Velopack" Version="0.0.1053" />
+    </ItemGroup>
+
+</Project>

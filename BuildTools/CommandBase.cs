@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Mono.Options;
 
 namespace VaettirNet.BuildTools;
@@ -48,6 +50,7 @@ public abstract class CommandBase : Command
 
     protected abstract int Execute();
 
+    [ContractAnnotation("value:null => halt")]
     protected void ValidateRequiredArgument<T>(T value, string argumentName)
     {
         if (typeof(T) == typeof(string))

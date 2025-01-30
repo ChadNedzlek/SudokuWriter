@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -71,13 +75,13 @@ public class ValidatingGitHubReleaseSource : GithubSource
             }
             byte[] releaseBytes = await Downloader.DownloadBytes(assetUrl, Authorization, "application/octet-stream");
             var signedFeed = JsonSerializer.Deserialize<SignedAssetFeed>(releaseBytes);
-            List<X509Certificate2> certs = signedFeed.Certificates.Select(ReadCert).ToList();
+            Dictionary<string, X509Certificate2> certs = signedFeed.Certificates.Select(ReadCert).ToDictionary(c => c.GetCertHashString(HashAlgorithmName.SHA256));
 
             foreach (var asset in signedFeed.Assets)
             {
                 Convert.FromHexString(asset.SHA256, hash, out _, out _);
                 string msg = null;
-                X509Certificate2 cert = certs[asset.CertIndex];
+                X509Certificate2 cert = certs[asset.CertHash];
                 if (asset.SignatureBase64 is null)
                 {
                     msg = "Unsigned asset present in feed";
@@ -115,14 +119,14 @@ public class ValidatingGitHubReleaseSource : GithubSource
     {
         return $"releases.{channel ?? VelopackRuntimeInfo.SystemOs.GetOsShortName()}.json";
     }
-
-    private record SignedAsset(string SignatureBase64, int CertIndex) : VelopackAsset;
-
-    private record SignedAssetFeed
-    {
-        public string[] Certificates { get; set; } = Array.Empty<string>();
-        public SignedAsset[] Assets { get; set; } = Array.Empty<SignedAsset>();
-    }
 }
 
 public record ValidatedSignedAsset(string SignatureBase64, X509Certificate2 Certificate, bool Validated, string InvalidMessage) : VelopackAsset;
+
+public record SignedAsset(string SignatureBase64, string CertHash) : VelopackAsset;
+
+public record SignedAssetFeed
+{
+    public string[] Certificates { get; set; } = Array.Empty<string>();
+    public SignedAsset[] Assets { get; set; } = Array.Empty<SignedAsset>();
+}
