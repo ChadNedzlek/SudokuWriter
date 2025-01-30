@@ -1,0 +1,3 @@
+namespace VaettirNet.VelopackExtensions.SignedReleases.Model.Validation;
+
+public record InvalidSignatureValidationResult(string Signature) : AssetValidationResult(ValidationResultCode.InvalidSignature);

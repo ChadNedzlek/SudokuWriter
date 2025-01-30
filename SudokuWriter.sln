@@ -8,7 +8,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuWriter.Gui", "SudokuW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildTools", "BuildTools\BuildTools.csproj", "{227842D8-9811-4E04-9622-B1735A164354}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Velopack.SignedReleases", "Velopack.SignedReleases\Velopack.SignedReleases.csproj", "{F17B9904-BD86-447D-ACFB-D539D0AAA290}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VelopackExtensions.SignedReleases", "VelopackExtensions.SignedReleases\VelopackExtensions.SignedReleases.csproj", "{F17B9904-BD86-447D-ACFB-D539D0AAA290}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

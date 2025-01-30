@@ -12,6 +12,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\SudokuWriter.Library\SudokuWriter.Library.csproj" />
+        <ProjectReference Include="..\VelopackExtensions.SignedReleases\VelopackExtensions.SignedReleases.csproj" />
     </ItemGroup>
 
     <ItemGroup>

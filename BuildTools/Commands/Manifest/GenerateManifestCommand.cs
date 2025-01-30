@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
 
-namespace VaettirNet.BuildTools;
+namespace VaettirNet.BuildTools.Commands.Manifest;
 
 public class GenerateManifestCommand : CommandBase
 {

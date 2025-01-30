@@ -2,6 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
+using VaettirNet.BuildTools.Commands.Manifest;
+using VaettirNet.BuildTools.Commands.Release;
+using VaettirNet.VelopackExtensions.SignedReleases;
 
 namespace VaettirNet.BuildTools;
 
@@ -13,6 +16,8 @@ internal static class Program
         ServiceCollection collection = new ServiceCollection();
 
         collection.AddLogging();
+        collection.AddSingleton<ReleaseSignerFactory>();
+        collection.AddVelopackReleaseValidation();
 
         using var services = collection.BuildServiceProvider();
 
@@ -22,6 +27,8 @@ internal static class Program
         {
             ActivatorUtilities.CreateInstance<GenerateManifestCommand>(services),
             ActivatorUtilities.CreateInstance<VerifyManifestCommand>(services),
+            ActivatorUtilities.CreateInstance<VerifyReleaseCommand>(services),
+            ActivatorUtilities.CreateInstance<SignReleaseCommand>(services),
         };
 
         try

@@ -1,16 +1,10 @@
-﻿using System.IO;
-using System.Reflection;
-using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
-using System.Windows;
-using JetBrains.Annotations;
+﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Mono.Options;
-using NuGet.Versioning;
+using VaettirNet.VelopackExtensions.SignedReleases;
+using VaettirNet.VelopackExtensions.SignedReleases.Sources;
 using Velopack;
-using Velopack.Locators;
 
 namespace VaettirNet.SudokuWriter.Gui;
 
@@ -32,6 +26,8 @@ public partial class App : Application
         
         ServiceCollection collection = new ServiceCollection();
         collection.AddLogging();
+        collection.AddSingleton<IVelopackAssetValidator, SameSignerAsEntryPointValidator>();
+        collection.AddVelopackReleaseValidation();
         collection.AddSingleton(
             s => new UpdateManager(
                 "https://github.com/ChadNedzlek/SudokuWriter",

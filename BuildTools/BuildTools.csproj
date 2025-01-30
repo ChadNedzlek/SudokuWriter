@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Velopack.SignedReleases\Velopack.SignedReleases.csproj" />
+      <ProjectReference Include="..\VelopackExtensions.SignedReleases\VelopackExtensions.SignedReleases.csproj" />
     </ItemGroup>
 
 </Project>

@@ -18,12 +18,15 @@ using Microsoft.Win32;
 using VaettirNet.SudokuWriter.Gui.UiRules;
 using VaettirNet.SudokuWriter.Library;
 using VaettirNet.SudokuWriter.Library.Rules;
+using VaettirNet.VelopackExtensions.SignedReleases.Model.Validation;
+using VaettirNet.VelopackExtensions.SignedReleases.Sources;
 using Velopack;
 
 namespace VaettirNet.SudokuWriter.Gui;
 
 public partial class MainWindow
 {
+    private readonly IVelopackAssetValidator _assetValidator;
     private readonly ILogger<MainWindow> _logger;
     private readonly UpdateManager _updateManager;
     private readonly IOptions<StartupOptions> _startupOptions;
@@ -49,8 +52,13 @@ public partial class MainWindow
     private Task _solveTask;
     private readonly GameEngineSerializer _serializer;
 
-    public MainWindow(ILogger<MainWindow> logger, UpdateManager updateManager, IOptions<StartupOptions> startupOptions)
+    public MainWindow(
+        IVelopackAssetValidator assetValidator,
+        UpdateManager updateManager,
+        IOptions<StartupOptions> startupOptions,
+        ILogger<MainWindow> logger)
     {
+        _assetValidator = assetValidator;
         _logger = logger;
         _updateManager = updateManager;
         _startupOptions = startupOptions;
@@ -686,6 +694,23 @@ public partial class MainWindow
             UpdateInfo updateInfo = await _updateManager.CheckForUpdatesAsync();
             if (updateInfo is not null)
             {
+                var validation = _assetValidator.Validate(updateInfo);
+
+                if (validation.Code < ValidationResultCode.Trusted)
+                {
+                    if (MessageBox.Show(
+                            "Update warning",
+                            "Target asset does not appear to be from the correct source. Continue with the installation?",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning,
+                            MessageBoxResult.No
+                        ) !=
+                        MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+                }
+
                 UpdateAvailable = true;
             }
         }
