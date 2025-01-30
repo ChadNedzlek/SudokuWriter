@@ -2,7 +2,7 @@ using Velopack;
 
 namespace VaettirNet.VelopackExtensions.SignedReleases;
 
-public static class AssetUtilities
+public static class VelopackUtilities
 {
     public static void CopyTo(this VelopackAsset source, VelopackAsset dest)
     {
@@ -15,5 +15,10 @@ public static class AssetUtilities
         dest.SHA256 = source.SHA256;
         dest.FileName = source.FileName;
         dest.Type = source.Type;
+    }
+
+    public static string GetVeloReleaseIndexName(string channel)
+    {
+        return $"releases.{channel ?? VelopackRuntimeInfo.SystemOs.GetOsShortName()}.json";
     }
 }

@@ -14,11 +14,18 @@ namespace VaettirNet.VelopackExtensions.SignedReleases.Sources;
 
 public class ValidatingGitHubReleaseSource : GithubSource
 {
+    public class Options
+    {
+        public string RepoUrl { get; set; }
+        public string AccessToken { get; set; }
+        public bool Prerelease { get; set; }
+    }
+    
     private readonly ReleaseValidator _releaseValidator;
 
     public ValidatingGitHubReleaseSource(
         ReleaseValidator releaseValidator,
-        IOptions<GitHubReleaseOptions> options,
+        IOptions<Options> options,
         IFileDownloader downloader = null
     ) : base(options.Value.RepoUrl, options.Value.AccessToken, options.Value.Prerelease, downloader)
     {
@@ -43,7 +50,7 @@ public class ValidatingGitHubReleaseSource : GithubSource
             return new VelopackAssetFeed();
         }
 
-        string releasesFileName = GetVeloReleaseIndexName(channel);
+        string releasesFileName = VelopackUtilities.GetVeloReleaseIndexName(channel);
         List<ValidatedGitAsset> entries = [];
         foreach (var r in releases) {
             // this might be a browser url or an api url (depending on whether we have a AccessToken or not)
@@ -63,11 +70,6 @@ public class ValidatingGitHubReleaseSource : GithubSource
         return new VelopackAssetFeed {
             Assets = entries.Cast<VelopackAsset>().ToArray(),
         };
-    }
-
-    public static string GetVeloReleaseIndexName(string channel)
-    {
-        return $"releases.{channel ?? VelopackRuntimeInfo.SystemOs.GetOsShortName()}.json";
     }
 
     private record ValidatedGitAsset : GitBaseAsset

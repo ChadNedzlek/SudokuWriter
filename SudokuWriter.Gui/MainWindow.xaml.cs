@@ -18,6 +18,7 @@ using Microsoft.Win32;
 using VaettirNet.SudokuWriter.Gui.UiRules;
 using VaettirNet.SudokuWriter.Library;
 using VaettirNet.SudokuWriter.Library.Rules;
+using VaettirNet.VelopackExtensions.SignedReleases;
 using VaettirNet.VelopackExtensions.SignedReleases.Model.Validation;
 using VaettirNet.VelopackExtensions.SignedReleases.Sources;
 using Velopack;
