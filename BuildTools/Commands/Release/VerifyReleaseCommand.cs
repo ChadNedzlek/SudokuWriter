@@ -62,6 +62,10 @@ public class VerifyReleaseCommand : CommandBase
                     CommandSet.Error.WriteLine($"{item.FileName} | Verification failed | Hash = {item.SHA256} | CertHash = {res.Signature} | Signer = {res.Signer.Subject}");
                     ret |= 32;
                     break;
+                case ExpiredCertificateValidationResult res:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    CommandSet.Error.WriteLine($"{item.FileName} | Expired certificate | Hash = {item.SHA256} | Valid = {res.Signer.NotBefore:u} to {res.Signer.NotAfter:u} | Signer = {res.Signer.Subject}");
+                    break;
                 case UntrustedValidationResult res:
                     CommandSet.Error.WriteLine($"{item.FileName} | Verified signature | Hash = {item.SHA256} | Signer = {res.Signer.Subject}");
                     break;

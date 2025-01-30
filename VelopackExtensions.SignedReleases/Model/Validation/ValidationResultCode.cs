@@ -6,6 +6,7 @@ public enum ValidationResultCode
     Unverifiable,
     InvalidSignature,
     VerificationFailed,
+    Expired,
     Untrusted,
     Trusted
 }

@@ -53,7 +53,6 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
 
-    # Install the .NET Core workload
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
@@ -74,31 +73,22 @@ jobs:
         useConfigFile: true
         configFilePath: ./.github/GitVersion.yml
       
-      # Execute all unit tests in the solution
     - name: Restore
       run: dotnet restore -p:IsLocal=false
       
-      # Execute all unit tests in the solution
     - name: Build
       run: dotnet build -c Release --no-restore -p:IsLocal=false -p:Version=${{ steps.version.outputs.AssemblySemVer }} -p:PackageVersion=${{ steps.version.outputs.SemVer }}
 
-    # Execute all unit tests in the solution
     - name: Unit Test
       run: dotnet test --no-build --verbosity normal --configuration Release -p:IsLocal=false
       
-    # Execute all unit tests in the solution
     - name: Build
       run: dotnet publish ./SudokuWriter.Gui/ -c Release --no-build -r win-x64 -o ./.out/publish
 
-    #Decode the base 64 encoded pfx and save the Signing_Certificate
     - name: Decode the pfx
       run: |
         $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.CODE_SIGN_PFX }}")
         [IO.File]::WriteAllBytes('${{ github.workspace }}\GitHubActionsWorkflow.pfx', $pfx_cert_byte)
-      
-      # Execute all unit tests in the solution
-    - name: Created signed manifest
-      run: dotnet run --project ./BuildTools/BuildTools.csproj -c Release --no-build -- manifest gen -d ./.out/publish -k ${{ github.workspace }}\GitHubActionsWorkflow.pfx
     
     - name: Tag the commit
       run: |
@@ -122,12 +112,19 @@ jobs:
           --packAuthors Vaettir.Net `
           --shortcuts StartMenu `
           --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr http://freetsa.org/tsr"
+
+    - name: Created signed manifest
+      run: dotnet run --project ./BuildTools/BuildTools.csproj -c Release --no-build -- vpk release sign -d ./.out/releases -k ${{ github.workspace }}\GitHubActionsWorkflow.pfx
+
+#    - name: Create Velopack Release
+#      run: |
 #        vpk upload github `
 #          --repoUrl ${{ github.server_url }}/${{ github.repository }} `
 #          -o ./.out/releases `
 #          --publish `
 #          --releaseName "Sudoku Writer ${{ steps.version.outputs.SemVer }}" `
 #          --tag v${{ steps.version.outputs.SemVer }} `
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:

@@ -4,7 +4,6 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
 using VaettirNet.VelopackExtensions.SignedReleases.Model;
 using VaettirNet.VelopackExtensions.SignedReleases.Model.Validation;
-using VaettirNet.VelopackExtensions.SignedReleases.Sources;
 
 namespace VaettirNet.VelopackExtensions.SignedReleases;
 
