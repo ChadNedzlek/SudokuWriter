@@ -114,7 +114,7 @@ jobs:
           --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr http://freetsa.org/tsr"
 
     - name: Created signed manifest
-      run: dotnet run --project ./BuildTools/BuildTools.csproj -c Release --no-build -- vpk release sign -d ./.out/releases -k ${{ github.workspace }}\GitHubActionsWorkflow.pfx
+      run: dotnet run --project ./BuildTools/BuildTools.csproj -c Release --no-build -- vpk release sign --release ./.out/releases --key ${{ github.workspace }}\GitHubActionsWorkflow.pfx
 
 #    - name: Create Velopack Release
 #      run: |
