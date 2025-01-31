@@ -123,12 +123,13 @@ jobs:
           -o ./.out/releases `
           --publish `
           --releaseName "Sudoku Writer ${{ steps.version.outputs.SemVer }}" `
-          --tag v${{ steps.version.outputs.SemVer }}
+          --tag v${{ steps.version.outputs.SemVer }} `
+          --token ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: vpk
-        path: |
-          .out/releases
-        retention-days: 1
+#    - name: Upload artifacts
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: vpk
+#        path: |
+#          .out/releases
+#        retention-days: 1
