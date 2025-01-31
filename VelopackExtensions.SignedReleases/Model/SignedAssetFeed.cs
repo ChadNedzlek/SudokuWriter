@@ -11,5 +11,7 @@ public record SignedAssetFeed(ImmutableList<string> Certificates) : VelopackAsse
     {
         get => base.Assets.Cast<SignedAsset>();
         init => base.Assets = value.Cast<VelopackAsset>().ToArray();
-    } 
+    }
+
+    public ImmutableList<string> Certificates { get; set; } = Certificates;
 }

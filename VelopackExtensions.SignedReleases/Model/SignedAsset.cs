@@ -18,6 +18,6 @@ public record SignedAsset : VelopackAsset
         baseAsset.CopyTo(this);
     }
 
-    public string SignatureBase64 { get; init; }
-    public string CertHash { get; init; }
+    public string SignatureBase64 { get; set; }
+    public string CertHash { get; set; }
 }

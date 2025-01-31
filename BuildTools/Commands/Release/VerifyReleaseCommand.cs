@@ -44,34 +44,34 @@ public class VerifyReleaseCommand : CommandBase
             {
                 case UnsignedValidationResult:
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    CommandSet.Error.WriteLine($"{item.FileName} | Missing signature | Hash = {item.SHA256}");
+                    CommandSet.WriteError($"{item.FileName} | Missing signature | Hash = {item.SHA256}");
                     ret |= 4;
                     break;
                 case InvalidSignatureValidationResult res:
                     Console.ForegroundColor = ConsoleColor.Red;
-                    CommandSet.Error.WriteLine($"{item.FileName} | Invalid signature | Hash = {item.SHA256} | Signature = {res.Signature}");
+                    CommandSet.WriteError($"{item.FileName} | Invalid signature | Hash = {item.SHA256} | Signature = {res.Signature}");
                     ret |= 8;
                     break;
                 case UnverifiableValidationResult res:
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    CommandSet.Error.WriteLine($"{item.FileName} | Unverifiable signature | Hash = {item.SHA256} | CertHash = {res.CertHash}");
+                    CommandSet.WriteError($"{item.FileName} | Unverifiable signature | Hash = {item.SHA256} | CertHash = {res.CertHash}");
                     ret |= 16;
                     break;
                 case VerificationFailedValidationResult res:
                     Console.ForegroundColor = ConsoleColor.Red;
-                    CommandSet.Error.WriteLine($"{item.FileName} | Verification failed | Hash = {item.SHA256} | CertHash = {res.Signature} | Signer = {res.Signer.Subject}");
+                    CommandSet.WriteError($"{item.FileName} | Verification failed | Hash = {item.SHA256} | CertHash = {res.Signature} | Signer = {res.Signer.Subject}");
                     ret |= 32;
                     break;
                 case ExpiredCertificateValidationResult res:
                     Console.ForegroundColor = ConsoleColor.Red;
-                    CommandSet.Error.WriteLine($"{item.FileName} | Expired certificate | Hash = {item.SHA256} | Valid = {res.Signer.NotBefore:u} to {res.Signer.NotAfter:u} | Signer = {res.Signer.Subject}");
+                    CommandSet.WriteError($"{item.FileName} | Expired certificate | Hash = {item.SHA256} | Valid = {res.Signer.NotBefore:u} to {res.Signer.NotAfter:u} | Signer = {res.Signer.Subject}");
                     break;
                 case UntrustedValidationResult res:
-                    CommandSet.Error.WriteLine($"{item.FileName} | Verified signature | Hash = {item.SHA256} | Signer = {res.Signer.Subject}");
+                    CommandSet.WriteError($"{item.FileName} | Verified signature | Hash = {item.SHA256} | Signer = {res.Signer.Subject}");
                     break;
                 case TrustedValidationResult res:
                     Console.ForegroundColor = ConsoleColor.Green;
-                    CommandSet.Error.WriteLine($"{item.FileName} | trusted | Hash = {item.SHA256} | Signer = {res.Signer.Subject}");
+                    CommandSet.WriteError($"{item.FileName} | trusted | Hash = {item.SHA256} | Signer = {res.Signer.Subject}");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

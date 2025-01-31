@@ -46,7 +46,7 @@ public class VerifyManifestCommand : CommandBase
         using var reader = new StreamReader(manifestStream);
         if (reader.ReadLine() != GenerateManifestCommand.BeginManifestBlock)
         {
-            CommandSet.Error.WriteLine("Invalid manifest file, missing begin manifest block");
+            CommandSet.WriteError("Invalid manifest file, missing begin manifest block");
             return 3;
         }
 
@@ -61,19 +61,19 @@ public class VerifyManifestCommand : CommandBase
             var segments = lineSpan.Split('\t');
             if (!segments.MoveNext() || !uint.TryParse(lineSpan[segments.Current], out uint length))
             {
-                CommandSet.Error.WriteLine("Invalid manifest file, file section missing length/delimiter");
+                CommandSet.WriteError("Invalid manifest file, file section missing length/delimiter");
                 return 3;
             }
             if (!segments.MoveNext())
             {
-                CommandSet.Error.WriteLine("Invalid manifest file, file section missing hash/delimiter");
+                CommandSet.WriteError("Invalid manifest file, file section missing hash/delimiter");
                 return 3;
             }
 
             Convert.FromHexString(lineSpan[segments.Current], hash, out _, out _);
             if (!segments.MoveNext())
             {
-                CommandSet.Error.WriteLine("Invalid manifest file, file section missing file path");
+                CommandSet.WriteError("Invalid manifest file, file section missing file path");
                 return 3;
             }
 
@@ -84,14 +84,14 @@ public class VerifyManifestCommand : CommandBase
             using var fileStream = File.OpenRead(fileName);
             if (fileStream.Length != length)
             {
-                CommandSet.Error.WriteLine($"Length mismatch for {pathSpan}");
+                CommandSet.WriteError($"Length mismatch for {pathSpan}");
                 return 4;
             }
 
             SHA256.HashData(fileStream, compareHash);
             if (!hash.SequenceEqual(compareHash))
             {
-                CommandSet.Error.WriteLine($"Hash validation failed for {pathSpan}");
+                CommandSet.WriteError($"Hash validation failed for {pathSpan}");
                 return 4;
             }
 
@@ -101,7 +101,7 @@ public class VerifyManifestCommand : CommandBase
 
         if (line == null)
         {
-            CommandSet.Error.WriteLine("Invalid manifest file, missing end manifest block");
+            CommandSet.WriteError("Invalid manifest file, missing end manifest block");
             return 3;
         }
 
@@ -111,7 +111,7 @@ public class VerifyManifestCommand : CommandBase
             var relPath = Path.GetRelativePath(InputDirectory, filename).Replace('\\', '/');
             if (!validatedPaths.Contains(relPath))
             {
-                CommandSet.Error.WriteLine($"Extra file found {relPath}");
+                CommandSet.WriteError($"Extra file found {relPath}");
                 return 4;
             }
         }
@@ -132,13 +132,13 @@ public class VerifyManifestCommand : CommandBase
                 {
                     if (field.DecodedDataLength != compareHash.Length || !Convert.TryFromBase64Chars(rem[field.Base64Data], compareHash, out _))
                     {
-                        CommandSet.Error.WriteLine("Invalid manifest file, malformed hash");
+                        CommandSet.WriteError("Invalid manifest file, malformed hash");
                         return 3;
                     }
                     
                     if (!hash.SequenceEqual(compareHash))
                     {
-                        CommandSet.Error.WriteLine("Hash validation failed for aggregate hash");
+                        CommandSet.WriteError("Hash validation failed for aggregate hash");
                         return 4;
                     }
 
@@ -155,7 +155,7 @@ public class VerifyManifestCommand : CommandBase
                     Span<byte> bytes = new byte[field.DecodedDataLength];
                     if (!Convert.TryFromBase64Chars(rem[field.Base64Data], bytes, out _))
                     {
-                        CommandSet.Error.WriteLine("Invalid manifest file, malformed certificate");
+                        CommandSet.WriteError("Invalid manifest file, malformed certificate");
                         return 3;
                     }
 
@@ -173,7 +173,7 @@ public class VerifyManifestCommand : CommandBase
 
                         if (expected != inCert)
                         {
-                            CommandSet.Error.WriteLine($"Embedded certificate does not have matching Subject: {inCert}");
+                            CommandSet.WriteError($"Embedded certificate does not have matching Subject: {inCert}");
                             return 4;
                         }
                     }
@@ -182,13 +182,13 @@ public class VerifyManifestCommand : CommandBase
                     {
                         if (cert.Extensions.OfType<X509AuthorityKeyIdentifierExtension>().FirstOrDefault() is not { } aki)
                         {
-                            CommandSet.Error.WriteLine($"Embedded certificate does not authority key info");
+                            CommandSet.WriteError($"Embedded certificate does not authority key info");
                             return 4;
                         }
 
                         if (aki.KeyIdentifier is null)
                         {
-                            CommandSet.Error.WriteLine($"Embedded certificate authority key identifier has no key id");
+                            CommandSet.WriteError($"Embedded certificate authority key identifier has no key id");
                             return 4;
                         }
 
@@ -199,13 +199,13 @@ public class VerifyManifestCommand : CommandBase
 
                         if (aki.KeyIdentifier is not {} akiki)
                         {
-                            CommandSet.Error.WriteLine($"Embedded certificate authority key identifier has no key id");
+                            CommandSet.WriteError($"Embedded certificate authority key identifier has no key id");
                             return 4;
                         }
 
                         if (!expectedAki.SequenceEqual(akiki.Span))
                         {
-                            CommandSet.Error.WriteLine($"Embedded certificate does not have matching authority key identifier: {Convert.ToHexString(akiki.Span)}");
+                            CommandSet.WriteError($"Embedded certificate does not have matching authority key identifier: {Convert.ToHexString(akiki.Span)}");
                             return 4;
                         }
                     }
@@ -214,13 +214,13 @@ public class VerifyManifestCommand : CommandBase
                     {
                         if (cert.Extensions.OfType<X509SubjectKeyIdentifierExtension>().FirstOrDefault() is not { } ski)
                         {
-                            CommandSet.Error.WriteLine($"Embedded certificate does not subject key info");
+                            CommandSet.WriteError($"Embedded certificate does not subject key info");
                             return 4;
                         }
 
                         if (ski.SubjectKeyIdentifier != SubjectKeyIdentifier)
                         {
-                            CommandSet.Error.WriteLine($"Embedded certificate does not have matching subject key id: {ski.SubjectKeyIdentifier}");
+                            CommandSet.WriteError($"Embedded certificate does not have matching subject key id: {ski.SubjectKeyIdentifier}");
                             return 4;
                         }
                     }
@@ -232,7 +232,7 @@ public class VerifyManifestCommand : CommandBase
                 {
                     if (!Convert.TryFromBase64Chars(rem[field.Base64Data], signature, out int cbSignature))
                     {
-                        CommandSet.Error.WriteLine("Invalid manifest file, invalid rsa public key");
+                        CommandSet.WriteError("Invalid manifest file, invalid rsa public key");
                         return 3;
                     }
                     signature = signature[..cbSignature];
@@ -241,13 +241,13 @@ public class VerifyManifestCommand : CommandBase
                     
                     if (publicKeySpan.IsEmpty)
                     {
-                        CommandSet.Error.WriteLine("Invalid manifest file, missing public key");
+                        CommandSet.WriteError("Invalid manifest file, missing public key");
                         return 3;
                     }
 
                     if (!validatedHash)
                     {
-                        CommandSet.Error.WriteLine("Invalid manifest file, missing aggregate hash");
+                        CommandSet.WriteError("Invalid manifest file, missing aggregate hash");
                         return 3;
                     }
 
@@ -260,7 +260,7 @@ public class VerifyManifestCommand : CommandBase
                 {
                     if (!Convert.TryFromBase64Chars(rem[field.Base64Data], signature, out int cbSignature))
                     {
-                        CommandSet.Error.WriteLine("Invalid manifest file, invalid rsa public key");
+                        CommandSet.WriteError("Invalid manifest file, invalid rsa public key");
                         return 3;
                     }
                     signature = signature[..cbSignature];
@@ -269,13 +269,13 @@ public class VerifyManifestCommand : CommandBase
                     
                     if (publicKeySpan.IsEmpty)
                     {
-                        CommandSet.Error.WriteLine("Invalid manifest file, missing public key");
+                        CommandSet.WriteError("Invalid manifest file, missing public key");
                         return 3;
                     }
 
                     if (!validatedHash)
                     {
-                        CommandSet.Error.WriteLine("Invalid manifest file, missing aggregate hash");
+                        CommandSet.WriteError("Invalid manifest file, missing aggregate hash");
                         return 3;
                     }
 
@@ -291,7 +291,7 @@ public class VerifyManifestCommand : CommandBase
 
         if (!validatedHash)
         {
-            CommandSet.Error.WriteLine("Invalid manifest file, missing aggregate hash");
+            CommandSet.WriteError("Invalid manifest file, missing aggregate hash");
             return 3;
         }
 
@@ -300,7 +300,7 @@ public class VerifyManifestCommand : CommandBase
             case RSA rsa:
                 if (!rsa.VerifyHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pss))
                 {
-                    CommandSet.Error.WriteLine("Signature validation failed");
+                    CommandSet.WriteError("Signature validation failed");
                     return 4;
                 }
                 validatedSignature = true;
@@ -308,7 +308,7 @@ public class VerifyManifestCommand : CommandBase
             case ECDsa ecdsa:
                 if (!ecdsa.VerifyHash(hash, signature, DSASignatureFormat.Rfc3279DerSequence))
                 {
-                    CommandSet.Error.WriteLine("Signature validation failed");
+                    CommandSet.WriteError("Signature validation failed");
                     return 4;
                 }
                 validatedSignature = true;
@@ -317,7 +317,7 @@ public class VerifyManifestCommand : CommandBase
 
         if (!validatedSignature)
         {
-            CommandSet.Error.WriteLine("Invalid manifest file, missing signature block");
+            CommandSet.WriteError("Invalid manifest file, missing signature block");
             return 3;
         }
 

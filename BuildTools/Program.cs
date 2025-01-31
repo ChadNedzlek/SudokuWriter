@@ -8,9 +8,22 @@ using VaettirNet.VelopackExtensions.SignedReleases;
 
 namespace VaettirNet.BuildTools;
 
+public enum VerbosityLevel
+{
+    Silent,
+    Error,
+    Warning,
+    Quiet,
+    Normal,
+    Verbose,
+}
+
 internal static class Program
 {
     public const byte CaSlot = 0x84;
+
+    public static VerbosityLevel Verbosity { get; private set; } = VerbosityLevel.Normal;
+    
     static int Main(string[] args)
     {
         ServiceCollection collection = new ServiceCollection();
@@ -29,6 +42,9 @@ internal static class Program
             ActivatorUtilities.CreateInstance<VerifyManifestCommand>(services),
             ActivatorUtilities.CreateInstance<VerifyReleaseCommand>(services),
             ActivatorUtilities.CreateInstance<SignReleaseCommand>(services),
+            ActivatorUtilities.CreateInstance<SignGithubRelease>(services),
+            {"verbose|v", "Increase verbosity level", v => Verbosity += v is null ? -1 : 1},
+            {"quiet|q", "Decrease verbosity level", v => Verbosity -= v is null ? -1 : 1},
         };
 
         try

@@ -113,9 +113,6 @@ jobs:
           --shortcuts StartMenu `
           --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr http://freetsa.org/tsr"
 
-    - name: Created signed manifest
-      run: dotnet run --project ./BuildTools/BuildTools.csproj -c Release --no-build -- vpk release sign --release ./.out/releases --key ${{ github.workspace }}\GitHubActionsWorkflow.pfx
-
     - name: Create Velopack Release
       run: |
         vpk upload github `
@@ -125,6 +122,21 @@ jobs:
           --releaseName "Sudoku Writer ${{ steps.version.outputs.SemVer }}" `
           --tag v${{ steps.version.outputs.SemVer }} `
           --token ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Created signed manifest
+      run: |
+        dotnet run `
+        --project ./BuildTools/BuildTools.csproj `
+        -c Release `
+        --no-build `
+        -- `
+        gh release sign `
+        --repository ${{ github.repository }} `
+        --tag v${{ steps.version.outputs.SemVer }} `
+        --key ${{ github.workspace }}\GitHubActionsWorkflow.pfx `
+        --verbose
+      env:
+        GITHUB_ACCESSTOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #    - name: Upload artifacts
 #      uses: actions/upload-artifact@v4

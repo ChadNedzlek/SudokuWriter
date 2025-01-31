@@ -22,7 +22,7 @@ public abstract class CommandBase : Command
         IList<string> handled = HandleExtraArgs(extra);
         if (handled.Count > 0)
         {
-            CommandSet.Error.WriteLine($"Unknown argument '{handled[0]}'");
+            CommandSet.WriteError($"Unknown argument '{handled[0]}'");
             Options.WriteOptionDescriptions(Console.Error);
             return 1;
         }
@@ -39,7 +39,7 @@ public abstract class CommandBase : Command
         }
         catch (MissingRequiredArgumentException e)
         {
-            CommandSet.Error.WriteLine(e.Message);
+            CommandSet.WriteError(e.Message);
             Options.WriteOptionDescriptions(CommandSet.Error);
             return e.ExitCode ?? 1;
         }
