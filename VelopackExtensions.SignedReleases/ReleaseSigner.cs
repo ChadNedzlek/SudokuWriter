@@ -21,6 +21,14 @@ using VaettirNet.VelopackExtensions.SignedReleases.Signing;
 namespace VaettirNet.VelopackExtensions.SignedReleases;
 
 [InterpolatedStringHandler]
+public class DebugBase64FormattedString : Base64FormattedString
+{
+    public DebugBase64FormattedString(int literalLength, int formattedCount, ILogger logger) : base(literalLength, formattedCount, logger, LogLevel.Debug)
+    {
+    }
+}
+
+[InterpolatedStringHandler]
 public class Base64FormattedString
 {
     private readonly StringBuilder _builder;
@@ -68,6 +76,11 @@ public class Base64FormattedString
 public static class LoggerExtensions
 {
     public static void Log(this ILogger logger, LogLevel level, [InterpolatedStringHandlerArgument(nameof(logger), nameof(level))] Base64FormattedString message)
+    {
+        if (logger.IsEnabled(level))
+            logger.Log(level, message.ToString());
+    }
+    public static void LogDebug(this ILogger logger, LogLevel level, [InterpolatedStringHandlerArgument(nameof(logger), nameof(level))] DebugBase64FormattedString message)
     {
         if (logger.IsEnabled(level))
             logger.Log(level, message.ToString());

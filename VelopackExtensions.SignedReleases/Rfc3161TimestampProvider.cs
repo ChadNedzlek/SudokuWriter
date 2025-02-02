@@ -59,6 +59,12 @@ public class Rfc3161TimestampProvider : ISignedTimestampService
             case "text/html":
                 _logger?.LogError("The server responded with html: {htmlDoc}", Encoding.UTF8.GetString(bytes).Replace("\n", " "));
                 throw new CryptographicException("Unexpected response from TSR server");
+            case "application/timestamp-reply":
+                // This is good
+                break;
+            case var contentType:
+                _logger?.LogError("The server responded with unknown content type: {contentType}", contentType);
+                throw new CryptographicException("Unexpected response from TSR server");
         }
 
         Rfc3161TimestampToken resp = request.ProcessResponse(bytes, out _);
