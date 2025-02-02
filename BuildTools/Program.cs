@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mono.Options;
+using NReco.Logging.File;
 using VaettirNet.BuildTools.Commands.Manifest;
 using VaettirNet.BuildTools.Commands.Release;
 using VaettirNet.VelopackExtensions.SignedReleases;
@@ -26,9 +27,25 @@ internal static class Program
     
     static int Main(string[] args)
     {
+        bool consoleLogging = false;
+        string fileLog = null;
+        OptionSet preargs = new()
+        {
+            {"console-log|cl", "Enable console logging", v => consoleLogging = v is not null},
+            {"file-log|fl=", "Enable file logging to a file", v => fileLog = v},
+        };
+
+        var remArgs = preargs.Parse(args);
+        
         ServiceCollection collection = new ServiceCollection();
 
-        collection.AddLogging();
+        collection.AddLogging(
+            b =>
+            {
+                b.SetMinimumLevel(LogLevel.Trace);
+                if (consoleLogging) b.AddSimpleConsole(o => o.IncludeScopes = false);
+                if (fileLog is not null) b.AddFile(fileLog);
+            });
         collection.AddSingleton<ReleaseSignerFactory>();
         collection.AddVelopackReleaseValidation();
 
@@ -49,7 +66,7 @@ internal static class Program
 
         try
         {
-            return commands.Run(args);
+            return commands.Run(remArgs);
         }
         catch (CommandFailedException e)
         {

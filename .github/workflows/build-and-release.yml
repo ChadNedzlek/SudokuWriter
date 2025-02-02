@@ -134,7 +134,8 @@ jobs:
         --repository ${{ github.repository }} `
         --tag v${{ steps.version.outputs.SemVer }} `
         --key ${{ github.workspace }}\GitHubActionsWorkflow.pfx `
-        --verbose
+        --verbose `
+        --console-log
       env:
         GITHUB_ACCESSTOKEN: ${{ secrets.GITHUB_TOKEN }}
 
