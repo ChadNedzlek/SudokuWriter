@@ -1,6 +1,6 @@
 using System;
 
-namespace VaettirNet.VelopackExtensions.SignedReleases.Sources;
+namespace VaettirNet.VelopackExtensions.SignedReleases;
 
 public static class HttpUtility
 {

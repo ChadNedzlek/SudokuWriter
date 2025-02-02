@@ -1,13 +1,13 @@
 using System;
 using System.Security.Cryptography;
 
-namespace VaettirNet.BuildTools;
+namespace VaettirNet.VelopackExtensions.SignedReleases;
 
-public readonly struct PublicHashFormatter
+public readonly struct PublicKeyHashFormatter
 {
     private readonly AsymmetricAlgorithm _alg;
 
-    public PublicHashFormatter(AsymmetricAlgorithm alg)
+    public PublicKeyHashFormatter(AsymmetricAlgorithm alg)
     {
         _alg = alg;
     }

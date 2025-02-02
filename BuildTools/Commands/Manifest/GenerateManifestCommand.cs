@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
+using VaettirNet.VelopackExtensions.SignedReleases;
 
 namespace VaettirNet.BuildTools.Commands.Manifest;
 
@@ -91,7 +92,7 @@ public class GenerateManifestCommand : CommandBase
             X509Certificate2 pfxCert = X509CertificateLoader.LoadPkcs12(File.ReadAllBytes(PrivateKeyFile), null);
             if (pfxCert.GetECDsaPrivateKey() is { } ecdsa)
             {
-                _logger.LogInformation("Loaded ecdsa key with public key {publicKey}", new PublicHashFormatter(ecdsa));
+                _logger.LogInformation("Loaded ecdsa key with public key {publicKey}", new PublicKeyHashFormatter(ecdsa));
                 cbSignature = ecdsa.SignHash(hash, signature, DSASignatureFormat.Rfc3279DerSequence);
                 publicKey = ecdsa.ExportSubjectPublicKeyInfoPem();
                 cert = pfxCert;
@@ -99,7 +100,7 @@ public class GenerateManifestCommand : CommandBase
             }
             if (pfxCert.GetRSAPrivateKey() is { } rsa)
             {
-                _logger.LogInformation("Loaded rsa key with public key {publicKey}", new PublicHashFormatter(rsa));
+                _logger.LogInformation("Loaded rsa key with public key {publicKey}", new PublicKeyHashFormatter(rsa));
                 cbSignature = rsa.SignHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pss);
                 publicKey = rsa.ExportSubjectPublicKeyInfoPem();
                 cert = pfxCert;
@@ -112,7 +113,7 @@ public class GenerateManifestCommand : CommandBase
         if (!string.IsNullOrEmpty(CertificateFile))
         {
             cert = X509CertificateLoader.LoadCertificate(File.ReadAllBytes(CertificateFile));
-            _logger.LogInformation("Loaded cert with public key {publicKey}", new PublicHashFormatter(cert.GetECDsaPublicKey() ?? (AsymmetricAlgorithm)cert.GetRSAPublicKey()));
+            _logger.LogInformation("Loaded cert with public key {publicKey}", new PublicKeyHashFormatter(cert.GetECDsaPublicKey() ?? (AsymmetricAlgorithm)cert.GetRSAPublicKey()));
         }
         else
         {
@@ -154,7 +155,7 @@ public class GenerateManifestCommand : CommandBase
 
         var ecdsa = ECDsa.Create();
         ecdsa.ImportECPrivateKey(bytes, out _);
-        _logger.LogInformation("Loaded key with public key {publicKey}", new PublicHashFormatter(ecdsa));
+        _logger.LogInformation("Loaded key with public key {publicKey}", new PublicKeyHashFormatter(ecdsa));
         cbSignature = ecdsa.SignHash(hash, signature, DSASignatureFormat.Rfc3279DerSequence);
         publicKey = ecdsa.ExportSubjectPublicKeyInfoPem();
     }
@@ -177,7 +178,7 @@ public class GenerateManifestCommand : CommandBase
 
         var rsa = RSA.Create();
         rsa.ImportSubjectPublicKeyInfo(bytes, out _);
-        _logger.LogInformation("Loaded key with public key {publicKey}", new PublicHashFormatter(rsa));
+        _logger.LogInformation("Loaded key with public key {publicKey}", new PublicKeyHashFormatter(rsa));
         cbSignature = rsa.SignHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pss);
         publicKey = rsa.ExportSubjectPublicKeyInfoPem();
     }

@@ -57,12 +57,12 @@ public class VerifyReleaseCommand : CommandBase
                     CommandSet.WriteError($"{item.FileName} | Unverifiable signature | Hash = {item.SHA256} | CertHash = {res.CertHash}");
                     ret |= 16;
                     break;
-                case VerificationFailedValidationResult res:
+                case SignatureVerificationFailedValidationResult res:
                     Console.ForegroundColor = ConsoleColor.Red;
                     CommandSet.WriteError($"{item.FileName} | Verification failed | Hash = {item.SHA256} | CertHash = {res.Signature} | Signer = {res.Signer.Subject}");
                     ret |= 32;
                     break;
-                case ExpiredCertificateValidationResult res:
+                case CertificateVerificationFailedValidationResult res:
                     Console.ForegroundColor = ConsoleColor.Red;
                     CommandSet.WriteError($"{item.FileName} | Expired certificate | Hash = {item.SHA256} | Valid = {res.Signer.NotBefore:u} to {res.Signer.NotAfter:u} | Signer = {res.Signer.Subject}");
                     break;

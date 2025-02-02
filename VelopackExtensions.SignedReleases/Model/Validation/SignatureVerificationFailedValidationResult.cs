@@ -1,0 +1,5 @@
+using System.Security.Cryptography.X509Certificates;
+
+namespace VaettirNet.VelopackExtensions.SignedReleases.Model.Validation;
+
+public record SignatureVerificationFailedValidationResult(X509Certificate2 Signer, string Signature) : AssetValidationResult(ValidationResultCode.SignatureVerificationFailed);

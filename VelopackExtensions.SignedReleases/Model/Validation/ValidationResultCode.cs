@@ -5,8 +5,8 @@ public enum ValidationResultCode
     Unsigned = 0,
     Unverifiable,
     InvalidSignature,
-    VerificationFailed,
-    Expired,
+    SignatureVerificationFailed,
+    CertificateVerificationFailed,
     Untrusted,
     Trusted
 }

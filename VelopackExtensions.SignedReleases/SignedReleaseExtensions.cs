@@ -12,7 +12,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class SignedReleaseExtensions
 {
-    public static IServiceCollection AddVelopackReleaseValidation(this IServiceCollection services)
+    public static IServiceCollection AddVelopackReleaseValidation(this IServiceCollection services, string timestampAuthorityUrl = "https://freetsa.org/tsr")
     {
         services.AddLogging();
         services.AddOptions();
@@ -31,6 +31,8 @@ public static class SignedReleaseExtensions
         services.TryAddSingleton<IAssetTrustResolver>(DefaultTrustResolver.Instance);
         services.TryAddSingleton<ReleaseSignerFactory>();
         services.TryAddSingleton<ReleaseValidator>();
+        services.TryAddSingleton<ISignedTimestampService, Rfc3161TimestampProvider>();
+        services.Configure<Rfc3161TimestampProvider.Options>(o => o.TimestampAuthorityUrl = timestampAuthorityUrl);
         return services;
     }
 }

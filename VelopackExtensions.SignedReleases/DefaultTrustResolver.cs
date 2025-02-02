@@ -8,23 +8,29 @@ namespace VaettirNet.VelopackExtensions.SignedReleases;
 
 public class DefaultTrustResolver : IAssetTrustResolver
 {
-    private readonly TimeProvider _timeProvider;
-    public static readonly DefaultTrustResolver Instance = new(TimeProvider.System);
+    public static readonly DefaultTrustResolver Instance = new();
 
-    public DefaultTrustResolver(TimeProvider timeProvider)
+    public DefaultTrustResolver()
     {
-        _timeProvider = timeProvider;
     }
 
-    public AssetValidationResult Validate(VelopackAsset asset, X509Certificate2 signer)
+    public AssetValidationResult Validate(VelopackAsset asset, X509Certificate2 signer, DateTimeOffset asOf)
     {
-        signer.Verify();
-        DateTimeOffset now = _timeProvider.GetUtcNow();
-        if (signer.NotBefore > now || signer.NotAfter < now)
+        X509ChainStatusFlags status = signer.VerifyChain(
+            new X509ChainPolicy
+            {
+                RevocationMode = X509RevocationMode.Online,
+                RevocationFlag = X509RevocationFlag.EntireChain,
+                VerificationTime = asOf.UtcDateTime,
+                VerificationFlags = X509VerificationFlags.IgnoreNotTimeNested
+            }
+        );
+
+        if (status == X509ChainStatusFlags.NoError)
         {
-            return new ExpiredCertificateValidationResult(signer, now);
+            return new UntrustedValidationResult(signer);
         }
 
-        return new UntrustedValidationResult(signer);
+        return new CertificateVerificationFailedValidationResult(signer, asOf, status);
     }
 }
