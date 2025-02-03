@@ -165,8 +165,11 @@ public partial class SignGithubRelease : CommandBase
 
                     foreach (SignedAsset asset in signedAssetFeed.Assets ?? [])
                     {
-                        previousSignatures.TryAdd(asset.SHA256, asset.SignatureBase64);
-                        previousCertHash.TryAdd(asset.SHA256, asset.CertHash);
+                        if (asset.SignatureBase64 != null && asset.CertHash != null)
+                        {
+                            previousSignatures.TryAdd(asset.SHA256, asset.SignatureBase64);
+                            previousCertHash.TryAdd(asset.SHA256, asset.CertHash);
+                        }
                     }
                 }
             }
