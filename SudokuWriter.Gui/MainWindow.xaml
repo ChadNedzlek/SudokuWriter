@@ -56,7 +56,7 @@
                     <RadioButton Content="Renban" GroupName="RuleType" />
                     <RadioButton Content="German Whisper" GroupName="RuleType" />
                     <RadioButton Content="Palindrome" GroupName="RuleType" />
-                    <RadioButton Content="Thermo" GroupName="RuleType" IsEnabled="False" />
+                    <RadioButton Content="Thermo" GroupName="RuleType" />
                     <RadioButton Content="Arrow" GroupName="RuleType" IsEnabled="False" />
                     <RadioButton Content="Same Parity" GroupName="RuleType" IsEnabled="False" />
                     <RadioButton Content="Alternate Parity" GroupName="RuleType" IsEnabled="False" />

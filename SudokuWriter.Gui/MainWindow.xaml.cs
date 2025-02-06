@@ -78,6 +78,7 @@ public partial class MainWindow
             new KropkiDotUiRule(cellSize, "White Kropki", isDouble: false),
             new PairSumUiRule(cellSize, "Sums"),
             new CageUiRule(cellSize, "Cage"),
+            new ThermoUiRule(cellSize, "Thermo"),
         ];
 
         if (_startupOptions.Value.LoadFileName is not null)

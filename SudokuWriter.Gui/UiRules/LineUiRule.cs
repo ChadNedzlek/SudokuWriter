@@ -72,6 +72,7 @@ public abstract class LineUiRule<T> : UiGameRuleFactory where T : LineRule<T>, I
     {
         var drawing = new GeometryDrawing
         {
+            Brush = LineBrush,
             Pen = new Pen
             {
                 Brush = LineBrush,
