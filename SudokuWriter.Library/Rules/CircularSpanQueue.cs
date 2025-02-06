@@ -7,6 +7,9 @@ public ref struct CircularSpanQueue<T>
     private Span<T> _span;
     private int _head = -1;
     private int _tail;
+    #if DEBUG
+    private int _count = 0;
+    #endif
 
     public CircularSpanQueue(Span<T> span)
     {
@@ -15,6 +18,9 @@ public ref struct CircularSpanQueue<T>
 
     public void Enqueue(T value)
     {
+#if DEBUG
+        _count++;
+        #endif
         if (_head < 0)
         {
             _span[_tail] = value;
@@ -44,10 +50,22 @@ public ref struct CircularSpanQueue<T>
             value = default;
             return false;
         }
+#if DEBUG
+        _count--;
+#endif
 
         value = _span[_head++];
+        if (_head >= _span.Length)
+        {
+            _head = 0;
+        }
+
         if (_head == _tail)
+        {
             _head = -1;
+            _tail = 0;
+        }
+
         return true;
     }
 }

@@ -17,8 +17,8 @@ public class ThermoLineRule : DirectedLineRule<ThermoLineRule>, ILineRule<Thermo
     public override GameResult Evaluate(GameState state)
     {
         ImmutableArray<GridCoord> roots = GetRoots();
-        var coordQueue = new CircularSpanQueue<GridCoord>(stackalloc GridCoord[20]);
-        var valueQueue = new CircularSpanQueue<CellValueMask>(stackalloc CellValueMask[20]);
+        var coordQueue = new CircularSpanQueue<GridCoord>(stackalloc GridCoord[40]);
+        var valueQueue = new CircularSpanQueue<CellValueMask>(stackalloc CellValueMask[40]);
         foreach (GridCoord r in roots)
         {
             coordQueue.Enqueue(r);
