@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Numerics;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -20,7 +19,6 @@ using VaettirNet.SudokuWriter.Library;
 using VaettirNet.SudokuWriter.Library.Rules;
 using VaettirNet.VelopackExtensions.SignedReleases;
 using VaettirNet.VelopackExtensions.SignedReleases.Model.Validation;
-using VaettirNet.VelopackExtensions.SignedReleases.Sources;
 using Velopack;
 
 namespace VaettirNet.SudokuWriter.Gui;
@@ -153,7 +151,7 @@ public partial class MainWindow
 
             if (e.OriginalSource is not TextBox cell) return;
 
-            cell.Tag = new CellValue(cell.Text, CellStyle.Fixed);
+            cell.Tag = new CellBoxValue(cell.Text, CellStyle.Fixed);
             await ValidateAndReportGameState();
         }
         catch (Exception ex)
@@ -162,16 +160,32 @@ public partial class MainWindow
         }
     }
 
+    private CancellationTokenSource _cancelPendingEvalutations;
     private async Task ValidateAndReportGameState()
     {
         if (_gameEngine.Rules.IsEmpty) return;
+
+        StatusMessage = "Solving...";
         
         GameState state = BuildGameStateFromUi();
+
+        CancellationTokenSource prevToken = Interlocked.Exchange(ref _cancelPendingEvalutations, new CancellationTokenSource());
+        prevToken?.Cancel();
+        prevToken?.Dispose();
 
         TaskCompletionSource<GameQueryResult> resultTask = new();
         _queries.Enqueue(new GameQuery(state, resultTask));
         _gameStateAvailable.Trigger();
-        GameQueryResult result = await resultTask.Task;
+        GameQueryResult result;
+        try
+        {
+            result = await resultTask.Task;
+        }
+        catch (OperationCanceledException)
+        {
+            // This version of the game was preempted, just move on
+            return;
+        }
 
         Style s = result.Result switch
         {
@@ -188,20 +202,23 @@ public partial class MainWindow
         for (int c = 0; c < state.Structure.Columns; c++)
         {
             TextBox uiCell = uiCells[r * 9 + c];
-            CellStyle style = uiCell.Tag is CellValue value ? value.Style : CellStyle.Ambiguous;
+            CellStyle style = uiCell.Tag is CellBoxValue value ? value.Style : CellStyle.Ambiguous;
             if (style == CellStyle.Fixed) continue;
             switch (result)
             {
                 case UnsolvableQueryResult:
                     SetCell(r, c, "", CellStyle.Potential);
+                    StatusMessage = "Unsolvable";
                     break;
                 case SolvedQueryResult solved:
                     SetCell(r, c, TextFromDigit(solved.Solution.Cells.GetSingle(r, c)), CellStyle.Solved);
+                    StatusMessage = "Solved";
                     break;
                 case MultipleSolutionsQueryResult multi:
-                    ushort mask = (ushort)(multi.Solution1.Cells[r, c] |
+                    CellValueMask mask = (multi.Solution1.Cells[r, c] |
                         multi.Solution2.Cells[r, c]);
-                    SetCell(r, c, TextFromDigitMask(mask), BitOperations.IsPow2(mask) ? CellStyle.Solved : CellStyle.Ambiguous);
+                    SetCell(r, c, TextFromDigitMask(mask), mask.IsSingle() ? CellStyle.Solved : CellStyle.Ambiguous);
+                    StatusMessage = "Multiple Solutions";
                     break;
             }
         }
@@ -215,7 +232,7 @@ public partial class MainWindow
         for (int r = 0; r < cells.Rows; r++)
         for (int c = 0; c < cells.Columns; c++)
         {
-            if (uiCells[r * 9 + c].Tag is CellValue { Style: CellStyle.Fixed, Text: { } cellText })
+            if (uiCells[r * 9 + c].Tag is CellBoxValue { Style: CellStyle.Fixed, Text: { } cellText })
             {
                 cells.SetSingle(r, c, DigitFromText(cellText));
             }
@@ -225,22 +242,22 @@ public partial class MainWindow
         return state;
     }
 
-    private ushort DigitFromText(string text)
+    private static CellValue DigitFromText(string text)
     {
-        return (ushort)(ushort.TryParse(text, out ushort digit) ? digit - 1 : ~0);
+        return new CellValue((ushort)(ushort.TryParse(text, out ushort digit) ? digit - 1 : ~0));
     }
 
-    private string TextFromDigit(int digit)
+    private static string TextFromDigit(CellValue digit)
     {
-        return (digit + 1).ToString();
+        return digit.NumericValue.ToString();
     }
 
-    private string TextFromDigitMask(ushort digit)
+    private static string TextFromDigitMask(CellValueMask digit)
     {
         var b = new StringBuilder(9);
         for (ushort d = 0; d < 9; d++)
-            if (Cells.IsDigitSet(digit, d))
-                b.Append(TextFromDigit(d));
+            if (digit.Contains(new CellValue(d)))
+                b.Append(TextFromDigit(new CellValue(d)));
 
         return b.ToString();
     }
@@ -288,7 +305,7 @@ public partial class MainWindow
     {
         TextBox cell = CellBoxes[row * 9 + column];
         SetCellTextAndStyle(cell, text, style);
-        cell.Tag = new CellValue(text, style);
+        cell.Tag = new CellBoxValue(text, style);
     }
 
     private void SetCellTextAndStyle(TextBox cell, string text, CellStyle style)
@@ -327,7 +344,7 @@ public partial class MainWindow
     {
         if (e.OriginalSource is not TextBox box) return;
 
-        if (box.Tag is CellValue { Style: CellStyle.Fixed }) return;
+        if (box.Tag is CellBoxValue { Style: CellStyle.Fixed }) return;
 
         SetCellTextAndStyle(box, "", CellStyle.Fixed);
     }
@@ -336,7 +353,7 @@ public partial class MainWindow
     {
         if (e.OriginalSource is not TextBox box) return;
 
-        if (box.Tag is not CellValue computed) return;
+        if (box.Tag is not CellBoxValue computed) return;
 
         SetCellTextAndStyle(box, computed.Text, computed.Style);
     }
@@ -385,12 +402,13 @@ public partial class MainWindow
 
     private record class GameQuery(GameState State, TaskCompletionSource<GameQueryResult> OnSolved);
 
-    private readonly record struct CellValue(string Text, CellStyle Style);
+    private readonly record struct CellBoxValue(string Text, CellStyle Style);
 
     private void CloseWindow(object sender, ExecutedRoutedEventArgs e) => Close();
 
     private void NewGame(object sender, ExecutedRoutedEventArgs e)
     {
+        _cancelPendingEvalutations?.Cancel();
         _gameEngine = GameEngine.Default;
         _selfTriggered++;
         foreach (TextBox cell in CellBoxes)
@@ -398,6 +416,12 @@ public partial class MainWindow
             cell.Text = "";
         }
         _selfTriggered--;
+        _currentRule = null;
+        _ruleCollection.Rules.Clear();
+        while (RuleDrawingGroup.Children.Count > 2)
+        {
+            RuleDrawingGroup.Children.RemoveAt(2);
+        }
     }
 
     private async void SaveGame(object sender, ExecutedRoutedEventArgs e)
@@ -444,6 +468,7 @@ public partial class MainWindow
                 return;
             }
         
+            _cancelPendingEvalutations?.Cancel();
             _queries.Clear();
             
             await using Stream stream = dlg.OpenFile();
@@ -462,14 +487,13 @@ public partial class MainWindow
         for (int r = 0; r < gameEngine.InitialState.Structure.Rows; r++)
         for (int c = 0; c < gameEngine.InitialState.Structure.Columns; c++)
         {
-            switch (gameEngine.InitialState.Cells.GetSingle(r, c))
+            if (gameEngine.InitialState.Cells[r, c].TryGetSingle(out var x))
             {
-                case Cells.NoSingleValue:
-                    SetCell(r, c, "", CellStyle.Potential);
-                    break;
-                case var x:
-                    SetCell(r, c, TextFromDigit(x), CellStyle.Fixed);
-                    break;
+                SetCell(r, c, TextFromDigit(x), CellStyle.Fixed);
+            }
+            else
+            {
+                SetCell(r, c, "", CellStyle.Potential);
             }
         }
 
@@ -485,7 +509,6 @@ public partial class MainWindow
         {
             RuleDrawingGroup.Children.Add(uiRule.Drawing);
         }
-
         await ValidateAndReportGameState();
     }
 
@@ -637,6 +660,8 @@ public partial class MainWindow
         var menuItem = e.OriginalSource as MenuItem;
         try
         {
+            StatusMessage = "Updating...";
+            IsEnabled = false;
             if (menuItem != null) menuItem.IsEnabled = false;
             GameState gameState = BuildGameStateFromUi();
             string tempFile = Path.GetTempFileName();
@@ -651,7 +676,7 @@ public partial class MainWindow
                 return;
             }
 
-            await _updateManager.DownloadUpdatesAsync(updateInfo);
+            await _updateManager.DownloadUpdatesAsync(updateInfo, pct => Dispatcher.Invoke(() => ProgressPercentage = pct));
             _updateManager.ApplyUpdatesAndRestart(null, ["--load", tempFile]);
         }
         catch (Exception ex)
@@ -661,6 +686,8 @@ public partial class MainWindow
         }
         finally
         {
+            ProgressPercentage = 0;
+            IsEnabled = true;
             if (menuItem != null) menuItem.IsEnabled = true;
         }
     }
@@ -691,6 +718,7 @@ public partial class MainWindow
                 return;
             }
 
+            StatusMessage = "Checking for updates...";
             if (menuItem != null) menuItem.IsEnabled = false;
             UpdateInfo updateInfo = await _updateManager.CheckForUpdatesAsync();
             if (updateInfo is not null)

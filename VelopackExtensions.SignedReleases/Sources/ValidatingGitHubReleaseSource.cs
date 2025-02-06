@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using VaettirNet.VelopackExtensions.SignedReleases.Model.Validation;
-using VaettirNet.VelopackExtensions.SignedReleases.Signing;
 using Velopack;
 using Velopack.Sources;
 

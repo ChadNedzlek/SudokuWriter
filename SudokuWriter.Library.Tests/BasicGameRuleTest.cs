@@ -19,7 +19,7 @@ public class BasicGameRuleTest
     public void EvaluateSingleSet()
     {
         var s = new GameStructure(4, 4, 4, 2, 2);
-        var state = new GameState(Cells.CreateFilled(s).SetCell(0, 0, 0), s);
+        var state = new GameState(Cells.CreateFilled(s).SetCell(0, 0, new CellValue(0)), s);
         BasicGameRule.Instance.Evaluate(state).ShouldBe(GameResult.Unknown);
     }
 
@@ -29,8 +29,8 @@ public class BasicGameRuleTest
         var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
             Cells.CreateFilled(s)
-                .SetCell(0, 0, 0)
-                .SetCell(2, 0, 0),
+                .SetCell(0, 0, new CellValue(0))
+                .SetCell(2, 0, new CellValue(0)),
             s
         );
         BasicGameRule.Instance.Evaluate(state).ShouldBe(GameResult.Unsolvable);
@@ -42,7 +42,7 @@ public class BasicGameRuleTest
         var s = new GameStructure(4, 4, 4, 2, 2);
         var state = new GameState(
             Cells.CreateFilled(s)
-                .SetCell(0, 0, 0)
+                .SetCell(0, 0, new CellValue(0))
                 .SetCell(0, 2, 0),
             s
         );

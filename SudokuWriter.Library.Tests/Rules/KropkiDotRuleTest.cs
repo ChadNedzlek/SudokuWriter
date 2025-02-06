@@ -33,17 +33,30 @@ public class KropkiDotRuleTest
     }
 
     [Test]
-    public void SimplyFromSetCell()
+    public void SimplySequentialFromSetCell()
     {
         var structure = new GameStructure(2, 2, 4, 2, 2);
         var cells = Cells.CreateFilled(structure).ToBuilder();
-        cells[1, 0] = 13;
-        cells[1, 1] = 13;
+        cells[0, 0] = new CellValue(0) | new CellValue(1);
         var state = new GameState(cells.MoveToImmutable(), structure);
-        GameState reduced = new KropkiDotRule(doubles: [(0,0)], sequential: [(2,0)]).TryReduce(state).ShouldNotBeNull();
-        Cells.GetDigitDisplay(reduced.Cells[0, 0]).ShouldBe("124");
-        Cells.GetDigitDisplay(reduced.Cells[0, 1]).ShouldBe("124");
-        Cells.GetDigitDisplay(reduced.Cells[1, 0]).ShouldBe("34");
-        Cells.GetDigitDisplay(reduced.Cells[1, 1]).ShouldBe("34");
+        GameState reduced = new KropkiDotRule(doubles: [], sequential: [(0,0)]).TryReduce(state).ShouldNotBeNull();
+        reduced.Cells[0, 0].ToString().ShouldBe("12");
+        reduced.Cells[0, 1].ToString().ShouldBe("123");
+        reduced.Cells[1, 0].ToString().ShouldBe("1234");
+        reduced.Cells[1, 1].ToString().ShouldBe("1234");
+    }
+
+    [Test]
+    public void SimplyDoubleFromSetCell()
+    {
+        var structure = new GameStructure(2, 2, 4, 2, 2);
+        var cells = Cells.CreateFilled(structure).ToBuilder();
+        cells[0, 0] = new CellValue(0) | new CellValue(1);
+        var state = new GameState(cells.MoveToImmutable(), structure);
+        GameState reduced = new KropkiDotRule(doubles: [(0,0)], sequential: []).TryReduce(state).ShouldNotBeNull();
+        reduced.Cells[0, 0].ToString().ShouldBe("12");
+        reduced.Cells[0, 1].ToString().ShouldBe("124");
+        reduced.Cells[1, 0].ToString().ShouldBe("1234");
+        reduced.Cells[1, 1].ToString().ShouldBe("1234");
     }
 }

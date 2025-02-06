@@ -13,9 +13,9 @@ public class CageRuleTest
     {
         GameStructure s = new(1, 2, 9, 1, 2);
         var cells = CellsBuilder.CreateFilled(s);
-        cells[0, 1] = Cells.GetDigitMask(0);
+        cells[0, 1] = new CellValue(0).AsMask();
         var reducedState = new CageRule(5, [(0, 0), (0, 1)]).TryReduce(new GameState(cells.MoveToImmutable(), s)).ShouldNotBeNull();
-        Cells.GetDigitDisplay(reducedState.Cells[0,0]).ShouldBe("4");
+        reducedState.Cells[0,0].ToString().ShouldBe("4");
     }
 
     [Test]
@@ -23,9 +23,9 @@ public class CageRuleTest
     {
         GameStructure s = new(1, 2, 9, 1, 2);
         var cells = CellsBuilder.CreateFilled(s);
-        cells[0, 1] = Cells.GetDigitMask(3);
+        cells[0, 1] = new CellValue(3).AsMask();
         var reducedState = new CageRule(10, [(0, 0), (0, 1)]).TryReduce(new GameState(cells.MoveToImmutable(), s)).ShouldNotBeNull();
-        Cells.GetDigitDisplay(reducedState.Cells[0,0]).ShouldBe("6");
+        reducedState.Cells[0,0].ToString().ShouldBe("6");
     }
 
     [Test]
@@ -33,10 +33,10 @@ public class CageRuleTest
     {
         GameStructure s = new(1, 2, 9, 1, 2);
         var cells = CellsBuilder.CreateFilled(s);
-        cells[0, 1] = (ushort)(Cells.GetDigitMask(3) | Cells.GetDigitMask(4) | Cells.GetDigitMask(6));
+        cells[0, 1] = new CellValue(3) | new CellValue(4) | new CellValue(6);
         var reducedState = new CageRule(10, [(0, 0), (0, 1)]).TryReduce(new GameState(cells.MoveToImmutable(), s)).ShouldNotBeNull();
         // Technically the 4 is "wrong", but that requires an "O(Cells^2 * Digits)" algorithm instead of an O(Digits) one
-        Cells.GetDigitDisplay(reducedState.Cells[0,0]).ShouldBe("3456");
+        reducedState.Cells[0,0].ToString().ShouldBe("3456");
     }
 
     [Test]
@@ -52,8 +52,8 @@ public class CageRuleTest
     {
         GameStructure s = new(1, 2, 9, 1, 2);
         var cells = CellsBuilder.CreateFilled(s);
-        cells[0, 1] = Cells.GetDigitMask(1);
-        cells[0, 0] = Cells.GetDigitMask(4);
+        cells[0, 1] = new CellValue(1).AsMask();
+        cells[0, 0] = new CellValue(4).AsMask();
         new CageRule(7, [(0, 0), (0, 1)]).Evaluate(new GameState(cells.MoveToImmutable(), s)).ShouldBe(GameResult.Solved);
     }
 
@@ -62,7 +62,7 @@ public class CageRuleTest
     {
         GameStructure s = new(1, 2, 9, 1, 2);
         var cells = CellsBuilder.CreateFilled(s);
-        cells[0, 1] = Cells.GetDigitMask(1);
+        cells[0, 1] = new CellValue(1).AsMask();
         new CageRule(12, [(0, 0), (0, 1)]).Evaluate(new GameState(cells.MoveToImmutable(), s)).ShouldBe(GameResult.Unsolvable);
     }
 }

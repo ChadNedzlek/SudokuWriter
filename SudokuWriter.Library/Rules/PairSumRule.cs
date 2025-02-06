@@ -22,9 +22,9 @@ public class PairSumRule : IGameRule
         foreach (GridEdge d in Pairs)
         {
             (GridCoord aCoord, GridCoord bCoord) = d.GetSides();
-            ushort a = state.Cells[aCoord];
-            ushort b = state.Cells[bCoord];
-            if ((a & GetSumPair(b, state.Digits)) == 0) return GameResult.Unsolvable;
+            CellValueMask a = state.Cells[aCoord];
+            CellValueMask b = state.Cells[bCoord];
+            if ((a & GetSumPair(b, state.Digits)) == CellValueMask.None) return GameResult.Unsolvable;
         }
 
         return GameResult.Solved;
@@ -37,8 +37,8 @@ public class PairSumRule : IGameRule
         foreach (GridEdge d in Pairs)
         {
             (GridCoord aCoord, GridCoord bCoord) = d.GetSides();
-            ref ushort a = ref cells[aCoord];
-            ref ushort b = ref cells[bCoord];
+            ref CellValueMask a = ref cells[aCoord];
+            ref CellValueMask b = ref cells[bCoord];
             reduced |= RuleHelpers.TryMask(ref a, GetSumPair(b, state.Digits));
             reduced |= RuleHelpers.TryMask(ref b, GetSumPair(a, state.Digits));
         }
@@ -46,7 +46,7 @@ public class PairSumRule : IGameRule
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state)
+    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state)
     {
         return [];
     }
@@ -69,13 +69,13 @@ public class PairSumRule : IGameRule
         return new PairSumRule(sum, pairList);
     }
 
-    private ushort GetSumPair(ushort x, ushort digits)
+    private CellValueMask GetSumPair(CellValueMask x, ushort digits)
     {
-        int reversed = Cells.GetReversed(x, digits);
+        CellValueMask reversed = x.Reversed(digits);
         int zeroShift = digits + 1;
         int shiftAmount = zeroShift - Sum;
-        if (shiftAmount > 0) return (ushort)(reversed >> shiftAmount);
+        if (shiftAmount > 0) return reversed >> (ushort)shiftAmount;
 
-        return (ushort)(reversed << -shiftAmount);
+        return reversed << (ushort)-shiftAmount;
     }
 }

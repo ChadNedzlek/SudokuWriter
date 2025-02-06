@@ -1,27 +1,34 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 
 namespace VaettirNet.SudokuWriter.Library;
 
-public readonly ref struct MultiRef<T>
+[InlineArray(10)]
+internal struct OffsetList
+{
+    private ulong _element0;
+}
+
+public ref struct MultiRef<T>
 {
     private readonly Span<T> _ref;
-    private readonly List<ulong> _offsets;
+    private OffsetList _offsets;
+    private int _length;
 
     public MultiRef(Span<T> validSpace)
     {
-        _offsets = new List<ulong>(10);
         _ref = validSpace;
     }
 
-    internal MultiRef(Span<T> validSpace, List<ulong> offsets)
+    internal MultiRef(Span<T> validSpace, OffsetList offsets, int length)
     {
         _ref = validSpace;
         _offsets = offsets;
+        _length = length;
     }
 
-    public int GetCount()
+    public readonly int GetCount()
     {
         int cnt = 0;
         foreach (ulong ptr in _offsets)
@@ -40,12 +47,19 @@ public readonly ref struct MultiRef<T>
         return cnt;
     }
 
+    private void Add(ulong o)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(_length, 9);
+        _offsets[_length++] = o;
+    }
+
     public void Include(ref T target)
     {
         if (!_ref.Overlaps(new ReadOnlySpan<T>(ref target), out int offset))
             throw new ArgumentException("target is not contained in this MultiRef", nameof(target));
 
-        _offsets.Add((ulong)offset);
+        if (_length > 9) throw new ArgumentOutOfRangeException();
+        Add((ulong)offset);
     }
 
     public void Include(int index)
@@ -53,23 +67,26 @@ public readonly ref struct MultiRef<T>
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _ref.Length);
         ArgumentOutOfRangeException.ThrowIfNegative(index);
 
-        _offsets.Add((ulong)index);
+        if (_length > 9) throw new ArgumentOutOfRangeException();
+        Add((ulong)index);
     }
 
     public void IncludeStrides(ushort start, ushort runLength, ushort strideLength, ushort strideCount)
     {
-        _offsets.Add(((ulong)start << 48) | ((ulong)runLength << 32) | ((ulong)strideLength << 16) | strideCount);
+        if (_length > 9) throw new ArgumentOutOfRangeException();
+        Add(((ulong)start << 48) | ((ulong)runLength << 32) | ((ulong)strideLength << 16) | strideCount);
     }
 
     public void IncludeStride(ushort start, ushort runLength)
     {
-        _offsets.Add(((ulong)start << 48) | ((ulong)runLength << 32) | 1);
+        Add(((ulong)start << 48) | ((ulong)runLength << 32) | 1);
     }
 
-    public void ForEach(RefAction<T> callback)
+    public readonly void ForEach(RefAction<T> callback)
     {
-        foreach (ulong ptr in _offsets)
+        for (int ip=0;ip<_length;ip++)
         {
+            ulong ptr = _offsets[ip];
             if (ptr <= int.MaxValue)
             {
                 callback(ref _ref[(int)ptr]);
@@ -86,15 +103,16 @@ public readonly ref struct MultiRef<T>
         }
     }
 
-    public TOut Aggregate<TOut>(RefAggregator<T, TOut> callback)
+    public readonly TOut Aggregate<TOut>(RefAggregator<T, TOut> callback)
     {
         return Aggregate(default, callback);
     }
 
-    public TOut Aggregate<TOut>(TOut seed, RefAggregator<T, TOut> callback)
+    public readonly TOut Aggregate<TOut>(TOut seed, RefAggregator<T, TOut> callback)
     {
-        foreach (ulong ptr in _offsets)
+        for (int ip = 0; ip < _length; ip++)
         {
+            ulong ptr = _offsets[ip];
             if (ptr <= int.MaxValue)
             {
                 seed = callback(seed, ref _ref[(int)ptr]);
@@ -113,17 +131,18 @@ public readonly ref struct MultiRef<T>
         return seed;
     }
 
-    public TOut Aggregate<TOut, TContext>(RefContextAggregator<T, TOut, TContext> callback, TContext context)
+    public readonly TOut Aggregate<TOut, TContext>(RefContextAggregator<T, TOut, TContext> callback, TContext context)
         where TContext : allows ref struct
     {
         return Aggregate(default, callback, context);
     }
 
-    public TOut Aggregate<TOut, TContext>(TOut seed, RefContextAggregator<T, TOut, TContext> callback, TContext context)
+    public readonly TOut Aggregate<TOut, TContext>(TOut seed, RefContextAggregator<T, TOut, TContext> callback, TContext context)
         where TContext : allows ref struct
     {
-        foreach (ulong ptr in _offsets)
+        for (int ip=0;ip<_length;ip++)
         {
+            ulong ptr = _offsets[ip];
             if (ptr <= int.MaxValue)
             {
                 seed = callback(seed, ref _ref[(int)ptr], context);
@@ -142,11 +161,12 @@ public readonly ref struct MultiRef<T>
         return seed;
     }
 
-    public ImmutableArray<T> ToImmutableList()
+    public readonly ImmutableArray<T> ToImmutableList()
     {
         ImmutableArray<T>.Builder values = ImmutableArray.CreateBuilder<T>(20);
-        foreach (ulong ptr in _offsets)
+        for (int ip=0;ip<_length;ip++)
         {
+            ulong ptr = _offsets[ip];
             if (ptr <= int.MaxValue)
             {
                 values.Add(_ref[(int)ptr]);
@@ -165,9 +185,9 @@ public readonly ref struct MultiRef<T>
         return values.ToImmutable();
     }
 
-    public MultiRefBox<T> Box()
+    public readonly MultiRefBox<T> Box()
     {
-        return new MultiRefBox<T>(_offsets);
+        return new MultiRefBox<T>(_offsets, _length);
     }
 }
 

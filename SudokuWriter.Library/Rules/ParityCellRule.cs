@@ -20,18 +20,14 @@ public class ParityCellRule : IGameRule
     {
         foreach (GridCoord odd in OddCells)
         {
-            int single = state.Cells.GetSingle(odd.Row, odd.Col);
-            if (single == Cells.NoSingleValue) continue;
-            // Digits are 0 based in code, 1 based in rules
-            if (single % 2 != 0) return GameResult.Unsolvable;
+            if (!state.Cells[odd].TryGetSingle(out var single)) continue;
+            if (single.NumericValue % 2 == 0) return GameResult.Unsolvable;
         }
 
         foreach (GridCoord even in EvenCells)
         {
-            int single = state.Cells.GetSingle(even.Row, even.Col);
-            if (single == Cells.NoSingleValue) continue;
-            // Digits are 0 based in code, 1 based in rules
-            if (single % 2 == 0) return GameResult.Unsolvable;
+            if (!state.Cells[even].TryGetSingle(out var single)) continue;
+            if (single.NumericValue % 2 != 0) return GameResult.Unsolvable;
         }
 
         return GameResult.Solved;
@@ -39,7 +35,7 @@ public class ParityCellRule : IGameRule
 
     public GameState? TryReduce(GameState state)
     {
-        ushort oddMask = unchecked((ushort)(0x5555 & Cells.GetAllDigitsMask(state.Digits)));
+        CellValueMask oddMask = new CellValueMask(0x5555) & CellValueMask.All(state.Digits);
         CellsBuilder cells = state.Cells.ToBuilder();
         bool changed = false;
         foreach (GridCoord odd in OddCells)
@@ -49,13 +45,13 @@ public class ParityCellRule : IGameRule
 
         foreach (GridCoord even in EvenCells)
         {
-            changed |= RuleHelpers.TryMask(ref cells[even.Row, even.Col], unchecked((ushort)(oddMask << 1)));
+            changed |= RuleHelpers.TryMask(ref cells[even.Row, even.Col], oddMask << 1);
         }
 
         return changed ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state) => [];
+    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state) => [];
 
     public JsonObject ToJsonObject()
     {

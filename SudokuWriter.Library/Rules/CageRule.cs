@@ -27,15 +27,14 @@ public class CageRule : IGameRule
     {
         ushort simpleSum = 0;
         bool allSet = true;
-        List<ushort> highCellValues = new (Cage.Length);
+        List<CellValueMask> highCellValues = new (Cage.Length);
         foreach (GridCoord cell in Cage)
         {
-            ushort value = state.Cells[cell];
+            CellValueMask value = state.Cells[cell];
             highCellValues.Add(value);
-            var v = Cells.GetSingle(value);
-            if (v != Cells.NoSingleValue)
+            if (value.TryGetSingle(out var v))
             {
-                simpleSum += (ushort)(v + 1);
+                simpleSum += v.NumericValue;
             }
             else
             {
@@ -48,27 +47,27 @@ public class CageRule : IGameRule
             return simpleSum == Sum ? GameResult.Solved : GameResult.Unsolvable;
         }
 
-        List<ushort> lowCellValues = highCellValues.ToList();
+        List<CellValueMask> lowCellValues = highCellValues.ToList();
 
 
         highCellValues.Sort(HighestHighBitComparison);
         lowCellValues.Sort(LowestLowBitComparison);
-        Span<ushort> highSpan = CollectionsMarshal.AsSpan(highCellValues);
-        Span<ushort> lowSpan = CollectionsMarshal.AsSpan(lowCellValues);
+        Span<CellValueMask> highSpan = CollectionsMarshal.AsSpan(highCellValues);
+        Span<CellValueMask> lowSpan = CollectionsMarshal.AsSpan(lowCellValues);
         
         ushort minValue = 0;
         ushort maxValue = 0;
 
         for (int i = 0; i < Cage.Length; i++)
         {
-            ushort max = Cells.GetMaxDigitMask(highSpan[i]);
-            ushort min = Cells.GetMinDigitMask(lowSpan[i]);
-            minValue += (ushort)(Cells.GetSingle(min) + 1);
-            maxValue += (ushort)(Cells.GetSingle(max) + 1);
+            CellValueMask max = highSpan[i].GetMaxDigitMask();
+            CellValueMask min = lowSpan[i].GetMinDigitMask();
+            minValue += min.GetSingle().NumericValue;
+            maxValue +=  max.GetSingle().NumericValue;
             for (int j = i + 1; j < Cage.Length; j++)
             {
-                highSpan[j] &= (ushort)~max;
-                lowSpan[j] &= (ushort)~min;
+                highSpan[j] &= ~max;
+                lowSpan[j] &= ~min;
             }
             highCellValues.Sort(HighestHighBitComparison);
             lowCellValues.Sort(LowestLowBitComparison);
@@ -80,8 +79,8 @@ public class CageRule : IGameRule
                 ? GameResult.Solved
                 : GameResult.Unknown;
         
-        int HighestHighBitComparison(ushort a, ushort b) => b.CompareTo(a);
-        int LowestLowBitComparison(ushort a, ushort b) => ushort.TrailingZeroCount(a).CompareTo(ushort.TrailingZeroCount(b));
+        int HighestHighBitComparison(CellValueMask a, CellValueMask b) => b.RawValue.CompareTo(a.RawValue);
+        int LowestLowBitComparison(CellValueMask a, CellValueMask b) => ushort.TrailingZeroCount(a.RawValue).CompareTo(ushort.TrailingZeroCount(b.RawValue));
     }
 
     public GameState? TryReduce(GameState state)
@@ -92,7 +91,7 @@ public class CageRule : IGameRule
         Vec indices = Vec.Indices;
         for (int i = 0; i < Cage.Length; i++)
         {
-            Vec value = Vector256.Create(cells[Cage[i]]);
+            Vec value = Vector256.Create(cells[Cage[i]].RawValue);
             Vec index = Vector256.Create((ushort)i);
             setExcept = Vector256.ConditionalSelect(Vector256.Equals(index, indices), setExcept, setExcept | value);
         }
@@ -129,13 +128,13 @@ public class CageRule : IGameRule
 
         for (int i = 0; i < Cage.Length; i++)
         {
-            reduced |= RuleHelpers.TryMask(ref cells[Cage[i]], validMask[i]);
+            reduced |= RuleHelpers.TryMask(ref cells[Cage[i]], new CellValueMask(validMask[i]));
         }
 
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state)
+    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state)
     {
         var refs = state.Cells.GetEmptyReferences();
         foreach (var cell in Cage)
@@ -158,7 +157,7 @@ public class CageRule : IGameRule
 
     private Vec CalculateValidMaskAvx2(Vec maxSumExcept, Vec minSumExcept, int digits)
     {
-        var allMask = Vector256.Create((uint)Cells.GetAllDigitsMask(digits));
+        var allMask = Vector256.Create((uint)CellValueMask.All(digits).RawValue);
         // The minimum value for any given cell is the Sum minus the max values of all the other cells
         // Ex.  If the sum is "20", and the other cells can only add to "15", then a cell has to be
         // a minimum of 5.  (so 20 - 1 - 15 = 4 = the amount we have to shift the mask)
@@ -181,7 +180,7 @@ public class CageRule : IGameRule
 
     private Vec CalculateValidMaskAvx10v1(Vec maxSumExcept, Vec minSumExcept, int digits)
     {
-        var allMask = Vector256.Create(Cells.GetAllDigitsMask(digits));
+        var allMask = Vector256.Create(CellValueMask.All(digits).RawValue);
         // The minimum value for any given cell is the Sum minus the max values of all the other cells
         // Ex.  If the sum is "20", and the other cells can only add to "15", then a cell has to be
         // a minimum of 5.  (so 20 - 1 - 15 = 4 = the amount we have to shift the mask)

@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using VaettirNet.VelopackExtensions.SignedReleases;
 using VaettirNet.VelopackExtensions.SignedReleases.Model;
 using VaettirNet.VelopackExtensions.SignedReleases.Services;
-using Velopack;
 
 // services.AddStuff() is, by convention, put in this namespace, no matter the assembly
 // ReSharper disable once CheckNamespace

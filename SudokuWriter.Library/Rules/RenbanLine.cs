@@ -30,7 +30,7 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
         bool empty = false;
         foreach (BranchingRuleLine line in Lines)
         {
-            ushort setMask = 0;
+            CellValueMask setMask = CellValueMask.None;
             int length = 0;
             int setCount = 0;
             foreach (LineRuleSegment segment in line.Branches)
@@ -38,8 +38,8 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
                 foreach (GridCoord coord in segment.Cells)
                 {
                     length++;
-                    ushort mask = state.Cells[coord];
-                    if (Cells.IsSingle(mask))
+                    CellValueMask mask = state.Cells[coord];
+                    if (mask.IsSingle())
                     {
                         setCount++;
                         setMask |= mask;
@@ -49,10 +49,10 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
                 }
             }
 
-            int range = sizeof(ushort) * 8 - BitOperations.LeadingZeroCount(setMask) - BitOperations.TrailingZeroCount(setMask);
+            int range = sizeof(ushort) * 8 - BitOperations.LeadingZeroCount(setMask.RawValue) - BitOperations.TrailingZeroCount(setMask.RawValue);
             if (range > length) return GameResult.Unsolvable;
 
-            int setBitCount = BitOperations.PopCount(setMask);
+            ushort setBitCount = setMask.Count;
             if (setCount == length)
             {
                 if (setBitCount != length)
@@ -68,21 +68,21 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
         bool reduced = false;
         CellsBuilder cells = state.Cells.ToBuilder();
 
-        ushort allDigitMask = Cells.GetAllDigitsMask(state.Digits);
+        CellValueMask allDigitMask = CellValueMask.All(state.Digits);
 
         foreach (BranchingRuleLine line in Lines)
         {
             ushort length = 0;
-            ushort alreadySetMask = 0;
-            ushort availableDigits = 0;
+            CellValueMask alreadySetMask = CellValueMask.None;
+            CellValueMask availableDigits = CellValueMask.None;
             foreach (LineRuleSegment segment in line.Branches)
             {
                 foreach (GridCoord coord in segment.Cells)
                 {
                     length++;
-                    ushort cell = cells[coord];
+                    CellValueMask cell = cells[coord];
                     availableDigits |= cell;
-                    if (Cells.IsSingle(cell)) alreadySetMask |= cell;
+                    if (cell.IsSingle()) alreadySetMask |= cell;
                 }
             }
 
@@ -91,8 +91,8 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
             // can't have 1 or 2 on it either, since it can't... fit.
             ushort range = unchecked((ushort)((1 << length) - 1));
 
-            ushort checkGaps = availableDigits;
-            ushort noGaps = 0;
+            ushort checkGaps = availableDigits.RawValue;
+            CellValueMask noGaps = CellValueMask.None;
             while (checkGaps != 0)
             {
                 ushort trailingZeroCount = ushort.TrailingZeroCount(checkGaps);
@@ -102,7 +102,7 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
                 if ((test & checkGaps) == test)
                 {
                     // The range fits, blit it the contiguous set 1 bits
-                    noGaps |= lowestSetBits;
+                    noGaps |= new CellValueMask(lowestSetBits);
                 }
 
                 // We checked the bottom pile of bits, clear them to see if there's another range that works
@@ -115,25 +115,25 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
             {
                 foreach (GridCoord coord in branch.Cells)
                 {
-                    ref ushort cell = ref cells[coord];
+                    ref CellValueMask cell = ref cells[coord];
                     reduced |= RuleHelpers.TryMask(ref cell, noGaps);
-                    minimumHighDigit = ushort.Min(minimumHighDigit, unchecked((ushort)(16 - ushort.LeadingZeroCount(cell) - 1)));
-                    maximumLowDigit = ushort.Max(maximumLowDigit, ushort.TrailingZeroCount(cell));
+                    minimumHighDigit = ushort.Min(minimumHighDigit, unchecked((ushort)(16 - ushort.LeadingZeroCount(cell.RawValue) - 1)));
+                    maximumLowDigit = ushort.Max(maximumLowDigit, ushort.TrailingZeroCount(cell.RawValue));
                 }
             }
 
             int highDigitsToStrip = state.Digits - length - minimumHighDigit;
-            int stripTooHighBits = highDigitsToStrip < 1 ? allDigitMask : allDigitMask >> highDigitsToStrip;
+            CellValueMask stripTooHighBits = highDigitsToStrip < 1 ? allDigitMask : allDigitMask >> highDigitsToStrip;
             int lowDigitsToStrip = maximumLowDigit - length + 1;
-            int stripTooLowBits = lowDigitsToStrip < 1 ? allDigitMask : allDigitMask << lowDigitsToStrip;
-            ushort allowedMask = unchecked((ushort)(stripTooHighBits & stripTooLowBits & ~alreadySetMask));
+            CellValueMask stripTooLowBits = lowDigitsToStrip < 1 ? allDigitMask : allDigitMask << lowDigitsToStrip;
+            CellValueMask allowedMask = stripTooHighBits & stripTooLowBits & ~alreadySetMask;
 
             foreach (LineRuleSegment branch in line.Branches)
             {
                 foreach (GridCoord cell in branch.Cells)
                 {
-                    ref ushort mask = ref cells[cell];
-                    if (Cells.IsSingle(mask)) continue;
+                    ref CellValueMask mask = ref cells[cell];
+                    if (mask.IsSingle()) continue;
 
                     reduced |= RuleHelpers.TryMask(ref mask, allowedMask);
                 }
@@ -143,11 +143,11 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public override IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state)
+    public override IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state)
     {
         foreach (BranchingRuleLine line in Lines)
         {
-            ReadOnlyMultiRef<ushort> refs = state.Cells.GetEmptyReferences();
+            ReadOnlyMultiRef<CellValueMask> refs = state.Cells.GetEmptyReferences();
             foreach (LineRuleSegment branch in line.Branches)
             foreach (GridCoord cell in branch.Cells)
                 refs.Include(in state.Cells[cell]);

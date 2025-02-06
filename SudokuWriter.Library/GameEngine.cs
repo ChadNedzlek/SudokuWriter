@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Numerics;
 using VaettirNet.SudokuWriter.Library.Rules;
 
 namespace VaettirNet.SudokuWriter.Library;
@@ -146,7 +145,7 @@ public class GameEngine
             {
                 CellsBuilder cellBuilder = simplified.Cells.ToBuilder();
                 foreach (IGameRule rule in Rules)
-                foreach (MultiRefBox<ushort> mutexGroup in rule.GetMutualExclusionGroups(simplified))
+                foreach (MultiRefBox<CellValueMask> mutexGroup in rule.GetMutualExclusionGroups(simplified))
                     reduced |= MutualExclusion.ApplyMutualExclusionRules(cellBuilder.Unbox(mutexGroup));
 
                 if (reduced) simplified = simplified.WithCells(cellBuilder.MoveToImmutable());
@@ -165,13 +164,13 @@ public class GameEngine
         int minPossibilities = initial.Digits + 1;
         int minRow = 0;
         int minColumn = 0;
-        ushort minMask = 0;
+        CellValueMask minMask = CellValueMask.None;
 
         for (int r = 0; r < nRows; r++)
         for (int c = 0; c < nColumns; c++)
         {
-            ushort mask = initial.Cells[r, c];
-            int bitCount = BitOperations.PopCount(mask);
+            CellValueMask mask = initial.Cells[r, c];
+            ushort bitCount = mask.Count;
             if (bitCount > 1 && bitCount < minPossibilities)
             {
                 minPossibilities = bitCount;
@@ -181,11 +180,12 @@ public class GameEngine
             }
         }
 
-        for (int d = 0; d < nDigits; d++)
+        for (ushort d = 0; d < nDigits; d++)
         {
-            if (!Cells.IsDigitSet(minMask, d)) continue;
+            var v = new CellValue(d);
+            if (!minMask.Contains(v)) continue;
 
-            yield return initial.WithCells(initial.Cells.SetCell(minRow, minColumn, d));
+            yield return initial.WithCells(initial.Cells.SetCell(minRow, minColumn, v));
         }
     }
 
@@ -196,7 +196,7 @@ public class GameEngine
         int possibilities = 0;
         for (int r = 0; r < nRows; r++)
         for (int c = 0; c < nColumns; c++)
-            possibilities += BitOperations.PopCount(state.Cells[r, c]);
+            possibilities += state.Cells[r, c].Count;
 
         return possibilities;
     }

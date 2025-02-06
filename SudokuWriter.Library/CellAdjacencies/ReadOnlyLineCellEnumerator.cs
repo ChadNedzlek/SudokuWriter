@@ -26,7 +26,7 @@ public class ReadOnlyLineCellEnumerator : IEnumerator<ReadOnlyLineCellAdjacency>
         get
         {
             GridCoord coord = _currentBranch.Cells[_cellIndex];
-            List<ushort> adjacentCells = [];
+            List<CellValueMask> adjacentCells = [];
 
 
             AddNeighbors(adjacentCells, _currentBranch, _cellIndex);
@@ -117,7 +117,7 @@ public class ReadOnlyLineCellEnumerator : IEnumerator<ReadOnlyLineCellAdjacency>
         return false;
     }
 
-    private void AddNeighbors(in List<ushort> adjacentCells, LineRuleSegment branch, int iCell)
+    private void AddNeighbors(in List<CellValueMask> adjacentCells, LineRuleSegment branch, int iCell)
     {
         if (iCell > 0)
             adjacentCells.Add(_cells[branch.Cells[iCell - 1]]);

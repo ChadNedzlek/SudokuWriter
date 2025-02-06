@@ -6,23 +6,23 @@ namespace VaettirNet.SudokuWriter.Library;
 
 public static class MutualExclusion
 {
-    public static bool ApplyMutualExclusionRules(MultiRef<ushort> cells)
+    public static bool ApplyMutualExclusionRules(MultiRef<CellValueMask> cells)
     {
-        ImmutableArray<ushort> cellValues = cells.ToImmutableList();
-        Span<ushort> allowedMasks = stackalloc ushort[16];
-        allowedMasks.Fill(ushort.MaxValue);
+        ImmutableArray<CellValueMask> cellValues = cells.ToImmutableList();
+        Span<CellValueMask> allowedMasks = stackalloc CellValueMask[16];
+        allowedMasks.Fill(CellValueMask.All(15));
         ushort maxMask = (ushort)(1 << cellValues.Length);
         for (ushort comboMask = 1; comboMask < maxMask - 2; comboMask++)
         {
-            ushort setMask = 0;
+            CellValueMask setMask = CellValueMask.None;
             for (ushort mask = 1, i=0; mask <= comboMask; mask <<= 1, i++)
             {
                 if ((comboMask & mask) != 0) setMask |= cellValues[i];
             }
 
-            if (BitOperations.PopCount(comboMask) == BitOperations.PopCount(setMask))
+            if (BitOperations.PopCount(comboMask) == setMask.Count)
             {
-                ushort allowed = (ushort)~setMask;
+                CellValueMask allowed = ~setMask;
                 for (ushort mask = 1, i=0; i< cellValues.Length; mask <<= 1, i++)
                 {
                     if ((~comboMask & mask) != 0) allowedMasks[i] &= allowed;
@@ -33,12 +33,12 @@ public static class MutualExclusion
         return ApplyMasks(cells, allowedMasks);
     }
 
-    private static bool ApplyMasks(MultiRef<ushort> cells, Span<ushort> allowedMasks)
+    private static bool ApplyMasks(MultiRef<CellValueMask> cells, Span<CellValueMask> allowedMasks)
     {
         int iSet = 0;
 
-        bool ApplyMask(bool r, scoped ref ushort cell, ReadOnlySpan<ushort> mask) => r | RuleHelpers.TryMask(ref cell, mask[iSet++]);
+        bool ApplyMask(bool r, scoped ref CellValueMask cell, ReadOnlySpan<CellValueMask> mask) => r | RuleHelpers.TryMask(ref cell, mask[iSet++]);
 
-        return cells.Aggregate<bool, ReadOnlySpan<ushort>>(ApplyMask, allowedMasks);
+        return cells.Aggregate<bool, ReadOnlySpan<CellValueMask>>(ApplyMask, allowedMasks);
     }
 }

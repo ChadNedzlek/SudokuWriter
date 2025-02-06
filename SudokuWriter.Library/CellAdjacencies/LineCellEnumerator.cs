@@ -69,10 +69,10 @@ public struct LineCellEnumerator
         get
         {
             GridCoord coord = _currentBranch.Cells[_cellIndex];
-            MultiRef<ushort> refs = _cells.GetEmptyReferences();
+            MultiRef<CellValueMask> refs = _cells.GetEmptyReferences();
 
 
-            AddNeighbors(in refs, _currentBranch, _cellIndex);
+            AddNeighbors(ref refs, _currentBranch, _cellIndex);
 
             if (_cellIndex != 0 && _cellIndex != _currentBranch.Cells.Length - 1)
             {
@@ -92,7 +92,7 @@ public struct LineCellEnumerator
                     for (int iCell = 0; iCell < branch.Cells.Length; iCell++)
                     {
                         GridCoord cell = branch.Cells[iCell];
-                        if (cell == coord) AddNeighbors(in refs, branch, iCell);
+                        if (cell == coord) AddNeighbors(ref refs, branch, iCell);
                     }
                 }
             }
@@ -101,7 +101,7 @@ public struct LineCellEnumerator
         }
     }
 
-    private void AddNeighbors(in MultiRef<ushort> refs, LineRuleSegment branch, int iCell)
+    private void AddNeighbors(ref MultiRef<CellValueMask> refs, LineRuleSegment branch, int iCell)
     {
         if (iCell > 0)
             refs.Include(ref _cells[branch.Cells[iCell - 1]]);

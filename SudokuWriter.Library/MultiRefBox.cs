@@ -1,17 +1,18 @@
 using System;
-using System.Collections.Generic;
 
 namespace VaettirNet.SudokuWriter.Library;
 
 public readonly struct MultiRefBox<T>
 {
-    private readonly List<ulong> _offsets;
+    private readonly OffsetList _offsets;
+    private readonly int _length;
 
-    public MultiRefBox(List<ulong> offsets)
+    internal MultiRefBox(OffsetList offsets, int length)
     {
         _offsets = offsets;
+        _length = length;
     }
 
-    public MultiRef<T> Unbox(Span<T> references) => new(references, _offsets);
-    public ReadOnlyMultiRef<T> Unbox(ReadOnlySpan<T> references) => new(references, _offsets);
+    public MultiRef<T> Unbox(Span<T> references) => new(references, _offsets, _length);
+    public ReadOnlyMultiRef<T> Unbox(ReadOnlySpan<T> references) => new(references, _offsets, _length);
 }

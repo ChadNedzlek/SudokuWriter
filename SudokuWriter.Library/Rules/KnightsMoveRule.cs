@@ -18,8 +18,7 @@ public class KnightsMoveRule : IGameRule
         for (int r = 0; r < state.Structure.Rows; r++)
         for (int c = 0; c < state.Structure.Columns; c++)
         {
-            int single = state.Cells.GetSingle(r, c);
-            if (single == Cells.NoSingleValue)
+            if (!state.Cells[r, c].TryGetSingle(out var single))
             {
                 continue;
             }
@@ -32,8 +31,7 @@ public class KnightsMoveRule : IGameRule
                 if (ro < 0 || ro >= state.Structure.Rows) continue;
                 if (co < 0 || co >= state.Structure.Columns) continue;
 
-                int knightSingle = state.Cells.GetSingle(ro, co);
-                if (knightSingle == single)
+                if (state.Cells[ro, co].TryGetSingle(out var knightSingle) && knightSingle == single)
                 {
                     return GameResult.Unsolvable;
                 }
@@ -51,10 +49,9 @@ public class KnightsMoveRule : IGameRule
         for (ushort c = 0; c < state.Structure.Columns; c++)
         {
             var value = cells[r, c];
-            int single = Cells.GetSingle(value);
-            if (single == Cells.NoSingleValue) continue;
+            if (!value.IsSingle()) continue;
 
-            MultiRef<ushort> seenCells = cells.GetEmptyReferences();
+            MultiRef<CellValueMask> seenCells = cells.GetEmptyReferences();
             foreach (GridOffset offset in s_knightOffsets)
             {
                 if (cells.IsInRange(r, c, offset))
@@ -74,7 +71,7 @@ public class KnightsMoveRule : IGameRule
         return changed ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state) => [];
+    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state) => [];
 
     public JsonObject ToJsonObject() => new();
 

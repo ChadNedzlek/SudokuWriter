@@ -50,14 +50,14 @@ public readonly struct GameState
         {
             builder.Append('[');
             for (int c = 0; c < Cells.Columns; c++)
-                if (Cells[r, c] == 0)
+                if (Cells[r, c] == CellValueMask.None)
                 {
                     builder.Append("X ");
                 }
                 else
                 {
-                    for (int d = 0; d < Digits; d++)
-                        if (Cells[r, c, d])
+                    for (ushort d = 0; d < Digits; d++)
+                        if (Cells[r, c, new CellValue(d)])
                             builder.Append((char)('1' + d));
 
                     builder.Append(' ');

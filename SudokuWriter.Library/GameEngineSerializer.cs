@@ -78,7 +78,7 @@ public class GameEngineSerializer
             foreach (JsonNode c in cellArray)
             {
                 if (c is JsonArray { Count: 3 } a)
-                    cells.SetSingle(a[0].GetValue<int>(), a[1].GetValue<int>(), a[2].GetValue<ushort>());
+                    cells.SetSingle(a[0].GetValue<int>(), a[1].GetValue<int>(), CellValue.Deserialize(a[2].GetValue<ushort>()));
             }
         }
 
@@ -131,8 +131,10 @@ public class GameEngineSerializer
         for (int r = 0; r < game.InitialState.Cells.Rows; r++)
         for (int c = 0; c < game.InitialState.Cells.Columns; c++)
         {
-            int single = game.InitialState.Cells.GetSingle(r, c);
-            if (single != Cells.NoSingleValue) cells.Add(new JsonArray(r, c, single));
+            if (game.InitialState.Cells[r, c].TryGetSingle(out var single))
+            {
+                cells.Add(new JsonArray(r, c, single.Serialize()));
+            }
         }
 
         root["cells"] = cells;

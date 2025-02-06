@@ -1,6 +1,4 @@
 using System;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -8,9 +6,9 @@ namespace VaettirNet.SudokuWriter.Library;
 
 public readonly struct Cells
 {
-    private readonly ImmutableArray2<ushort> _cells;
+    private readonly ImmutableArray2<CellValueMask> _cells;
 
-    public Cells(ImmutableArray2<ushort> cells)
+    public Cells(ImmutableArray2<CellValueMask> cells)
     {
         _cells = cells;
     }
@@ -18,17 +16,17 @@ public readonly struct Cells
     public int Rows => _cells.Rows;
     public int Columns => _cells.Columns;
 
-    public bool this[int row, int col, int digit] => ((_cells[row, col] >> digit) & 1) != 0;
-    public ref readonly ushort this[int row, int col] => ref _cells[row, col];
-    public ref readonly  ushort this[GridCoord coord] => ref _cells[coord.Row, coord.Col];
+    public bool this[int row, int col, CellValue digit] => (_cells[row, col] & digit) != CellValueMask.None;
+    public ref readonly CellValueMask this[int row, int col] => ref _cells[row, col];
+    public ref readonly CellValueMask this[GridCoord coord] => ref _cells[coord.Row, coord.Col];
 
-    public int GetSingle(int row, int col) => GetSingle(_cells[row, col]);
+    public CellValue GetSingle(int row, int col) => _cells[row, col].GetSingle();
     
-    public ReadOnlyMultiRef<ushort> GetEmptyReferences() => _cells.GetEmptyReference();
-    public ReadOnlyMultiRef<ushort> GetRow(int row) => _cells.GetRowReference(row);
-    public ReadOnlyMultiRef<ushort> GetColumn(int columns) => _cells.GetColumnReference(columns);
-    public ReadOnlyMultiRef<ushort> GetRange(Range rows, Range columns) => _cells.GetRectangle(rows, columns);
-    public ReadOnlyMultiRef<ushort> Unbox(MultiRefBox<ushort> box) => _cells.Unbox(box);
+    public ReadOnlyMultiRef<CellValueMask> GetEmptyReferences() => _cells.GetEmptyReference();
+    public ReadOnlyMultiRef<CellValueMask> GetRow(int row) => _cells.GetRowReference(row);
+    public ReadOnlyMultiRef<CellValueMask> GetColumn(int columns) => _cells.GetColumnReference(columns);
+    public ReadOnlyMultiRef<CellValueMask> GetRange(Range rows, Range columns) => _cells.GetRectangle(rows, columns);
+    public ReadOnlyMultiRef<CellValueMask> Unbox(MultiRefBox<CellValueMask> box) => _cells.Unbox(box);
 
     public CellsBuilder ToBuilder()
     {
@@ -38,48 +36,29 @@ public readonly struct Cells
     public static Cells CreateFilled(int rows = 9, int columns = 9, int digits = 9)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(digits);
-        ImmutableArray2.Builder<ushort> array = ImmutableArray2.CreateBuilder<ushort>(rows, columns);
-        array.Fill(unchecked((ushort)((1 << digits) - 1)));
+        ImmutableArray2.Builder<CellValueMask> array = ImmutableArray2.CreateBuilder<CellValueMask>(rows, columns);
+        array.Fill(CellValueMask.All(digits));
         return new Cells(array.MoveToImmutable());
     }
 
-    public Cells SetCell(int row, int column, int digit)
+    public Cells SetCell(int row, int column, CellValue digit)
     {
-        return new Cells(_cells.SetItem(row, column, unchecked((ushort)(1 << digit))));
+        return new Cells(_cells.SetItem(row, column, digit.AsMask()));
     }
+
+    public Cells SetCell(int row, int column, ushort digit) => SetCell(row, column, new CellValue(digit));
 
     public Cells FillEmpty(GameStructure structure)
     {
-        ImmutableArray2.Builder<ushort> b = _cells.ToBuilder();
+        ImmutableArray2.Builder<CellValueMask> b = _cells.ToBuilder();
         for (int r = 0; r < b.Rows; r++)
         for (int c = 0; c < b.Columns; c++)
         {
-            ref ushort cell = ref b[r, c];
-            if (cell == 0) cell = GetAllDigitsMask(structure.Digits);
+            ref CellValueMask cell = ref b[r, c];
+            if (cell == CellValueMask.None) cell = CellValueMask.All(structure.Digits);
         }
 
         return new Cells(b.MoveToImmutable());
-    }
-
-    public bool TryRemoveDigit(int row, int column, int digit, out Cells removed)
-    {
-        ushort c = _cells[row, column];
-        ushort mask = unchecked((ushort)(1 << digit));
-        if ((c & mask) == 0)
-        {
-            removed = default;
-            return false;
-        }
-
-        c = unchecked((ushort)(c & (ushort)~mask));
-        if (c == 0)
-        {
-            removed = default;
-            return false;
-        }
-
-        removed = new Cells(_cells.SetItem(row, column, c));
-        return true;
     }
 
     public ulong GetCellHash()
@@ -87,90 +66,35 @@ public readonly struct Cells
         return _cells.GetHash64();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsDigitSet(ushort mask, int digit)
-    {
-        return (mask & (1 << digit)) != 0;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ushort GetDigitMask(int digit)
-    {
-        return (ushort)(1 << digit);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ushort GetAllDigitsMask(int digits)
-    {
-        return unchecked((ushort)((1 << digits) - 1));
-    }
-
     public static Cells CreateFilled(GameStructure structure)
     {
         return CreateFilled(structure.Rows, structure.Columns, structure.Digits);
     }
 
-    public const int NoSingleValue = -1;
-
-    public static bool IsSingle(ushort mask)
+    public static Cells FromMasks(CellValueMask[,] masks)
     {
-        return mask == 0 || BitOperations.IsPow2(mask);
-    }
-
-    public static int GetSingle(ushort mask)
-    {
-        return IsSingle(mask) ? BitOperations.Log2(mask) : NoSingleValue;
+        CellValueMask[] cells = new CellValueMask[masks.Length];
+        ReadOnlySpan<CellValueMask> span = MemoryMarshal.Cast<byte, CellValueMask>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(masks), sizeof(ushort) * masks.Length));
+        span.CopyTo(cells);
+        return new Cells(new ImmutableArray2<CellValueMask>(cells, masks.GetLength(1)));
     }
 
     public static Cells FromMasks(ushort[,] masks)
     {
-        ushort[] cells = new ushort[masks.Length];
-        ReadOnlySpan<ushort> span = MemoryMarshal.Cast<byte, ushort>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(masks), sizeof(ushort) * masks.Length));
+        CellValueMask[] cells = new CellValueMask[masks.Length];
+        ReadOnlySpan<CellValueMask> span = MemoryMarshal.Cast<byte, CellValueMask>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(masks), sizeof(ushort) * masks.Length));
         span.CopyTo(cells);
-        return new Cells(new ImmutableArray2<ushort>(cells, masks.GetLength(1)));
+        return new Cells(new ImmutableArray2<CellValueMask>(cells, masks.GetLength(1)));
     }
 
     public static Cells FromDigits(ushort[,] digits)
     {
-        ushort[] cells = new ushort[digits.Length];
-        ReadOnlySpan<ushort> span = MemoryMarshal.Cast<byte, ushort>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(digits), sizeof(ushort) * digits.Length));
+        CellValueMask[] cells = new CellValueMask[digits.Length];
+        ReadOnlySpan<CellValue> span = MemoryMarshal.Cast<byte, CellValue>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(digits), sizeof(ushort) * digits.Length));
         for (int i = 0; i < cells.Length; i++)
         {
-            cells[i] = GetDigitMask(span[i]);
+            cells[i] = span[i].AsMask();
         }
-        return new Cells(new ImmutableArray2<ushort>(cells, digits.GetLength(1)));
+        return new Cells(new ImmutableArray2<CellValueMask>(cells, digits.GetLength(1)));
     }
-
-    public static string GetDigitDisplay(ushort mask)
-    {
-        StringBuilder b = new();
-        for (int i = 0; (1 << i) <= mask; i++)
-        {
-            if (((1 << i) & mask) != 0)
-            {
-                b.Append((char)('1' + i));
-            }
-        }
-
-        return b.ToString();
-    }
-
-    public static ushort GetReversed(ushort mask, ushort digits)
-    {
-        unchecked
-        {
-            uint x = mask;
-            x |= (x & 0x000000FF) << 16;
-            x = (x & 0xF0F0F0F0) | ((x & 0x0F0F0F0F) << 8);
-            x = (x & 0xCCCCCCCC) | ((x & 0x33333333) << 4);
-            x = (x & 0XAAAAAAAA) | ((x & 0x55555555) << 2);
-            x <<= 1;
-            x >>= 32 - digits;
-            return (ushort)x;
-        }
-    }
-
-    public static ushort GetMaxDigitMask(ushort mask) => (ushort)(1 << (15 - ushort.LeadingZeroCount(mask)));
-
-    public static ushort GetMinDigitMask(ushort mask) => (ushort)~(~mask | (mask - 1));
 }

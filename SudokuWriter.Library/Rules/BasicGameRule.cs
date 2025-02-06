@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Text.Json.Nodes;
 
 namespace VaettirNet.SudokuWriter.Library.Rules;
@@ -14,47 +13,46 @@ public class BasicGameRule : IGameRule
     {
         int nRows = state.Cells.Rows;
         int nColumns = state.Cells.Columns;
-        Span<ushort> forcedByRow = stackalloc ushort[nRows];
-        Span<ushort> forcedByColumn = stackalloc ushort[nColumns];
-        Span<ushort> forcedByBox = stackalloc ushort[nRows];
-        Span<ushort> allowedInRow = stackalloc ushort[nRows];
-        Span<ushort> allowedInColumns = stackalloc ushort[nColumns];
-        Span<ushort> allowedInBox = stackalloc ushort[nRows];
+        Span<CellValueMask> forcedByRow = stackalloc CellValueMask[nRows];
+        Span<CellValueMask> forcedByColumn = stackalloc CellValueMask[nColumns];
+        Span<CellValueMask> forcedByBox = stackalloc CellValueMask[nRows];
+        Span<CellValueMask> allowedInRow = stackalloc CellValueMask[nRows];
+        Span<CellValueMask> allowedInColumns = stackalloc CellValueMask[nColumns];
+        Span<CellValueMask> allowedInBox = stackalloc CellValueMask[nRows];
         int boxesPerRow = state.Cells.Columns / state.BoxColumns;
         for (int r = 0; r < nRows; r++)
         {
-            ref ushort forcedRow = ref forcedByRow[r];
-            ref ushort allowedRow = ref allowedInRow[r];
+            ref CellValueMask forcedRow = ref forcedByRow[r];
+            ref CellValueMask allowedRow = ref allowedInRow[r];
             int br = r / state.BoxRows * boxesPerRow;
             for (int c = 0; c < nColumns; c++)
             {
                 int b = br + c / state.BoxColumns;
-                ushort allowed = state.Cells[r, c];
+                CellValueMask allowed = state.Cells[r, c];
                 allowedRow |= allowed;
                 allowedInColumns[c] |= allowed;
                 allowedInBox[b] |= allowed;
 
-                int v = state.Cells.GetSingle(r, c);
-                if (v == Cells.NoSingleValue) continue;
+                if (!state.Cells[r, c].TryGetSingle(out var v)) continue;
 
-                ushort m = unchecked((ushort)(1 << v));
+                CellValueMask m = v.AsMask();
 
-                if ((forcedRow & m) != 0) return GameResult.Unsolvable;
+                if ((forcedRow & m) != CellValueMask.None) return GameResult.Unsolvable;
 
                 forcedRow |= m;
 
-                ref ushort col = ref forcedByColumn[c];
-                if ((col & m) != 0) return GameResult.Unsolvable;
+                ref CellValueMask col = ref forcedByColumn[c];
+                if ((col & m) != CellValueMask.None) return GameResult.Unsolvable;
 
                 col |= m;
-                ref ushort box = ref forcedByBox[b];
-                if ((box & m) != 0) return GameResult.Unsolvable;
+                ref CellValueMask box = ref forcedByBox[b];
+                if ((box & m) != CellValueMask.None) return GameResult.Unsolvable;
 
                 box |= m;
             }
         }
 
-        ushort dMask = unchecked((ushort)((1 << state.Digits) - 1));
+        CellValueMask dMask = CellValueMask.All(state.Digits);
 
         if (allowedInRow.ContainsAnyExcept(dMask) ||
             allowedInColumns.ContainsAnyExcept(dMask) ||
@@ -74,20 +72,19 @@ public class BasicGameRule : IGameRule
         CellsBuilder cellBuilder = state.Cells.ToBuilder();
         int nRows = state.Cells.Rows;
         int nColumns = state.Cells.Columns;
-        Span<ushort> byRow = stackalloc ushort[nRows];
-        Span<ushort> byColumn = stackalloc ushort[nColumns];
-        Span<ushort> byBox = stackalloc ushort[nRows];
+        Span<CellValueMask> byRow = stackalloc CellValueMask[nRows];
+        Span<CellValueMask> byColumn = stackalloc CellValueMask[nColumns];
+        Span<CellValueMask> byBox = stackalloc CellValueMask[nRows];
         int boxesPerRow = state.Cells.Columns / state.BoxColumns;
         for (int r = 0; r < nRows; r++)
         {
-            ref ushort row = ref byRow[r];
+            ref CellValueMask row = ref byRow[r];
             int br = r / state.BoxRows * boxesPerRow;
             for (int c = 0; c < nColumns; c++)
             {
-                int v = state.Cells.GetSingle(r, c);
-                if (v == Cells.NoSingleValue) continue;
+                if (!state.Cells[r, c].TryGetSingle(out var v)) continue;
 
-                ushort m = unchecked((ushort)(1 << v));
+                CellValueMask m = v.AsMask();
                 row |= m;
                 byColumn[c] |= m;
                 int b = br + c / state.BoxColumns;
@@ -98,16 +95,16 @@ public class BasicGameRule : IGameRule
         bool removed = false;
         for (int r = 0; r < nRows; r++)
         {
-            ushort row = byRow[r];
+            CellValueMask row = byRow[r];
             int br = r / state.BoxRows * boxesPerRow;
             for (int c = 0; c < nColumns; c++)
             {
-                ref ushort cell = ref cellBuilder[r, c];
-                if (BitOperations.IsPow2(cell)) continue;
+                ref CellValueMask cell = ref cellBuilder[r, c];
+                if (cell.IsSingle()) continue;
 
                 int b = br + c / state.BoxColumns;
-                ushort m = unchecked((ushort)~(row | byColumn[c] | byBox[b]));
-                removed |= RuleHelpers.TryUpdate(ref cell, (ushort)(cell & m));
+                CellValueMask m = ~(row | byColumn[c] | byBox[b]);
+                removed |= RuleHelpers.TryUpdate(ref cell, cell & m);
             }
         }
 
@@ -116,7 +113,7 @@ public class BasicGameRule : IGameRule
         return null;
     }
 
-    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state)
+    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state)
     {
         for (int r = 0; r < state.Structure.Rows; r++)
         {

@@ -8,6 +8,8 @@ public readonly record struct GridCoord(ushort Row, ushort Col) :
     ISubtractionOperators<GridCoord, GridOffset, GridCoord>,
     IEqualityOperators<GridCoord, GridCoord, bool>
 {
+    public static readonly GridCoord Invalid = new(ushort.MaxValue, ushort.MaxValue);
+    
     public static GridCoord operator +(GridCoord left, GridOffset right)
     {
         return checked(new((ushort)(left.Row + right.Row), (ushort)(left.Col + right.Col)));

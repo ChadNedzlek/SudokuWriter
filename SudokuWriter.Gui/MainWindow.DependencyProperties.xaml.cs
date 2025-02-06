@@ -52,4 +52,43 @@ public partial class MainWindow
         typeof(MainWindow),
         new PropertyMetadata(default(bool))
     );
+    
+    public static readonly DependencyProperty StatusMessageProperty = DependencyProperty.Register(
+        nameof(StatusMessage),
+        typeof(string),
+        typeof(MainWindow),
+        new PropertyMetadata(default(string))
+    );
+
+    public string StatusMessage
+    {
+        get { return (string)GetValue(StatusMessageProperty); }
+        set { SetValue(StatusMessageProperty, value); }
+    }
+
+    public static readonly DependencyProperty ProgressPercentageProperty = DependencyProperty.Register(
+        nameof(ProgressPercentage),
+        typeof(int),
+        typeof(MainWindow),
+        new PropertyMetadata(default(int))
+    );
+
+    public int ProgressPercentage
+    {
+        get { return (int)GetValue(ProgressPercentageProperty); }
+        set { SetValue(ProgressPercentageProperty, value); }
+    }
+
+    public static readonly DependencyProperty ShowProgressBarProperty = DependencyProperty.Register(
+        nameof(ShowProgressBar),
+        typeof(bool),
+        typeof(MainWindow),
+        new PropertyMetadata(default(bool))
+    );
+
+    public bool ShowProgressBar
+    {
+        get { return (bool)GetValue(ShowProgressBarProperty); }
+        set { SetValue(ShowProgressBarProperty, value); }
+    }
 }

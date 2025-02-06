@@ -22,43 +22,43 @@ public class KropkiDotRule : IGameRule
         foreach (GridEdge d in Doubles)
         {
             var (aCoord, bCoord) = d.GetSides();
-            ushort a = state.Cells[aCoord];
-            ushort b = state.Cells[bCoord];
-            if ((a & GetDoubleOrHalves(b)) == 0) return GameResult.Unsolvable;
+            CellValueMask a = state.Cells[aCoord];
+            CellValueMask b = state.Cells[bCoord];
+            if ((a & GetDoubleOrHalves(b)) == CellValueMask.None) return GameResult.Unsolvable;
         }
 
         foreach (GridEdge s in Sequential)
         {
             var (aCoord, bCoord) = s.GetSides();
-            ushort a = state.Cells[aCoord];
-            ushort b = state.Cells[bCoord];
-            if ((a & GetSequential(b)) == 0) return GameResult.Unsolvable;
+            CellValueMask a = state.Cells[aCoord];
+            CellValueMask b = state.Cells[bCoord];
+            if ((a & GetSequential(b)) == CellValueMask.None) return GameResult.Unsolvable;
         }
 
         return GameResult.Solved;
     }
 
-    private static ushort GetDoubleOrHalves(ushort mask) => (ushort)(GetDoubles(mask) | GetHalves(mask));
+    private static CellValueMask GetDoubleOrHalves(CellValueMask mask) => GetDoubles(mask) | GetHalves(mask);
 
-    private static ushort GetDoubles(ushort mask)
+    private static CellValueMask GetDoubles(CellValueMask mask)
     {
-        return (ushort)(((mask & Cells.GetDigitMask(0)) << 1) |
-            (ushort)((mask & Cells.GetDigitMask(1)) << 2) |
-            (ushort)((mask & Cells.GetDigitMask(2)) << 3) |
-            (ushort)((mask & Cells.GetDigitMask(3)) << 4));
+        return ((mask & new CellValue(0)) << 1) |
+            ((mask & new CellValue(1)) << 2) |
+            ((mask & new CellValue(2)) << 3) |
+            ((mask & new CellValue(3)) << 4);
     }
 
-    private static ushort GetHalves(ushort mask)
+    private static CellValueMask GetHalves(CellValueMask mask)
     {
-        return (ushort)(((mask & Cells.GetDigitMask(1)) >> 1) |
-            (ushort)((mask & Cells.GetDigitMask(3)) >> 2) |
-            (ushort)((mask & Cells.GetDigitMask(5)) >> 3) |
-            (ushort)((mask & Cells.GetDigitMask(7)) >> 4));
+        return ((mask & new CellValue(1)) >> 1) |
+            ((mask & new CellValue(3)) >> 2) |
+            ((mask & new CellValue(5)) >> 3) |
+            ((mask & new CellValue(7)) >> 4);
     }
 
-    private static ushort GetSequential(ushort mask)
+    private static CellValueMask GetSequential(CellValueMask mask)
     {
-        return (ushort)((mask << 1) | (mask >> 1));
+        return (mask << 1) | (mask >> 1);
     }
 
     public GameState? TryReduce(GameState state)
@@ -68,8 +68,8 @@ public class KropkiDotRule : IGameRule
         foreach (GridEdge d in Doubles)
         {
             var (aCoord, bCoord) = d.GetSides();
-            ref ushort a = ref cells[aCoord];
-            ref ushort b = ref cells[bCoord];
+            ref CellValueMask a = ref cells[aCoord];
+            ref CellValueMask b = ref cells[bCoord];
             reduced |= RuleHelpers.TryMask(ref a, GetDoubleOrHalves(b));
             reduced |= RuleHelpers.TryMask(ref b, GetDoubleOrHalves(a));
         }
@@ -77,8 +77,8 @@ public class KropkiDotRule : IGameRule
         foreach (GridEdge s in Sequential)
         {
             var (aCoord, bCoord) = s.GetSides();
-            ref ushort a = ref cells[aCoord];
-            ref ushort b = ref cells[bCoord];
+            ref CellValueMask a = ref cells[aCoord];
+            ref CellValueMask b = ref cells[bCoord];
             reduced |= RuleHelpers.TryMask(ref a, GetSequential(b));
             reduced |= RuleHelpers.TryMask(ref b, GetSequential(a));
         }
@@ -86,7 +86,7 @@ public class KropkiDotRule : IGameRule
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state) => [];
+    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state) => [];
 
     public JsonObject ToJsonObject()
     {

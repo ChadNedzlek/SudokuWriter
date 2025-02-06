@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.IO;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -66,35 +65,22 @@ public static class RuleHelpers
         return (node[0].GetValue<T1>(), node[1].GetValue<T2>());
     }
 
-    public static bool ClearFromSeenCells(ushort inputCell, scoped in MultiRef<ushort> seenCells)
+    public static bool ClearFromSeenCells(CellValueMask inputCell, scoped in MultiRef<CellValueMask> seenCells)
     {
-        int single = Cells.GetSingle(inputCell);
-        if (single == -1) return false;
+        if (!inputCell.IsSingle()) return false;
 
-        ushort mask = unchecked((ushort)~inputCell);
+        CellValueMask mask = ~inputCell;
 
         return seenCells.Aggregate(
-            (bool c, ref ushort cell) => c | TryMask(ref cell, mask)
+            (bool c, ref CellValueMask cell) => c | TryMask(ref cell, mask)
         );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryUpdate<T>(ref T value, T newValue)
-        where T : unmanaged, IEqualityOperators<T, T, bool>
-        => Interlocked.Exchange(ref value, newValue) != newValue;
+    public static bool TryUpdate(ref CellValueMask value, CellValueMask newValue)
+        => Interlocked.Exchange(ref Unsafe.As<CellValueMask, ushort>(ref value), newValue.RawValue) != newValue.RawValue;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryMask<T>(ref T value, T mask)
-        where T : unmanaged, IEqualityOperators<T, T, bool>, IBitwiseOperators<T, T, T>
+    public static bool TryMask(ref CellValueMask value, CellValueMask mask)
         => TryUpdate(ref value, value & mask);
-
-    public static ushort MinValue(ushort value)
-    {
-        return (ushort)(1 << ushort.TrailingZeroCount(value));
-    }
-    
-    public static ushort MaxValue(ushort value)
-    {
-        return (ushort)(1 << (16 - ushort.LeadingZeroCount(value) - 1));
-    }
 }

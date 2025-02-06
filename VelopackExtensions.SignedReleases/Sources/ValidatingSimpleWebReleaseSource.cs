@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Web;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using VaettirNet.VelopackExtensions.SignedReleases.Model;
 using Velopack;
 using Velopack.Sources;
 

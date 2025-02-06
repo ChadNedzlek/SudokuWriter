@@ -11,20 +11,28 @@ public class MutualExclusionTest
     [Test]
     public void BasicDouble()
     {
-        Span<ushort> cells = [3, 3, 511, 511, 511, 511, 511, 511, 511];
-        var refs = new MultiRef<ushort>(cells);
+        CellValueMask low = new CellValue(0) | new CellValue(1);
+        CellValueMask all = CellValueMask.All(9);
+        CellValueMask excluded = all & ~low;
+        Span<CellValueMask> cells = [low, low, all, all, all, all, all, all, all];
+        var refs = new MultiRef<CellValueMask>(cells);
         refs.IncludeStride(0, (ushort)cells.Length);
         MutualExclusion.ApplyMutualExclusionRules(refs).ShouldBe(true);
-        cells.SequenceEqual<ushort>([3,3,508,508,508,508,508,508,508]).ShouldBeTrue();
+        cells.SequenceEqual([low, low, excluded, excluded, excluded, excluded, excluded, excluded, excluded]).ShouldBeTrue();
     }
 
     [Test]
     public void HiddenTriple()
     {
-        Span<ushort> cells = [3, 5, 6, 511, 511, 511, 511, 511, 511];
-        var refs = new MultiRef<ushort>(cells);
+        CellValueMask double12 = new CellValue(0) | new CellValue(1);
+        CellValueMask double23 = new CellValue(2) | new CellValue(1);
+        CellValueMask double13 = new CellValue(0) | new CellValue(2);
+        CellValueMask all = CellValueMask.All(9);
+        CellValueMask excluded = all & ~(double12 | double23 | double13);
+        Span<CellValueMask> cells = [double12, double23, double13, all, all, all, all, all, all];
+        var refs = new MultiRef<CellValueMask>(cells);
         refs.IncludeStride(0, (ushort)cells.Length);
         MutualExclusion.ApplyMutualExclusionRules(refs).ShouldBe(true);
-        cells.SequenceEqual<ushort>([3,5,6,504,504,504,504,504,504]).ShouldBeTrue();
+        cells.SequenceEqual([double12, double23, double13, excluded, excluded, excluded, excluded, excluded, excluded]).ShouldBeTrue();
     }
 }

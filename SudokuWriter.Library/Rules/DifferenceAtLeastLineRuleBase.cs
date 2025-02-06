@@ -43,9 +43,9 @@ public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
     {
         foreach (ReadOnlyLineCellAdjacency adjacency in GetLineAdjacencies(state.Cells))
         {
-            ushort cellMask = adjacency.Cell;
-            ushort allowedMask = GetAllowedMask(cellMask);
-            if (adjacency.AdjacentCells.Any(c => (c & allowedMask) == 0))
+            CellValueMask cellMask = adjacency.Cell;
+            CellValueMask allowedMask = GetAllowedMask(cellMask);
+            if (adjacency.AdjacentCells.Any(c => (c & allowedMask) == CellValueMask.None))
             {
                 return GameResult.Unsolvable;
             }
@@ -54,17 +54,17 @@ public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
         return GameResult.Solved;
     }
 
-    private ushort GetAllowedMask(ushort otherMask)
+    private CellValueMask GetAllowedMask(CellValueMask otherMask)
     {
-        ushort endAllowedMask = 0;
-        ushort shift = (ushort)(otherMask >> MinDifference);
-        while (shift != 0)
+        CellValueMask endAllowedMask = CellValueMask.None;
+        CellValueMask shift = otherMask >> MinDifference;
+        while (shift != CellValueMask.None)
         {
             endAllowedMask |= shift;
             shift >>= 1;
         }
-        shift = (ushort)(otherMask << MinDifference);
-        while (shift != 0)
+        shift = otherMask << MinDifference;
+        while (shift != CellValueMask.None)
         {
             endAllowedMask |= shift;
             shift <<= 1;
@@ -79,15 +79,15 @@ public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
         bool modified = false;
         foreach (LineCellAdjacency adjacency in GetLineAdjacencies(cellBuilder))
         {
-            ushort allowedMask = GetAllowedMask(adjacency.Cell);
+            CellValueMask allowedMask = GetAllowedMask(adjacency.Cell);
 
             modified = adjacency.AdjacentCells.Aggregate(modified,
-                (bool mod, ref ushort cell) => RuleHelpers.TryMask(ref cell, allowedMask) | mod
+                (bool mod, ref CellValueMask cell) => RuleHelpers.TryMask(ref cell, allowedMask) | mod
             );
         }
 
         return modified ? state.WithCells(cellBuilder.MoveToImmutable()) : null;
     }
 
-    public override IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state) => [];
+    public override IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state) => [];
 }

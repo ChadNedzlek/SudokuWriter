@@ -21,8 +21,6 @@ public enum VerbosityLevel
 
 internal static class Program
 {
-    public const byte CaSlot = 0x84;
-
     public static VerbosityLevel Verbosity { get; private set; } = VerbosityLevel.Normal;
     
     static int Main(string[] args)

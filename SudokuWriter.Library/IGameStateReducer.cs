@@ -6,5 +6,5 @@ public interface IGameStateReducer
 {
     GameState? TryReduce(GameState state);
 
-    IEnumerable<MultiRefBox<ushort>> GetMutualExclusionGroups(GameState state);
+    IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state);
 }
