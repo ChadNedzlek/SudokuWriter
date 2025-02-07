@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -73,17 +74,15 @@ public readonly struct Cells
 
     public static Cells FromMasks(CellValueMask[,] masks)
     {
-        CellValueMask[] cells = new CellValueMask[masks.Length];
-        ReadOnlySpan<CellValueMask> span = MemoryMarshal.Cast<byte, CellValueMask>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(masks), sizeof(ushort) * masks.Length));
-        span.CopyTo(cells);
-        return new Cells(new ImmutableArray2<CellValueMask>(cells, masks.GetLength(1)));
-    }
+        var cells = new CellValueMask[masks.Length];
+        unsafe
+        {
+            ReadOnlySpan<CellValueMask> span = MemoryMarshal.Cast<byte, CellValueMask>(
+                MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(masks), sizeof(CellValueMask) * masks.Length)
+            );
+            span.CopyTo(cells);
+        }
 
-    public static Cells FromMasks(ushort[,] masks)
-    {
-        CellValueMask[] cells = new CellValueMask[masks.Length];
-        ReadOnlySpan<CellValueMask> span = MemoryMarshal.Cast<byte, CellValueMask>(MemoryMarshal.CreateSpan(ref MemoryMarshal.GetArrayDataReference(masks), sizeof(ushort) * masks.Length));
-        span.CopyTo(cells);
         return new Cells(new ImmutableArray2<CellValueMask>(cells, masks.GetLength(1)));
     }
 
@@ -97,4 +96,6 @@ public readonly struct Cells
         }
         return new Cells(new ImmutableArray2<CellValueMask>(cells, digits.GetLength(1)));
     }
+
+    public bool Any(Func<CellValueMask, bool> selector) => _cells.Any(selector);
 }

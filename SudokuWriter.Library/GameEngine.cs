@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using VaettirNet.SudokuWriter.Library.Rules;
 
 namespace VaettirNet.SudokuWriter.Library;
@@ -39,7 +40,7 @@ public class GameEngine
         return new GameEngine(InitialState, [..Rules, rule]);
     }
 
-    public GameResult Evaluate(GameState state, out GameState? solution, out GameState? conflict)
+    public GameResult Evaluate(GameState state, out GameState? solution, out GameState? conflict, CancellationToken cancellationToken = default)
     {
         state = SimplifyState(state);
         GameResult initialState = Rules.Aggregate(
@@ -69,6 +70,8 @@ public class GameEngine
 
         GameState? solved = null;
         while (searchStates.TryDequeue(out GameState s, out _))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             foreach (GameState next in NextStates(s))
             {
                 GameResult result = EvaluateState(next);
@@ -94,6 +97,7 @@ public class GameEngine
 
                 searchStates.Enqueue(simplified, GetPossibilities(simplified));
             }
+        }
 
         if (solved.HasValue)
         {
@@ -124,12 +128,13 @@ public class GameEngine
         );
     }
 
-    private GameState SimplifyState(GameState next)
+    public GameState SimplifyState(GameState next, CancellationToken cancellationToken = default)
     {
         GameState simplified = next;
         bool reduced = true;
         while (reduced)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             reduced = false;
             foreach (IGameRule rule in Rules)
             {

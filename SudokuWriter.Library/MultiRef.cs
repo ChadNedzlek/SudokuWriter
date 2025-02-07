@@ -27,6 +27,8 @@ public ref struct MultiRef<T>
         _offsets = offsets;
         _length = length;
     }
+    
+    public readonly bool IsEmpty() => _length == 0;
 
     public readonly int GetCount()
     {
@@ -84,7 +86,7 @@ public ref struct MultiRef<T>
 
     public readonly void ForEach(RefAction<T> callback)
     {
-        for (int ip=0;ip<_length;ip++)
+        for (int ip = 0; ip < _length; ip++)
         {
             ulong ptr = _offsets[ip];
             if (ptr <= int.MaxValue)

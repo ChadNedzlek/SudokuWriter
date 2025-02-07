@@ -61,7 +61,7 @@
                     <RadioButton Content="Same Parity" GroupName="RuleType" IsEnabled="False" />
                     <RadioButton Content="Alternate Parity" GroupName="RuleType" IsEnabled="False" />
                     <RadioButton Content="Div Thirds" GroupName="RuleType" IsEnabled="False" />
-                    <RadioButton Content="Mod Thirds" GroupName="RuleType" IsEnabled="False" />
+                    <RadioButton Content="Mod Thirds" GroupName="RuleType" />
                     <RadioButton Content="Between" GroupName="RuleType" IsEnabled="False" />
                     <Grid>
                         <Separator />
@@ -150,7 +150,9 @@
                     <!-- ReSharper disable once Xaml.RedundantResource -->
                     <Style TargetType="TextBox" x:Key="Ambiguous" BasedOn="{StaticResource {x:Type TextBox}}">
                         <Setter Property="Foreground" Value="DarkRed" />
-                        <Setter Property="FontSize" Value="6" />
+                        <Setter Property="FontSize" Value="5" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
                     </Style>
                     <Style TargetType="TextBox" x:Key="Fixed" BasedOn="{StaticResource {x:Type TextBox}}" />
                     <Style TargetType="TextBox" x:Key="Solved" BasedOn="{StaticResource {x:Type TextBox}}">
@@ -158,7 +160,9 @@
                     </Style>
                     <Style TargetType="TextBox" x:Key="Potential" BasedOn="{StaticResource {x:Type TextBox}}">
                         <Setter Property="Foreground" Value="BlueViolet" />
-                        <Setter Property="FontSize" Value="9" />
+                        <Setter Property="FontSize" Value="5" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
                     </Style>
                     <Style TargetType="Border">
                         <Setter Property="BorderThickness" Value="0" />

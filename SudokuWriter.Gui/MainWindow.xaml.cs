@@ -79,6 +79,7 @@ public partial class MainWindow
             new PairSumUiRule(cellSize, "Sums"),
             new CageUiRule(cellSize, "Cage"),
             new ThermoUiRule(cellSize, "Thermo"),
+            new ModLineUiRule(cellSize, "Mod Thirds"),
         ];
 
         if (_startupOptions.Value.LoadFileName is not null)
@@ -175,8 +176,32 @@ public partial class MainWindow
         prevToken?.Dispose();
 
         TaskCompletionSource<GameQueryResult> resultTask = new();
-        _queries.Enqueue(new GameQuery(state, resultTask));
+        _queries.Enqueue(new GameQuery(state, resultTask, _cancelPendingEvalutations.Token));
         _gameStateAvailable.Trigger();
+        
+        var simplified = _gameEngine.SimplifyState(state);
+        ImmutableList<TextBox> uiCells = CellBoxes;
+        for (int r = 0; r < state.Structure.Rows; r++)
+        for (int c = 0; c < state.Structure.Columns; c++)
+        {
+            TextBox uiCell = uiCells[r * 9 + c];
+            CellStyle style = uiCell.Tag is CellBoxValue value ? value.Style : CellStyle.Ambiguous;
+            if (style == CellStyle.Fixed) continue;
+            CellValueMask mask = simplified.Cells[r, c];
+            switch (mask.Count)
+            {
+                case 0:
+                    SetCell(r, c, "", CellStyle.Potential);
+                    break;
+                case 1:
+                    SetCell(r, c, TextFromDigit(mask.GetSingle()), CellStyle.Solved);
+                    break;
+                default:
+                    SetCell(r, c, TextFromDigitMask(mask), CellStyle.Potential);
+                    break;
+            }
+        }
+        
         GameQueryResult result;
         try
         {
@@ -197,30 +222,34 @@ public partial class MainWindow
         };
         foreach (Border border in GetDescendants<Border>(GameGrid)) border.Style = s;
 
-        ImmutableList<TextBox> uiCells = CellBoxes;
-        
-        for (int r = 0; r < state.Structure.Rows; r++)
-        for (int c = 0; c < state.Structure.Columns; c++)
+        StatusMessage = result.Result switch
         {
-            TextBox uiCell = uiCells[r * 9 + c];
-            CellStyle style = uiCell.Tag is CellBoxValue value ? value.Style : CellStyle.Ambiguous;
-            if (style == CellStyle.Fixed) continue;
-            switch (result)
+            GameResult.Solved => "Solved",
+            GameResult.Unsolvable => "Unsolvable",
+            GameResult.MultipleSolutions => "Multiple Solutions",
+        };
+        if (result.Result == GameResult.Solved)
+        {
+            for (int r = 0; r < state.Structure.Rows; r++)
+            for (int c = 0; c < state.Structure.Columns; c++)
             {
-                case UnsolvableQueryResult:
-                    SetCell(r, c, "", CellStyle.Potential);
-                    StatusMessage = "Unsolvable";
-                    break;
-                case SolvedQueryResult solved:
-                    SetCell(r, c, TextFromDigit(solved.Solution.Cells.GetSingle(r, c)), CellStyle.Solved);
-                    StatusMessage = "Solved";
-                    break;
-                case MultipleSolutionsQueryResult multi:
-                    CellValueMask mask = (multi.Solution1.Cells[r, c] |
-                        multi.Solution2.Cells[r, c]);
-                    SetCell(r, c, TextFromDigitMask(mask), mask.IsSingle() ? CellStyle.Solved : CellStyle.Ambiguous);
-                    StatusMessage = "Multiple Solutions";
-                    break;
+                TextBox uiCell = uiCells[r * 9 + c];
+                CellStyle style = uiCell.Tag is CellBoxValue value ? value.Style : CellStyle.Ambiguous;
+                if (style == CellStyle.Fixed) continue;
+                switch (result)
+                {
+                    case UnsolvableQueryResult:
+                        SetCell(r, c, "", CellStyle.Potential);
+                        break;
+                    case SolvedQueryResult solved:
+                        SetCell(r, c, TextFromDigit(solved.Solution.Cells.GetSingle(r, c)), CellStyle.Solved);
+                        break;
+                    case MultipleSolutionsQueryResult multi:
+                        CellValueMask mask = (multi.Solution1.Cells[r, c] |
+                            multi.Solution2.Cells[r, c]);
+                        SetCell(r, c, TextFromDigitMask(mask), mask.IsSingle() ? CellStyle.Solved : CellStyle.Ambiguous);
+                        break;
+                }
             }
         }
     }
@@ -276,9 +305,10 @@ public partial class MainWindow
                 Debug.WriteLine("Found state to query", "INFO");
                 try
                 {
-                    GameResult result = _gameEngine.Evaluate(s.State, out GameState? solution, out GameState? conflict);
+                    GameResult result = _gameEngine.Evaluate(s.State, out GameState? solution, out GameState? conflict, s.CancellationToken);
                     Debug.WriteLine($"Query complete result={result}", "INFO");
-                    GameQueryResult queryResult = result switch {
+                    GameQueryResult queryResult = result switch
+                    {
                         GameResult.Unknown => UnknownQueryResult.Instance,
                         GameResult.Unsolvable => UnsolvableQueryResult.Instance,
                         GameResult.Solved => new SolvedQueryResult(solution.Value),
@@ -286,6 +316,10 @@ public partial class MainWindow
                         _ => throw new ArgumentOutOfRangeException()
                     };
                     s.OnSolved.TrySetResult(queryResult);
+                }
+                catch (OperationCanceledException)
+                {
+                    s.OnSolved.SetCanceled();
                 }
                 catch (Exception e)
                 {
@@ -401,7 +435,7 @@ public partial class MainWindow
         public static readonly UnknownQueryResult Instance = new();
     }
 
-    private record class GameQuery(GameState State, TaskCompletionSource<GameQueryResult> OnSolved);
+    private record class GameQuery(GameState State, TaskCompletionSource<GameQueryResult> OnSolved, CancellationToken CancellationToken);
 
     private readonly record struct CellBoxValue(string Text, CellStyle Style);
 

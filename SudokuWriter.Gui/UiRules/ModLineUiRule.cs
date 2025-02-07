@@ -4,7 +4,7 @@ using VaettirNet.SudokuWriter.Library.Rules;
 
 namespace VaettirNet.SudokuWriter.Gui.UiRules;
 
-public class RenbanUiRule : LineUiRule<RenbanLine>
+public class ModLineUiRule : LineUiRule<ModLineRule>
 {
     private class RuleImpl : Rule {
         public RuleImpl(UiGameRuleFactory factory, Drawing drawing, PathFigure path) : base(factory, drawing, path)
@@ -12,7 +12,7 @@ public class RenbanUiRule : LineUiRule<RenbanLine>
         }
     }
 
-    public RenbanUiRule(int cellSize, string name) : base(cellSize, name, Brushes.Magenta)
+    public ModLineUiRule(int cellSize, string name) : base(cellSize, name, Brushes.Orange)
     {
     }
     
@@ -21,5 +21,5 @@ public class RenbanUiRule : LineUiRule<RenbanLine>
         return new RuleImpl(this, drawing, figure);
     }
 
-    protected override RenbanLine SerializeLineRule(ImmutableArray<BranchingRuleLine> ruleLines) => new(ruleLines);
+    protected override ModLineRule SerializeLineRule(ImmutableArray<BranchingRuleLine> ruleLines) => new(ruleLines);
 }

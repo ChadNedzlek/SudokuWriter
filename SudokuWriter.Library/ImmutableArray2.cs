@@ -1,5 +1,6 @@
 using System;
 using System.IO.Hashing;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -9,7 +10,7 @@ public readonly struct ImmutableArray2<T>
 {
     public int Rows { get; }
     public int Columns { get; }
-    private readonly ReadOnlyMemory<T> _array;
+    private readonly T[] _array;
 
     public ImmutableArray2(int rows, int columns)
     {
@@ -20,7 +21,7 @@ public readonly struct ImmutableArray2<T>
         _array = new T[rows * columns];
     }
 
-    public ImmutableArray2(ReadOnlyMemory<T> array, int columns)
+    internal ImmutableArray2(T[] array, int columns)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(columns);
         Rows = array.Length / columns;
@@ -36,28 +37,28 @@ public readonly struct ImmutableArray2<T>
         return row * Columns + col;
     }
 
-    public ref readonly T this[int row, int col] => ref _array.Span[CalcIndex(row, col)];
+    public ref readonly T this[int row, int col] => ref _array[CalcIndex(row, col)];
 
     public ImmutableArray2.Builder<T> ToBuilder()
     {
         var array = new T[_array.Length];
-        _array.CopyTo(array);
+        _array.CopyTo(array.AsSpan());
         return ImmutableArray2.Builder<T>.EncapsulateArray(array, Columns);
     }
 
     public ImmutableArray2<T> SetItem(int row, int column, T value)
     {
         var array = new T[_array.Length];
-        _array.CopyTo(array);
+        _array.CopyTo(array.AsSpan());
         array[CalcIndex(row, column)] = value;
         return new ImmutableArray2<T>(array, Columns);
     }
 
-    public ReadOnlyMultiRef<T> GetEmptyReference() => new(_array.Span);
+    public ReadOnlyMultiRef<T> GetEmptyReference() => new(_array.AsSpan());
 
     public ReadOnlyMultiRef<T> GetColumnReference(int column)
     {
-        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.Span);
+        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.AsSpan());
         checked
         {
             refs.IncludeStrides((ushort)CalcIndex(0, column), 1, (ushort)Columns, (ushort)Rows);
@@ -67,7 +68,7 @@ public readonly struct ImmutableArray2<T>
 
     public ReadOnlyMultiRef<T> GetRowReference(int row)
     {
-        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.Span);
+        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.AsSpan());
         checked
         {
             refs.IncludeStride((ushort)CalcIndex(row, 0), (ushort)Rows);
@@ -79,7 +80,7 @@ public readonly struct ImmutableArray2<T>
     {
         var (startRow, numRows) = rows.GetOffsetAndLength(Rows);
         var (startCol, numCols) = columns.GetOffsetAndLength(Columns);
-        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.Span);
+        ReadOnlyMultiRef<T> refs = new ReadOnlyMultiRef<T>(_array.AsSpan());
         checked
         {
             refs.IncludeStrides((ushort)CalcIndex(startRow, startCol), (ushort)numCols, (ushort)Columns, (ushort)numRows);
@@ -87,7 +88,7 @@ public readonly struct ImmutableArray2<T>
         return refs;
     }
 
-    public ReadOnlyMultiRef<T> Unbox(MultiRefBox<T> box) => box.Unbox(_array.Span);
+    public ReadOnlyMultiRef<T> Unbox(MultiRefBox<T> box) => box.Unbox((ReadOnlySpan<T>)_array);
 
     public ulong GetHash64()
     {
@@ -98,7 +99,7 @@ public readonly struct ImmutableArray2<T>
                 throw new NotSupportedException();
             }
 
-            ReadOnlySpan<T> span = _array.Span;
+            ReadOnlySpan<T> span = _array;
             
             Span<byte> bytes = MemoryMarshal.CreateSpan(
                 ref Unsafe.As<T, byte>(ref MemoryMarshal.GetReference(span)),
@@ -117,6 +118,8 @@ public readonly struct ImmutableArray2<T>
         Array.Copy(values, flat, flat.Length);
         return new ImmutableArray2<T>(flat, values.GetLength(1));
     }
+
+    public bool Any(Func<T, bool> selector) => _array.Any(selector);
 }
 
 public static class ImmutableArray2
@@ -135,18 +138,13 @@ public static class ImmutableArray2
         return new ImmutableArray2<T>(rows, columns).ToBuilder();
     }
 
-    public static Builder<T> FromMemory<T>(Memory<T> array, int columns)
-    {
-        return Builder<T>.EncapsulateArray(array, columns);
-    }
-
     public class Builder<T>
     {
-        private readonly Memory<T> _array;
+        private readonly T[] _array;
 
         private bool _disposed;
 
-        private Builder(Memory<T> array, int columns)
+        private Builder(T[] array, int columns)
         {
             Columns = columns;
             Rows = array.Length / Columns;
@@ -161,11 +159,11 @@ public static class ImmutableArray2
             get
             {
                 ThrowIfDisposed();
-                return ref _array.Span[CalcIndex(row, col)];
+                return ref _array[CalcIndex(row, col)];
             }
         }
 
-        public static Builder<T> EncapsulateArray(Memory<T> array, int columns)
+        public static Builder<T> EncapsulateArray(T[] array, int columns)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(columns);
             ArgumentOutOfRangeException.ThrowIfZero(array.Length, nameof(array));
@@ -196,19 +194,19 @@ public static class ImmutableArray2
         public void Fill(T value)
         {
             ThrowIfDisposed();
-            _array.Span.Fill(value);
+            _array.AsSpan().Fill(value);
         }
 
         public MultiRef<T> GetEmptyReference()
         {
             ThrowIfDisposed();
-            return new MultiRef<T>(_array.Span);
+            return new MultiRef<T>(_array.AsSpan());
         }
 
         public MultiRef<T> GetColumnReference(int column)
         {
             ThrowIfDisposed();
-            MultiRef<T> refs = new MultiRef<T>(_array.Span);
+            MultiRef<T> refs = new MultiRef<T>(_array.AsSpan());
             checked
             {
                 refs.IncludeStrides((ushort)CalcIndex(0, column), 1, (ushort)Columns, (ushort)Rows);
@@ -219,7 +217,7 @@ public static class ImmutableArray2
         public MultiRef<T> GetRowReference(int row)
         {
             ThrowIfDisposed();
-            MultiRef<T> refs = new MultiRef<T>(_array.Span);
+            MultiRef<T> refs = new MultiRef<T>(_array.AsSpan());
             checked
             {
                 refs.IncludeStride((ushort)CalcIndex(row, 0), (ushort)Rows);
@@ -232,7 +230,7 @@ public static class ImmutableArray2
             ThrowIfDisposed();
             var (startRow, numRows) = rows.GetOffsetAndLength(Rows);
             var (startCol, numCols) = columns.GetOffsetAndLength(Columns);
-            MultiRef<T> refs = new MultiRef<T>(_array.Span);
+            MultiRef<T> refs = new MultiRef<T>(_array.AsSpan());
             checked
             {
                 refs.IncludeStrides((ushort)CalcIndex(startRow, startCol), (ushort)numCols, (ushort)Columns, (ushort)numRows);
@@ -240,6 +238,6 @@ public static class ImmutableArray2
             return refs;
         }
 
-        public MultiRef<T> Unbox(MultiRefBox<T> box) => box.Unbox(_array.Span);
+        public MultiRef<T> Unbox(MultiRefBox<T> box) => box.Unbox(_array.AsSpan());
     }
 }

@@ -27,7 +27,9 @@ public ref struct ReadOnlyMultiRef<T>
         _offsets[_length++] = o;
     }
 
-    public int GetCount()
+    public readonly bool IsEmpty => _length == 0;
+
+    public readonly int GetCount()
     {
         int cnt = 0;
         for (int ip=0;ip<_length;ip++)
