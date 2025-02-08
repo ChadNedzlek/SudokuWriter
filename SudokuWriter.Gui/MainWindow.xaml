@@ -60,7 +60,7 @@
                     <RadioButton Content="Arrow" GroupName="RuleType" IsEnabled="False" />
                     <RadioButton Content="Same Parity" GroupName="RuleType" IsEnabled="False" />
                     <RadioButton Content="Alternate Parity" GroupName="RuleType" IsEnabled="False" />
-                    <RadioButton Content="Div Thirds" GroupName="RuleType" IsEnabled="False" />
+                    <RadioButton Content="Div Thirds" GroupName="RuleType" />
                     <RadioButton Content="Mod Thirds" GroupName="RuleType" />
                     <RadioButton Content="Between" GroupName="RuleType" IsEnabled="False" />
                     <Grid>

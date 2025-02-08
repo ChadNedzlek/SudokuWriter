@@ -24,7 +24,9 @@ public abstract class LineRule<T> : IGameRule, ILineRule where T:ILineRule<T>
     public abstract GameState? TryReduce(GameState state);
     public abstract IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state);
 
-    public abstract void SaveToJsonObject(JsonObject obj);
+    public virtual void SaveToJsonObject(JsonObject obj)
+    {
+    }
 
     public JsonObject ToJsonObject()
     {

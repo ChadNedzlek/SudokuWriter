@@ -11,7 +11,4 @@ public class GermanWhispersLineRule : DifferenceAtLeastLineRuleBase<GermanWhispe
     }
     
     public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new GermanWhispersLineRule(parts);
-    public override void SaveToJsonObject(JsonObject obj)
-    {
-    }
 }

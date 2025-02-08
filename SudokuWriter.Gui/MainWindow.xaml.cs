@@ -80,6 +80,7 @@ public partial class MainWindow
             new CageUiRule(cellSize, "Cage"),
             new ThermoUiRule(cellSize, "Thermo"),
             new ModLineUiRule(cellSize, "Mod Thirds"),
+            new DivLineUiRule(cellSize, "Div Thirds"),
         ];
 
         if (_startupOptions.Value.LoadFileName is not null)

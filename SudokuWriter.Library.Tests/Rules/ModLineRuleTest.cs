@@ -8,7 +8,7 @@ namespace VaettirNet.SudokuWriter.Library.Tests.Rules;
 [TestOf(typeof(ModLineRule))]
 public class ModLineRuleTest
 {
-    private static readonly GameStructure s_structure = new GameStructure(3, 3, 9, 3, 3);
+    private static readonly GameStructure s_structure = new(3, 3, 9, 3, 3);
     [Test]
     public void NothingTestIsUnknown()
     {

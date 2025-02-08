@@ -108,8 +108,4 @@ public class ThermoLineRule : DirectedLineRule<ThermoLineRule>, ILineRule<Thermo
             yield return grp.Box();
         }
     }
-
-    public override void SaveToJsonObject(JsonObject obj)
-    {
-    }
 }

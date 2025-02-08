@@ -155,8 +155,4 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
             yield return refs.Box();
         }
     }
-
-    public override void SaveToJsonObject(JsonObject obj)
-    {
-    }
 }
