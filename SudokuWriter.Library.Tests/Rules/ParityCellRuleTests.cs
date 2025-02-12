@@ -83,7 +83,7 @@ public class ParityCellRuleTests
     {
         var structure = new GameStructure(2, 2, 2, 1, 2);
         var engine = new GameEngine(new GameState(Cells.CreateFilled(structure), structure), new ParityCellRule([(1, 0)], [(0, 0)]));
-        GameState reduced = engine.Rules[0].TryReduce(engine.InitialState).ShouldNotBeNull();
+        GameState reduced = engine.Rules[0].TryReduce(engine.InitialState, TestSimplificationTracker.Instance.GetEmptyChain()).ShouldNotBeNull();
         reduced.Cells.GetSingle(0, 0).ShouldBe(0);
         reduced.Cells.GetSingle(1, 0).ShouldBe(1);
     }

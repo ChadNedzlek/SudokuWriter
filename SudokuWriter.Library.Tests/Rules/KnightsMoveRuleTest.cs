@@ -29,7 +29,7 @@ public class KnightsMoveRuleTest
     {
         var structure = new GameStructure(3, 3, 3, 1, 1);
         var state = new GameState(Cells.CreateFilled(structure).SetCell(0, 0, 0), structure);
-        GameState reduced = new KnightsMoveRule().TryReduce(state).ShouldNotBeNull();
+        GameState reduced = new KnightsMoveRule().TryReduce(state, TestSimplificationTracker.Instance.GetEmptyChain()).ShouldNotBeNull();
         reduced.Cells[2, 1].ShouldBe(CellValueMask.All(structure.Digits) & ~new CellValue(0).AsMask());
     }
 }

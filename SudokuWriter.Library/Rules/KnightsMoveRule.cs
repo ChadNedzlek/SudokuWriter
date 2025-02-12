@@ -41,7 +41,7 @@ public class KnightsMoveRule : IGameRule
         return GameResult.Solved;
     }
 
-    public GameState? TryReduce(GameState state)
+    public GameState? TryReduce(GameState state, ISimplificationChain chain)
     {
         bool changed = false;
         CellsBuilder cells = state.Cells.ToBuilder();
@@ -71,7 +71,8 @@ public class KnightsMoveRule : IGameRule
         return changed ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state) => [];
+    public IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker) => [];
+    public IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker) => [];
 
     public JsonObject ToJsonObject() => new();
 

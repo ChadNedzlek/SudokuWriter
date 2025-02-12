@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace VaettirNet.SudokuWriter.Library.Rules;
@@ -80,4 +82,6 @@ public abstract class TriGroupLineRule<T> : TriLineRule<T>
             return reduced;
         }
     }
+
+    public override IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker) => [];
 }

@@ -83,7 +83,7 @@ public class CageRule : IGameRule
         int LowestLowBitComparison(CellValueMask a, CellValueMask b) => ushort.TrailingZeroCount(a.RawValue).CompareTo(ushort.TrailingZeroCount(b.RawValue));
     }
 
-    public GameState? TryReduce(GameState state)
+    public GameState? TryReduce(GameState state, ISimplificationChain chain)
     {
         if (state.Digits > 16) return null;
         CellsBuilder cells = state.Cells.ToBuilder();
@@ -134,7 +134,7 @@ public class CageRule : IGameRule
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state)
+    public IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker)
     {
         var refs = state.Cells.GetEmptyReferences();
         foreach (var cell in Cage)
@@ -142,7 +142,13 @@ public class CageRule : IGameRule
             refs.Include(in state.Cells[cell]);
         }
 
-        return [refs.Box()];
+        return [new MutexGroup(refs.Box(), tracker.Record($"Cage {Sum} in cell {Cage[0]}"))];
+    }
+
+    public IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker)
+    {
+        // TODO: This should be possible if any given set might have full
+        return [];
     }
 
     private Vec CalculateValidMask(Vec maxSumExcept, Vec minSumExcept, int digits)

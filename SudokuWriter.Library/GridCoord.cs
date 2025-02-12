@@ -34,4 +34,6 @@ public readonly record struct GridCoord(ushort Row, ushort Col) :
     
     public static implicit operator GridCoord((ushort row, ushort col) c) => new (c.row, c.col);
     public static implicit operator (int row, int col)(GridCoord c) => (c.Row, c.Col);
+
+    public override string ToString() => $"({Row},{Col})";
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.Json.Nodes;
 
@@ -15,4 +16,5 @@ public class ModLineRule : TriGroupLineRule<ModLineRule>, ILineRule<ModLineRule>
     protected override CellValueMask ReduceToGroup(CellValueMask input) => input | (input >> 3) | (input >> 6);
     protected override CellValueMask ReducingGroupMask(CellValueMask mask) => mask | mask << 3 | mask << 6;
     protected override CellValueMask InputGroupMask { get; } = CellValueMask.All(3);
+    public override IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker) => [];
 }

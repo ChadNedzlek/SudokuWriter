@@ -1,8 +1,9 @@
+using System.Linq;
 using NUnit.Framework;
 using Shouldly;
 using VaettirNet.SudokuWriter.Library.Rules;
 
-namespace VaettirNet.SudokuWriter.Library.Tests;
+namespace VaettirNet.SudokuWriter.Library.Tests.Rules;
 
 [TestFixture]
 [TestOf(typeof(BasicGameRule))]
@@ -97,7 +98,7 @@ public class BasicGameRuleTest
             Cells.CreateFilled(s),
             s
         );
-        BasicGameRule.Instance.TryReduce(state).ShouldBeNull();
+        BasicGameRule.Instance.TryReduce(state, TestSimplificationTracker.Instance.GetEmptyChain()).ShouldBeNull();
     }
 
     [Test]
@@ -109,7 +110,7 @@ public class BasicGameRuleTest
                 .SetCell(0, 0, 0),
             s
         );
-        GameState? reducedState = BasicGameRule.Instance.TryReduce(state);
+        GameState? reducedState = BasicGameRule.Instance.TryReduce(state, TestSimplificationTracker.Instance.GetEmptyChain());
         reducedState.ShouldNotBeNull();
         reducedState.Value.Cells[0, 0].ShouldBe(1);
 
@@ -124,5 +125,23 @@ public class BasicGameRuleTest
         reducedState.Value.Cells[1, 1].ShouldBe(14);
 
         reducedState.Value.Cells[2, 2].ShouldBe(15);
+    }
+
+    [Test]
+    public void DigitFences()
+    {
+        var s = new GameStructure(4, 4, 4, 2, 2);
+        CellsBuilder builder = CellsBuilder.CreateFilled(s);
+        builder[0, 0] = new CellValue(0) | new CellValue(1) | new CellValue(2);
+        var state = new GameState(builder.MoveToImmutable(), s);
+        var fences = new BasicGameRule().GetFencedDigits(state, TestSimplificationTracker.Instance).ToList();
+        fences.Count.ShouldBe(3);
+        fences.ShouldAllBe(e => e.Digit == new CellValue(3));
+        var row0 = state.Cells.GetRow(0).Box();
+        fences.ShouldContain(e => row0.IsStrictSuperSetOf(e.Cells));
+        var col0 = state.Cells.GetRow(0).Box();
+        fences.ShouldContain(e => col0.IsStrictSuperSetOf(e.Cells));
+        var box0 = state.Cells.GetRow(0).Box();
+        fences.ShouldContain(e => box0.IsStrictSuperSetOf(e.Cells));
     }
 }

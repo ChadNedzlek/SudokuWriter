@@ -73,7 +73,7 @@ public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
         return endAllowedMask;
     }
 
-    public override GameState? TryReduce(GameState state)
+    public override GameState? TryReduce(GameState state, ISimplificationChain chain)
     {
         CellsBuilder cellBuilder = state.Cells.ToBuilder();
         bool modified = false;
@@ -89,5 +89,6 @@ public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
         return modified ? state.WithCells(cellBuilder.MoveToImmutable()) : null;
     }
 
-    public override IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state) => [];
+    public override IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker) => [];
+    public override IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker) => [];
 }

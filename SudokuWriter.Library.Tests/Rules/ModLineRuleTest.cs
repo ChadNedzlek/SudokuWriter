@@ -42,7 +42,7 @@ public class ModLineRuleTest
         var filled = Cells.CreateFilled(s_structure).SetCell(0, 0, 0);
         var state = new GameState(filled, s_structure);
         ModLineRule modLineRule = new ModLineRule([new([new([(0, 0), (0, 1), (0, 2), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2)])])]);
-        var reduced = modLineRule.TryReduce(state).ShouldNotBeNull();
+        var reduced = modLineRule.TryReduce(state, TestSimplificationTracker.Instance.GetEmptyChain()).ShouldNotBeNull();
         reduced.Cells[0,0].ToString().ShouldBe("1");
         reduced.Cells[0,1].ToString().ShouldBe("235689");
         reduced.Cells[0,2].ToString().ShouldBe("235689");

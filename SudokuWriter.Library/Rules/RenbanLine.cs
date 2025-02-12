@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Numerics;
 using System.Text.Json.Nodes;
 
@@ -63,7 +65,7 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
         return empty ? GameResult.Unknown : GameResult.Solved;
     }
 
-    public override GameState? TryReduce(GameState state)
+    public override GameState? TryReduce(GameState state, ISimplificationChain chain)
     {
         bool reduced = false;
         CellsBuilder cells = state.Cells.ToBuilder();
@@ -109,22 +111,22 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
                 checkGaps &= (ushort)~lowestSetBits;
             }
 
-            ushort maximumLowDigit = 0;
-            ushort minimumHighDigit = (ushort)(state.Digits - 1);
+            CellValue maximumLowDigit = state.MinDigit;
+            CellValue minimumHighDigit = state.MaxDigit;
             foreach (LineRuleSegment branch in line.Branches)
             {
                 foreach (GridCoord coord in branch.Cells)
                 {
                     ref CellValueMask cell = ref cells[coord];
                     reduced |= RuleHelpers.TryMask(ref cell, noGaps);
-                    minimumHighDigit = ushort.Min(minimumHighDigit, unchecked((ushort)(16 - ushort.LeadingZeroCount(cell.RawValue) - 1)));
-                    maximumLowDigit = ushort.Max(maximumLowDigit, ushort.TrailingZeroCount(cell.RawValue));
+                    minimumHighDigit = CellValue.Min(minimumHighDigit, cell.GetMaxValue());
+                    maximumLowDigit = CellValue.Max(maximumLowDigit, cell.GetMinValue());
                 }
             }
 
-            int highDigitsToStrip = state.Digits - length - minimumHighDigit;
+            int highDigitsToStrip = state.Digits - length - minimumHighDigit.NumericValue + 1;
             CellValueMask stripTooHighBits = highDigitsToStrip < 1 ? allDigitMask : allDigitMask >> highDigitsToStrip;
-            int lowDigitsToStrip = maximumLowDigit - length + 1;
+            int lowDigitsToStrip = maximumLowDigit.NumericValue - length;
             CellValueMask stripTooLowBits = lowDigitsToStrip < 1 ? allDigitMask : allDigitMask << lowDigitsToStrip;
             CellValueMask allowedMask = stripTooHighBits & stripTooLowBits & ~alreadySetMask;
 
@@ -143,8 +145,9 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public override IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state)
+    public override IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker)
     {
+        List<MutexGroup> groups = new();
         foreach (BranchingRuleLine line in Lines)
         {
             ReadOnlyMultiRef<CellValueMask> refs = state.Cells.GetEmptyReferences();
@@ -152,7 +155,46 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
             foreach (GridCoord cell in branch.Cells)
                 refs.Include(in state.Cells[cell]);
 
-            yield return refs.Box();
+            groups.Add(new(refs.Box(), tracker.Record($"Renban line at {line.Branches[0].Cells[0]}")));
         }
+
+        return groups;
+    }
+
+    public override IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker)
+    {
+        List<DigitFence> fences = new();
+        foreach (BranchingRuleLine line in Lines)
+        {
+            CellValue maximumLowDigit = state.MinDigit;
+            CellValue minimumHighDigit = state.MaxDigit;
+            ushort count = 0;
+            foreach(GridCoord cell in line.Branches.SelectMany(b => b.Cells))
+            {
+                count++;
+                CellValueMask cellMask = state.Cells[cell];
+                minimumHighDigit = CellValue.Min(minimumHighDigit, cellMask.GetMaxValue());
+                maximumLowDigit = CellValue.Max(maximumLowDigit, cellMask.GetMinValue());
+            }
+
+            CellValue minDigit = CellValue.Min(minimumHighDigit, state.MaxDigit - count + 1);
+            CellValue maxDigit = CellValue.Max(maximumLowDigit, state.MinDigit + count - 1);
+
+            for (var d = minDigit; d <= maxDigit; d++)
+            {
+                ReadOnlyMultiRef<CellValueMask> cells = state.Cells.GetEmptyReferences();
+                foreach (GridCoord cell in line.Branches.SelectMany(b => b.Cells))
+                {
+                    ref readonly var mask = ref state.Cells[cell];
+                    if (state.Cells[cell].Contains(d))
+                        cells.Include(in mask);
+                }
+
+                if (cells.GetCount() != 1)
+                    fences.Add(new(d, cells.Box(), tracker.Record($"Renban line at {line.Branches[0].Cells[0]} must contain {d}")));
+            }
+        }
+
+        return fences;
     }
 }

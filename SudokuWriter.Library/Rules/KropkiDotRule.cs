@@ -61,7 +61,7 @@ public class KropkiDotRule : IGameRule
         return (mask << 1) | (mask >> 1);
     }
 
-    public GameState? TryReduce(GameState state)
+    public GameState? TryReduce(GameState state, ISimplificationChain chain)
     {
         CellsBuilder cells = state.Cells.ToBuilder();
         bool reduced = false;
@@ -86,7 +86,8 @@ public class KropkiDotRule : IGameRule
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state) => [];
+    public IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker) => [];
+    public IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker) => [];
 
     public JsonObject ToJsonObject()
     {

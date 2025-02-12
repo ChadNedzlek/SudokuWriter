@@ -40,7 +40,7 @@ public class ThermoLineRuleTest
         GameStructure s = new(2, 2, 4, 2, 2);
         var state = new GameState(Cells.CreateFilled(s), s);
         var thermoRule = new ThermoLineRule([new([new([(0, 0), (0, 1)])])]);
-        var reducedState = thermoRule.TryReduce(state).ShouldNotBeNull();
+        var reducedState = thermoRule.TryReduce(state, TestSimplificationTracker.Instance.GetEmptyChain()).ShouldNotBeNull();
         reducedState.Cells[0, 0].ShouldBe(new CellValue(0) | new CellValue(1) | new CellValue(2));
         reducedState.Cells[0, 1].ShouldBe(new CellValue(1) | new CellValue(2) | new CellValue(3));
     }

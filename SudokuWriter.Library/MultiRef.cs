@@ -1,16 +1,21 @@
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace VaettirNet.SudokuWriter.Library;
 
 [InlineArray(10)]
-internal struct OffsetList
+public struct OffsetList
 {
     private ulong _element0;
+
+    public static unsafe int Size { get; } = sizeof(OffsetList) / sizeof(ulong);
 }
 
-public ref struct MultiRef<T>
+[DebuggerDisplay("{Render(),nq}")]
+public ref struct MultiRef<T> : IOffsetContainer
 {
     private readonly Span<T> _ref;
     private OffsetList _offsets;
@@ -26,9 +31,20 @@ public ref struct MultiRef<T>
         _ref = validSpace;
         _offsets = offsets;
         _length = length;
+        for(int i = length; i < length; i++)
+        {
+            if (_offsets[i] != offsets[i])
+            {
+                throw new ArgumentException();
+            }
+        }
     }
     
     public readonly bool IsEmpty() => _length == 0;
+
+    public void Clear() => _length = 0;
+
+    public void UnboxFrom(MultiRefBox<T> input) => this = new MultiRef<T>(_ref, input.Offsets, input.Length);
 
     public readonly int GetCount()
     {
@@ -142,7 +158,7 @@ public ref struct MultiRef<T>
     public readonly TOut Aggregate<TOut, TContext>(TOut seed, RefContextAggregator<T, TOut, TContext> callback, TContext context)
         where TContext : allows ref struct
     {
-        for (int ip=0;ip<_length;ip++)
+        for (int ip = 0; ip < _length; ip++)
         {
             ulong ptr = _offsets[ip];
             if (ptr <= int.MaxValue)
@@ -191,11 +207,95 @@ public ref struct MultiRef<T>
     {
         return new MultiRefBox<T>(_offsets, _length);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator ReadOnlyMultiRef<T>(in MultiRef<T> v) => new(v._ref, v._offsets, v._length);
+
+    public void Except<TExcept>(TExcept except) where TExcept : IOffsetContainer, allows ref struct
+    {
+        var offsets = MemoryMarshal.CreateSpan(ref Unsafe.As<OffsetList, long>(ref _offsets), _length);
+        
+        if (offsets.ContainsAnyExceptInRange(0, ushort.MaxValue))
+        {
+            // There's a weird stride one in here, so we need to clear it out
+            Span<ushort> tmp = stackalloc ushort[MaxCount];
+            tmp = tmp[..GetOffsets(tmp)];
+            _length = tmp.Length;
+            for (int i = 0; i < tmp.Length; i++)
+            {
+                _offsets[i] = tmp[i];
+            }
+            offsets = MemoryMarshal.CreateSpan(ref Unsafe.As<OffsetList, long>(ref _offsets), _length);
+        }
+
+        Span<ushort> exceptOffsets = stackalloc ushort[TExcept.MaxCount];
+        exceptOffsets = exceptOffsets[..except.GetOffsets(exceptOffsets)];
+
+        for (int i = 0; i < _length; i++)
+        {
+            if (exceptOffsets.Contains((ushort)offsets[i]))
+            {
+                offsets[i] = offsets[--_length];
+                i--;
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly int GetOffsets(scoped Span<ushort> offsets) => ((ReadOnlyMultiRef<T>)this).GetOffsets(offsets);
+
+    public static int MaxCount => OffsetList.Size;
+
+    public string Render()
+    {
+        return Aggregate("", (string s, scoped ref T v, MultiRef<T> t) => s + $"{t.Render(in v)}, ", this).TrimEnd(' ', ',');
+    }
+    
+    private string Render(scoped ref readonly T x)
+    {
+        int nRow = (int)IntMath.Sqrt((uint)_ref.Length);
+        int nCol = _ref.Length / nRow;
+        _ref.Overlaps(new ReadOnlySpan<T>(in x), out int offset);
+        int r = offset / nCol;
+        int c = offset - (r * nCol);
+        return $"({r},{c}) {x}";
+    }
+}
+
+public static class IntMath
+{
+    public static uint Sqrt(uint x)
+    {
+        uint m, y, b;
+        m = 0x40000000;
+        y = 0;
+        while (m != 0)
+        {
+            b = y | m;
+            y >>= 1;
+            if (x >= b)
+            {
+                x -= b;
+                y |= m;
+            }
+
+            m >>= 2;
+        }
+
+        return y;
+    }
 }
 
 public delegate void RefAction<T>(scoped ref T value);
+public delegate void ReadonlyRefContextAction<T, in TContext>(scoped ref readonly T value, TContext ctx)
+    where TContext : allows ref struct;
+public delegate void ReadonlyRefContextRefAction<T, TContext>(scoped ref readonly T value, scoped ref TContext ctx)
+    where TContext : allows ref struct;
 
 public delegate TOut RefAggregator<TIn, TOut>(TOut input, scoped ref TIn value);
 
-public delegate TOut RefContextAggregator<TIn, TOut, TContext>(TOut input, scoped ref TIn value, TContext ctx)
+public delegate TOut RefContextAggregator<TIn, TOut, in TContext>(TOut input, scoped ref TIn value, TContext ctx)
+    where TContext : allows ref struct;
+
+public delegate TOut ReadonlyRefContextAggregator<TIn, TOut, in TContext>(TOut input, scoped ref readonly TIn value, TContext ctx)
     where TContext : allows ref struct;

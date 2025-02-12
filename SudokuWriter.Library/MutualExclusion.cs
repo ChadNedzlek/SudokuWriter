@@ -33,7 +33,7 @@ public static class MutualExclusion
         return ApplyMasks(cells, allowedMasks);
     }
 
-    private static bool ApplyMasks(MultiRef<CellValueMask> cells, Span<CellValueMask> allowedMasks)
+    private static bool ApplyMasks(MultiRef<CellValueMask> cells, ReadOnlySpan<CellValueMask> allowedMasks)
     {
         int iSet = 0;
 

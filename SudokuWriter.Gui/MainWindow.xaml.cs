@@ -81,12 +81,15 @@ public partial class MainWindow
             new ThermoUiRule(cellSize, "Thermo"),
             new ModLineUiRule(cellSize, "Mod Thirds"),
             new DivLineUiRule(cellSize, "Div Thirds"),
+            new QuadUiRule(cellSize, "Quadruple")
         ];
 
         if (_startupOptions.Value.LoadFileName is not null)
         {
             _ = LoadGameFromStream(File.OpenRead(_startupOptions.Value.LoadFileName));
         }
+        
+        AppVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "devel";
     }
 
     public int VariationValue
@@ -601,7 +604,13 @@ public partial class MainWindow
 
     private RuleParameters BuildParameters()
     {
-        return new RuleParameters(0, (ushort)VariationValue);
+        ushort mask = 0;
+        foreach (var child in VariationGrid.Children.OfType<CheckBox>())
+        {
+            mask = (ushort)((mask >> 1) | (child.IsChecked is true ? 1 << 8 : 0));
+        }
+
+        return new RuleParameters(mask, (ushort)VariationValue);
     }
 
     private void CellMouseUp(object sender, MouseButtonEventArgs e)

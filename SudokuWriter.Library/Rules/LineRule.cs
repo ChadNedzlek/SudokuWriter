@@ -21,8 +21,9 @@ public abstract class LineRule<T> : IGameRule, ILineRule where T:ILineRule<T>
     }
 
     public abstract GameResult Evaluate(GameState state);
-    public abstract GameState? TryReduce(GameState state);
-    public abstract IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state);
+    public abstract GameState? TryReduce(GameState state, ISimplificationChain chain);
+    public abstract IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker);
+    public abstract IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker);
 
     public virtual void SaveToJsonObject(JsonObject obj)
     {

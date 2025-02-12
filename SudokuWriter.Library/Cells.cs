@@ -17,7 +17,7 @@ public readonly struct Cells
     public int Rows => _cells.Rows;
     public int Columns => _cells.Columns;
 
-    public bool this[int row, int col, CellValue digit] => (_cells[row, col] & digit) != CellValueMask.None;
+    public bool this[int row, int col, CellValue digit] => _cells[row, col].Contains(digit);
     public ref readonly CellValueMask this[int row, int col] => ref _cells[row, col];
     public ref readonly CellValueMask this[GridCoord coord] => ref _cells[coord.Row, coord.Col];
 

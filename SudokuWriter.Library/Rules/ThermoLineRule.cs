@@ -44,7 +44,7 @@ public class ThermoLineRule : DirectedLineRule<ThermoLineRule>, ILineRule<Thermo
         return GameResult.Solved;
     }
 
-    public override GameState? TryReduce(GameState state)
+    public override GameState? TryReduce(GameState state, ISimplificationChain chain)
     {
         var cells = state.Cells.ToBuilder();
         bool reduced = false;
@@ -87,7 +87,7 @@ public class ThermoLineRule : DirectedLineRule<ThermoLineRule>, ILineRule<Thermo
             {
                 GridCoord crdNext = next[i];
                 ref CellValueMask vNext = ref cells[crdNext];
-                CellValueMask maxV = CellValueMask.All(v.GetMaxValue().NumericValue - 2);
+                CellValueMask maxV = CellValueMask.All(v.GetMaxValue().NumericValue - 1);
                 reduced |= RuleHelpers.TryMask(ref vNext,  maxV);
                 coordQueue.Enqueue(crdNext);
                 valueQueue.Enqueue(vNext);
@@ -97,15 +97,20 @@ public class ThermoLineRule : DirectedLineRule<ThermoLineRule>, ILineRule<Thermo
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public override IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state)
+    public override IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker)
     {
+        List<MutexGroup> groups = new();
         foreach (BranchingRuleLine line in Lines)
         {
             ReadOnlyMultiRef<CellValueMask> grp = state.Cells.GetEmptyReferences();
             foreach (LineRuleSegment branch in line.Branches)
             foreach(GridCoord cell in branch.Cells)
                 grp.Include(in state.Cells[cell]);
-            yield return grp.Box();
+            groups.Add(new (grp.Box(), tracker.Record($"Thermo {line.Branches[0].Cells[0]}")));
         }
+
+        return groups;
     }
+
+    public override IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker) => [];
 }

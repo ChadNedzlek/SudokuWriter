@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -40,9 +41,24 @@ public class GameEngine
         return new GameEngine(InitialState, [..Rules, rule]);
     }
 
-    public GameResult Evaluate(GameState state, out GameState? solution, out GameState? conflict, CancellationToken cancellationToken = default)
+    public GameResult Evaluate(
+        GameState state,
+        out GameState? solution,
+        out GameState? conflict,
+        CancellationToken cancellationToken = default
+    )
+    => Evaluate(state, out solution, out conflict, NoopTracker.Instance, out _, cancellationToken);
+
+    public GameResult Evaluate(
+        GameState state,
+        out GameState? solution,
+        out GameState? conflict,
+        ISimplificationTracker tracker,
+        out ISimplificationChain solutionChain,
+        CancellationToken cancellationToken = default)
     {
-        state = SimplifyState(state);
+        solutionChain = tracker.GetEmptyChain();
+        state = SimplifyState(state, solutionChain, cancellationToken);
         GameResult initialState = Rules.Aggregate(
             GameResult.Solved,
             (res, rule) => res switch
@@ -78,7 +94,7 @@ public class GameEngine
 
                 if (result == GameResult.Unsolvable) continue;
 
-                GameState simplified = SimplifyState(next);
+                GameState simplified = SimplifyState(next, solutionChain, cancellationToken);
 
                 switch (EvaluateState(simplified))
                 {
@@ -128,8 +144,9 @@ public class GameEngine
         );
     }
 
-    public GameState SimplifyState(GameState next, CancellationToken cancellationToken = default)
+    public GameState SimplifyState(GameState next, ISimplificationChain chain = null, CancellationToken cancellationToken = default)
     {
+        chain ??= NoopTracker.Instance.GetEmptyChain();
         GameState simplified = next;
         bool reduced = true;
         while (reduced)
@@ -138,7 +155,7 @@ public class GameEngine
             reduced = false;
             foreach (IGameRule rule in Rules)
             {
-                if (rule.TryReduce(simplified) is { } simpleReduce)
+                if (rule.TryReduce(simplified, chain) is { } simpleReduce)
                 {
                     simplified = simpleReduce;
                     reduced = true;
@@ -150,14 +167,66 @@ public class GameEngine
             {
                 CellsBuilder cellBuilder = simplified.Cells.ToBuilder();
                 foreach (IGameRule rule in Rules)
-                foreach (MultiRefBox<CellValueMask> mutexGroup in rule.GetMutualExclusionGroups(simplified))
-                    reduced |= MutualExclusion.ApplyMutualExclusionRules(cellBuilder.Unbox(mutexGroup));
+                foreach (MutexGroup mutexGroup in rule.GetMutualExclusionGroups(simplified, chain.Tracker))
+                {
+                    MultiRef<CellValueMask> cellRef = cellBuilder.Unbox(mutexGroup.Cells);
+                    bool applied = MutualExclusion.ApplyMutualExclusionRules(cellRef);
+                    if (applied)
+                    {
+                        chain.Record($"{mutexGroup.SimplificationRecord.Description} became {cellRef}");
+                    }
+                    reduced |= applied;
+                }
+                if (reduced) simplified = simplified.WithCells(cellBuilder.MoveToImmutable());
+            }
+            
+            if (!reduced)
+            {
+                CellsBuilder cellBuilder = simplified.Cells.ToBuilder();
+                List<DigitFence> fencedDigits = Rules.SelectMany(r => r.GetFencedDigits(simplified, chain.Tracker).ToList()).ToList();
+                foreach (IGameRule rule in Rules)
+                foreach (MutexGroup mutexGroup in rule.GetMutualExclusionGroups(simplified, chain.Tracker))
+                {
+                    if (EvaluateFenceLimitations(cellBuilder, mutexGroup, fencedDigits, chain))
+                    {
+                        // Evaluating a fence might screw up other fences, so we need to bail now, unfortunately
+                        reduced = true;
+                        break;
+                    }
+                }
 
                 if (reduced) simplified = simplified.WithCells(cellBuilder.MoveToImmutable());
             }
         }
 
         return simplified;
+    }
+
+    private static bool EvaluateFenceLimitations(
+        CellsBuilder cellBuilder,
+        MutexGroup mutexGroup,
+        List<DigitFence> fencedDigits,
+        ISimplificationChain chain
+    )
+    {
+        MultiRef<CellValueMask> mutexRef = cellBuilder.Unbox(mutexGroup.Cells);
+        foreach (DigitFence digitFence in fencedDigits)
+        {
+            if (!mutexGroup.Cells.IsStrictSuperSetOf(digitFence.Cells))
+                continue;
+            
+            MultiRef<CellValueMask> modificationGroup = mutexRef;
+            modificationGroup.Except(digitFence.Cells);
+            CellValueMask mask = ~digitFence.Digit.AsMask();
+            if (modificationGroup.Aggregate(false, (bool r, scoped ref CellValueMask cell) => RuleHelpers.TryMask(ref cell, mask) | r))
+            {
+                // Evaluating a fence might screw up other fences, so we need to bail now, unfortunately
+                chain.Record($"Digit must be in {digitFence.SimplificationRecord.Description}, so cannot be in {mutexGroup.SimplificationRecord.Description}");
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public IEnumerable<GameState> NextStates(GameState initial)

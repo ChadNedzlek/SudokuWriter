@@ -6,7 +6,7 @@
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:gui="clr-namespace:VaettirNet.SudokuWriter.Gui"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="800"
+        Title="VN Sudoku Writer" Height="500" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}">
     <Window.CommandBindings>
         <CommandBinding Command="New" Executed="NewGame" />
@@ -44,6 +44,7 @@
                 Header="Check for Updates"
                 Click="CheckForUpdates"
                 Visibility="{Binding Converter={StaticResource VisConv}, ConverterParameter=True, RelativeSource={RelativeSource AncestorType=gui:MainWindow}, Path=UpdateAvailable}" />
+            <Label Content="{Binding AppVersion}" Opacity="0.3" />
         </Menu>
         <Border DockPanel.Dock="Right" Width="150" BorderBrush="LightGray" BorderThickness="1,0,0,0" Padding="10">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
@@ -80,7 +81,7 @@
                         <Separator />
                         <TextBlock Background="#AAFFFFFF" HorizontalAlignment="Left" Margin="5,0,0,0" Padding="5,0">Other Rules</TextBlock>
                     </Grid>
-                    <RadioButton Content="Quadruple" GroupName="RuleType" IsEnabled="False" />
+                    <RadioButton Content="Quadruple" GroupName="RuleType" />
                     <RadioButton Content="Cage" GroupName="RuleType" />
                     <Grid>
                         <Separator />
@@ -91,7 +92,8 @@
                     <Button VerticalAlignment="Bottom" Click="EvaluateGame">Test Game</Button>
                     <Separator />
                     <Grid
-                        IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=HasVariationDigits}">
+                        IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=gui:MainWindow}, Path=HasVariationDigits}"
+                        Name="VariationGrid">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="*" />

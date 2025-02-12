@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.Json.Nodes;
 
@@ -16,5 +17,4 @@ public class DivLineRule : TriGroupLineRule<DivLineRule>, ILineRule<DivLineRule>
     protected override CellValueMask ReducingGroupMask(CellValueMask mask) => mask | mask << 1 | mask << 2;
 
     protected override CellValueMask InputGroupMask { get; } = new CellValue(0) | new CellValue(3) | new CellValue(6);
-
 }

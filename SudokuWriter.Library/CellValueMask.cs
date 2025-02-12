@@ -21,7 +21,7 @@ public readonly struct CellValueMask :
     
     private readonly ushort _mask;
 
-    internal CellValueMask(ushort mask)
+    public CellValueMask(ushort mask)
     {
         _mask = mask;
     }
@@ -109,8 +109,8 @@ public readonly struct CellValueMask :
         return new CellValueMask(ret);
     }
 
-    public CellValue GetMaxValue() => new((ushort)(16 - ushort.LeadingZeroCount(_mask)));
-    public CellValue GetMinValue() => new(ushort.TrailingZeroCount(_mask));
+    public CellValue GetMaxValue() => _mask == 0 ? CellValue.None : new((ushort)(16 - ushort.LeadingZeroCount(_mask) - 1));
+    public CellValue GetMinValue() => _mask == 0 ? CellValue.None : new(ushort.TrailingZeroCount(_mask));
 
     public override string ToString()
     {
@@ -119,7 +119,7 @@ public readonly struct CellValueMask :
         {
             if (((1 << i) & _mask) != 0)
             {
-                b.Append((char)('1' + i));
+                b.Append((i+1).ToString("X"));
             }
         }
 

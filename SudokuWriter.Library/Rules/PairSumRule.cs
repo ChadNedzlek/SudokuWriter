@@ -30,7 +30,7 @@ public class PairSumRule : IGameRule
         return GameResult.Solved;
     }
 
-    public GameState? TryReduce(GameState state)
+    public GameState? TryReduce(GameState state, ISimplificationChain chain)
     {
         CellsBuilder cells = state.Cells.ToBuilder();
         bool reduced = false;
@@ -46,10 +46,12 @@ public class PairSumRule : IGameRule
         return reduced ? state.WithCells(cells.MoveToImmutable()) : null;
     }
 
-    public IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state)
+    public IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker)
     {
         return [];
     }
+
+    public IEnumerable<DigitFence> GetFencedDigits(GameState state, ISimplificationTracker tracker) => [];
 
     public JsonObject ToJsonObject()
     {

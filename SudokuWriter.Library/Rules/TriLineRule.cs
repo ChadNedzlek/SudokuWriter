@@ -47,7 +47,7 @@ public abstract class TriLineRule<T> : LineRule<T>
         return result;
     }
 
-    public override GameState? TryReduce(GameState state)
+    public override GameState? TryReduce(GameState state, ISimplificationChain chain)
     {
         CellsBuilder cells = state.Cells.ToBuilder();
         bool reduced = false;
@@ -79,5 +79,5 @@ public abstract class TriLineRule<T> : LineRule<T>
     protected abstract GameResult EvaluateGroup(in ReadOnlyMultiRef<CellValueMask> a, in ReadOnlyMultiRef<CellValueMask> b, in ReadOnlyMultiRef<CellValueMask> c);
     protected abstract bool ReduceGroups(ref MultiRef<CellValueMask> a, ref MultiRef<CellValueMask> b, ref MultiRef<CellValueMask> c);
 
-    public override IEnumerable<MultiRefBox<CellValueMask>> GetMutualExclusionGroups(GameState state) => [];
+    public override IEnumerable<MutexGroup> GetMutualExclusionGroups(GameState state, ISimplificationTracker tracker) => [];
 }

@@ -91,4 +91,17 @@ public partial class MainWindow
         get { return (bool)GetValue(ShowProgressBarProperty); }
         set { SetValue(ShowProgressBarProperty, value); }
     }
+
+    public static readonly DependencyProperty AppVersionProperty = DependencyProperty.Register(
+        nameof(AppVersion),
+        typeof(string),
+        typeof(MainWindow),
+        new PropertyMetadata(default(string))
+    );
+
+    public string AppVersion
+    {
+        get { return (string)GetValue(AppVersionProperty); }
+        set { SetValue(AppVersionProperty, value); }
+    }
 }

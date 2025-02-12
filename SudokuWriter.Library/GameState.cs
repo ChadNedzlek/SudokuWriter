@@ -29,6 +29,8 @@ public readonly struct GameState
     public int BoxRows => Structure.BoxRows;
     public int BoxColumns => Structure.BoxColumns;
     public ushort Digits => Structure.Digits;
+    public CellValue MinDigit { get; } = new(0);
+    public CellValue MaxDigit => new((ushort)(Structure.Digits - 1));
 
     public GameState WithCells(Cells cells)
     {
