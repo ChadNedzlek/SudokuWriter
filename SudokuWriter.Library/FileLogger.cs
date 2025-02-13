@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -11,19 +12,20 @@ using Microsoft.Extensions.Options;
 
 namespace VaettirNet.SudokuWriter.Library;
 
-public class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposable, ISupportExternalScope
+public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposable, ISupportExternalScope
 {
-    private readonly Channel<Record> _records = Channel.CreateBounded<Record>(50);
-    private readonly Task _backgroundTask;
-    private readonly IOptions<Options> _options;
-    private readonly TimeProvider _timeProvider;
-    private IExternalScopeProvider _scopeProvider;
-
     public class Options
     {
         public int CountOfLogs { get; set; } = 5;
         public string FilePathPattern { get; set; } = "log_{0}_{1}.txt";
     }
+
+    private readonly Channel<Record> _records = Channel.CreateBounded<Record>(500);
+    private readonly Task _backgroundTask;
+    private readonly IOptions<Options> _options;
+    private readonly TimeProvider _timeProvider;
+    private IExternalScopeProvider _scopeProvider;
+    private bool _closing;
 
     public BufferedFileLoggerProvider(IOptions<Options> options, TimeProvider timeProvider = null, IExternalScopeProvider scopeProvider = null)
     {
@@ -31,7 +33,6 @@ public class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposable, ISu
         _options = options;
         _scopeProvider = scopeProvider;
         _backgroundTask = Task.Run(ProcessLogQueue);
-        ILogger<BufferedFileLoggerProvider> logger = NullLogger<BufferedFileLoggerProvider>.Instance;
     }
 
     public ILogger CreateLogger(string categoryName)
@@ -41,10 +42,59 @@ public class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposable, ISu
 
     private async Task ProcessLogQueue()
     {
+        StreamWriter writer = null;
         ChannelReader<Record> reader = _records.Reader;
-        await foreach(Record record in reader.ReadAllAsync())
+        try
         {
-            // Write stuff
+            await foreach (Record record in reader.ReadAllAsync())
+            {
+                EnsureWriter();
+                await writer.WriteLineAsync(
+                    $"{record.Timestamp:yyyy-MM-ddTHH:mm:ss.fff} [{record.LogLevel}] {record.EventId} {record.FormattedMessage} {record.Exception} {record.ActivitySpanId} {record.ActivityTraceId} {record.ManagedThreadId} {record.MessageTemplate}"
+                );
+            }
+        }
+        finally
+        {
+            if (writer != null) await writer.DisposeAsync();
+        }
+
+        return;
+
+
+        void EnsureWriter()
+        {
+            if (writer != null)
+            {
+                return;
+            }
+
+            foreach (var oldLogFile in Directory.GetFiles(string.Format(_options.Value.FilePathPattern, "*", "*"))
+                .OrderByDescending(f => f)
+                .Skip(_options.Value.CountOfLogs)
+            )
+            {
+                File.Delete(oldLogFile);
+            }
+
+            for(int count = 0; count < 100; count++)
+            {
+                string path = string.Format(_options.Value.FilePathPattern, _timeProvider.GetLocalNow().ToString("yyyy-MM-ddTHH-mm-ss"), count);
+                try
+                {
+                    writer = new StreamWriter(
+                        path,
+                        new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.ReadWrite }
+                    );
+                    return;
+                }
+                catch (IOException e) when ((e.HResult & 0xFFFF) == 80)
+                {
+                    // We are going to try again
+                }
+            }
+
+            throw new InvalidOperationException("Unable to create log file after 100 attempts");
         }
     }
 
@@ -136,6 +186,7 @@ public class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposable, ISu
 
     public async ValueTask DisposeAsync()
     {
+        _closing = true;
         try
         {
             _records.Writer.Complete();
@@ -161,9 +212,9 @@ public class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposable, ISu
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            if (formatter == null)
+            if (_fileLogger._closing)
             {
-                throw new ArgumentNullException(nameof(formatter));
+                return;
             }
 
             var message = formatter(state, exception);
@@ -175,8 +226,8 @@ public class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposable, ISu
             List<IReadOnlyList<KeyValuePair<string, object>>> attributes = [];
             _fileLogger._scopeProvider.ForEachScope((scope, list) =>
             {
-                if (scope is IReadOnlyList<KeyValuePair<string, object>> attributes)
-                    list.Add(attributes);
+                if (scope is IReadOnlyList<KeyValuePair<string, object>> a)
+                    list.Add(a);
             }, attributes);
             
             Record record;
@@ -214,6 +265,11 @@ public class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposable, ISu
 
             while (!_fileLogger._records.Writer.TryWrite(record))
             {
+                if (_fileLogger._closing)
+                {
+                    return;
+                }
+                
                 Thread.Sleep(10);
             }
         }
