@@ -108,7 +108,12 @@ jobs:
         md ./.out/tmp | Out-Null
         ConvertTo-Json @{title="Sudoku Writer"; version="${{ steps.version.outputs.SemVer }}"} `
           | Out-File ./.out/tmp/conventional-changelog.json -Encoding utf8NoBom -NoNewline
-        conventional-changelog --preset conventionalcommits --outfile ./.out/tmp/release-notes.md --context ./.out/tmp/conventional-changelog.json --verbose
+        conventional-changelog `
+          --preset conventionalcommits `
+          --outfile ./.out/tmp/release-notes.md `
+          --context ./.out/tmp/conventional-changelog.json `
+          --release-count 2 `
+          --verbose
   
     - name: Pack Velopack Release
       run: |
