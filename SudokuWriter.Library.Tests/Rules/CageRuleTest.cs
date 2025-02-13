@@ -82,7 +82,7 @@ public class TestSimplificationTracker : ISimplificationTracker
 
 public class TestSimplificationChain : ISimplificationChain
 {
-    public readonly List<SimplificationRecord> Records = new List<SimplificationRecord>();
+    public readonly List<SimplificationRecord> Records = new();
 
     public TestSimplificationChain(ISimplificationTracker tracker)
     {
@@ -96,4 +96,13 @@ public class TestSimplificationChain : ISimplificationChain
     }
 
     public ISimplificationTracker Tracker { get; }
+    
+    public ISimplificationChain Fork()
+    {
+        var forked = new TestSimplificationChain(Tracker);
+        forked.Records.AddRange(Records);
+        return forked;
+    }
+
+    public IEnumerable<SimplificationRecord> GetRecords() => Records;
 }

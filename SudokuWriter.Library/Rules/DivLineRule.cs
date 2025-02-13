@@ -10,7 +10,7 @@ public class DivLineRule : TriGroupLineRule<DivLineRule>, ILineRule<DivLineRule>
     {
     }
 
-    public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new DivLineRule(parts);
+    public static DivLineRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new DivLineRule(parts);
 
     protected override CellValueMask ReduceToGroup(CellValueMask input) => input | (input >> 1) | (input >> 2);
     protected override CellValueMask ReducingGroupMask(CellValueMask mask) => mask | mask << 1 | mask << 2;

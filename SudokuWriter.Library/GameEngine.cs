@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -88,13 +87,15 @@ public class GameEngine
         while (searchStates.TryDequeue(out GameState s, out _))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            foreach (GameState next in NextStates(s))
+            foreach (var guess in NextStates(s, tracker))
             {
-                GameResult result = EvaluateState(next);
+                solutionChain = solutionChain.Fork();
+                solutionChain.Record(guess.SimplificationRecord);
+                GameResult result = EvaluateState(guess.State);
 
                 if (result == GameResult.Unsolvable) continue;
 
-                GameState simplified = SimplifyState(next, solutionChain, cancellationToken);
+                GameState simplified = SimplifyState(guess.State, solutionChain, cancellationToken);
 
                 switch (EvaluateState(simplified))
                 {
@@ -169,6 +170,7 @@ public class GameEngine
                 foreach (IGameRule rule in Rules)
                 foreach (MutexGroup mutexGroup in rule.GetMutualExclusionGroups(simplified, chain.Tracker))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     MultiRef<CellValueMask> cellRef = cellBuilder.Unbox(mutexGroup.Cells);
                     bool applied = MutualExclusion.ApplyMutualExclusionRules(cellRef);
                     if (applied)
@@ -231,7 +233,9 @@ public class GameEngine
         return false;
     }
 
-    public IEnumerable<GameState> NextStates(GameState initial)
+    private readonly record struct NextGuess(GameState State, SimplificationRecord SimplificationRecord); 
+
+    private IEnumerable<NextGuess> NextStates(GameState initial, ISimplificationTracker tracker)
     {
         int nRows = initial.Cells.Rows;
         int nColumns = initial.Cells.Columns;
@@ -261,7 +265,10 @@ public class GameEngine
             var v = new CellValue(d);
             if (!minMask.Contains(v)) continue;
 
-            yield return initial.WithCells(initial.Cells.SetCell(minRow, minColumn, v));
+            yield return new NextGuess(
+                initial.WithCells(initial.Cells.SetCell(minRow, minColumn, v)),
+                tracker.Record($"Guess {minRow + 1},{minColumn + 1} {minMask} => {v}")
+            );
         }
     }
 

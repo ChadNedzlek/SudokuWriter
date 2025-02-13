@@ -21,7 +21,7 @@ public class RenbanLine : LineRule<RenbanLine>, ILineRule<RenbanLine>
     {
     }
 
-    public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject)
+    public static RenbanLine Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject)
     {
         return new RenbanLine(parts);
     }

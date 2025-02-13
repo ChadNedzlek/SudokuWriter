@@ -29,7 +29,7 @@ public abstract class TriLineRule<T> : LineRule<T>
                     {
                         case 1: x = ref b; break;
                         case 2: x = ref c; break;
-                    };
+                    }
                     x.Include(in cells[branch.Cells[iCell]]);
                 }
 

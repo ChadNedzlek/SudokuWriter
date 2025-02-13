@@ -12,7 +12,7 @@ public class ThermoLineRule : DirectedLineRule<ThermoLineRule>, ILineRule<Thermo
     {
     }
 
-    public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new ThermoLineRule(parts);
+    public static ThermoLineRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new ThermoLineRule(parts);
 
     public override GameResult Evaluate(GameState state)
     {

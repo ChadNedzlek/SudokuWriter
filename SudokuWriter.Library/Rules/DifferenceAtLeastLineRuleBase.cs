@@ -21,7 +21,7 @@ public class DifferenceAtLeastLineRule : DifferenceAtLeastLineRuleBase<Differenc
     {
     }
 
-    public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new DifferenceAtLeastLineRule(parts, jsonObject["diff"].GetValue<ushort>());
+    public static DifferenceAtLeastLineRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new DifferenceAtLeastLineRule(parts, jsonObject["diff"].GetValue<ushort>());
 
     public override void SaveToJsonObject(JsonObject obj)
     {

@@ -29,6 +29,7 @@ public partial class MainWindow
     private readonly ILogger<MainWindow> _logger;
     private readonly UpdateManager _updateManager;
     private readonly IOptions<StartupOptions> _startupOptions;
+    private readonly SolutionExplanation _solutionExplanation = new();
 
     public enum CellStyle
     {
@@ -176,14 +177,26 @@ public partial class MainWindow
         GameState state = BuildGameStateFromUi();
 
         CancellationTokenSource prevToken = Interlocked.Exchange(ref _cancelPendingEvalutations, new CancellationTokenSource());
+        var cancellationToken = _cancelPendingEvalutations.Token;
         prevToken?.Cancel();
         prevToken?.Dispose();
 
         TaskCompletionSource<GameQueryResult> resultTask = new();
-        _queries.Enqueue(new GameQuery(state, resultTask, _cancelPendingEvalutations.Token));
+        ISimplificationTracker tracker = _solutionExplanation.IsVisible ? new ToggleableSimplificationTracker() : new NoopTracker();
+        _queries.Enqueue(new GameQuery(state, resultTask, cancellationToken, tracker));
         _gameStateAvailable.Trigger();
         
-        var simplified = _gameEngine.SimplifyState(state);
+        GameState simplified;
+        try
+        {
+            simplified = await Task.Run(() => _gameEngine.SimplifyState(state, cancellationToken: cancellationToken), cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // This version of the game was preempted, just move on
+            return;
+        }
+        
         ImmutableList<TextBox> uiCells = CellBoxes;
         for (int r = 0; r < state.Structure.Rows; r++)
         for (int c = 0; c < state.Structure.Columns; c++)
@@ -216,6 +229,8 @@ public partial class MainWindow
             // This version of the game was preempted, just move on
             return;
         }
+        
+        _solutionExplanation.Update(result.Explanation);
 
         Style s = result.Result switch
         {
@@ -304,13 +319,20 @@ public partial class MainWindow
         {
             _exit.Token.ThrowIfCancellationRequested();
             await _gameStateAvailable.WaitAsync();
-            if (_queries.TryDequeue(out GameQuery s))
+            while (_queries.TryDequeue(out GameQuery s))
             {
-                Debug.WriteLine("Found state to query", "INFO");
+                _logger.LogDebug("Found state to query");
                 try
                 {
-                    GameResult result = _gameEngine.Evaluate(s.State, out GameState? solution, out GameState? conflict, s.CancellationToken);
-                    Debug.WriteLine($"Query complete result={result}", "INFO");
+                    GameResult result = _gameEngine.Evaluate(
+                        s.State,
+                        out GameState? solution,
+                        out GameState? conflict,
+                        s.Tracker,
+                        out ISimplificationChain explanation,
+                        s.CancellationToken
+                    );
+                    _logger.LogDebug("Query complete result={result}", result);
                     GameQueryResult queryResult = result switch
                     {
                         GameResult.Unknown => UnknownQueryResult.Instance,
@@ -319,7 +341,7 @@ public partial class MainWindow
                         GameResult.MultipleSolutions => new MultipleSolutionsQueryResult(solution.Value, conflict.Value),
                         _ => throw new ArgumentOutOfRangeException()
                     };
-                    s.OnSolved.TrySetResult(queryResult);
+                    s.OnSolved.TrySetResult(queryResult with {Explanation = explanation});
                 }
                 catch (OperationCanceledException)
                 {
@@ -327,14 +349,10 @@ public partial class MainWindow
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine($"EXCEPTION IN GAME STATE: {e}");
+                    _logger.LogError(e, "EXCEPTION IN GAME STATE: {exception}", e.Message);
                 }
 
-                Debug.WriteLine($"Dispatch query complete", "INFO");
-            }
-            else
-            {
-                Debug.WriteLine("No query found", "ERROR");
+                _logger.LogDebug("Dispatch query complete");
             }
         }
         // ReSharper disable once FunctionNeverReturns
@@ -425,7 +443,7 @@ public partial class MainWindow
         e.Handled = true;
     }
     
-    private record class GameQueryResult(GameResult Result);
+    private record class GameQueryResult(GameResult Result, ISimplificationChain Explanation = null);
     private record class SolvedQueryResult(GameState Solution) : GameQueryResult(GameResult.Solved);
     private record class MultipleSolutionsQueryResult(GameState Solution1, GameState Solution2) : GameQueryResult(GameResult.MultipleSolutions);
 
@@ -439,7 +457,12 @@ public partial class MainWindow
         public static readonly UnknownQueryResult Instance = new();
     }
 
-    private record class GameQuery(GameState State, TaskCompletionSource<GameQueryResult> OnSolved, CancellationToken CancellationToken);
+    private record class GameQuery(
+        GameState State,
+        TaskCompletionSource<GameQueryResult> OnSolved,
+        CancellationToken CancellationToken,
+        ISimplificationTracker Tracker
+    );
 
     private readonly record struct CellBoxValue(string Text, CellStyle Style);
 
@@ -672,6 +695,7 @@ public partial class MainWindow
 
     private async void EvaluateGame(object sender, RoutedEventArgs e)
     {
+        _solutionExplanation.Show();
         try
         {
             await RunGameEngine();

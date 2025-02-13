@@ -204,6 +204,17 @@ public class CageRule : IGameRule
 
     public JsonObject ToJsonObject()
     {
-        return new();
+        return new JsonObject
+        {
+            ["sum"] = Sum,
+            ["cage"] = RuleHelpers.WriteGridCoords(Cage),
+        };
+    }
+
+    public static IGameRule FromJsonObject(JsonObject jsonObject)
+    {
+        ushort sum = RuleHelpers.ValueOrThrow<ushort>(jsonObject, "sum");
+        ImmutableArray<GridCoord> cage = RuleHelpers.ReadGridCoords(RuleHelpers.ValueOrThrow<JsonArray>(jsonObject, "cage"));
+        return new CageRule(sum, cage);
     }
 }

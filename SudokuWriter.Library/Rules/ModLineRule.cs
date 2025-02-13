@@ -11,7 +11,7 @@ public class ModLineRule : TriGroupLineRule<ModLineRule>, ILineRule<ModLineRule>
     {
     }
 
-    public static IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new ModLineRule(parts);
+    public static ModLineRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject) => new ModLineRule(parts);
 
     protected override CellValueMask ReduceToGroup(CellValueMask input) => input | (input >> 3) | (input >> 6);
     protected override CellValueMask ReducingGroupMask(CellValueMask mask) => mask | mask << 3 | mask << 6;

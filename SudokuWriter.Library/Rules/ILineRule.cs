@@ -5,5 +5,5 @@ namespace VaettirNet.SudokuWriter.Library.Rules;
 
 public interface ILineRule<T> : IGameRule
 {
-    static abstract IGameRule Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject);
+    static abstract T Create(ImmutableArray<BranchingRuleLine> parts, JsonObject jsonObject);
 }
