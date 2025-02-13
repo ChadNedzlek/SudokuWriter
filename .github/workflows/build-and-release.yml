@@ -107,6 +107,7 @@ jobs:
           -o ./.out/releases `
           --framework net9.0-x64-desktop `
           --mainExe "VnSudoku.exe" `
+          --icon "./SudokuWriter.Gui/Resources/SudokuWriter.ico" `
           --packTitle "Sudoku Writer" `
           --packAuthors Vaettir.Net `
           --shortcuts StartMenu `

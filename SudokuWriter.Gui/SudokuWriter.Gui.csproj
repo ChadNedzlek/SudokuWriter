@@ -8,6 +8,7 @@
         <UseWPF>true</UseWPF>
         <AssemblyName Condition=" '$(_TargetAssemblyProjectName)' == '' ">VnSudoku</AssemblyName>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <ApplicationIcon>Resources\SudokuWriter.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -34,9 +35,6 @@
         <EmbeddedResource Remove="Releases\**" />
         <Page Remove="Releases\**" />
         <None Remove="Releases\**" />
-    </ItemGroup>
-
-    <ItemGroup>
     </ItemGroup>
 
     <ItemGroup>
