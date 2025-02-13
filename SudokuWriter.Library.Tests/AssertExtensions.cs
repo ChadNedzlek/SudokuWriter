@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Shouldly;
 
 namespace VaettirNet.SudokuWriter.Library.Tests;

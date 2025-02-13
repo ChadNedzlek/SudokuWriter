@@ -89,7 +89,7 @@ public class GenerateManifestCommand : CommandBase
             Path.GetExtension(CertificateFile) == ".pfx" ? CertificateFile : null;
         if (pfxFile != null)
         {
-            X509Certificate2 pfxCert = X509CertificateLoader.LoadPkcs12(File.ReadAllBytes(PrivateKeyFile), null);
+            X509Certificate2 pfxCert = X509CertificateLoader.LoadPkcs12(File.ReadAllBytes(pfxFile), null);
             if (pfxCert.GetECDsaPrivateKey() is { } ecdsa)
             {
                 _logger.LogInformation("Loaded ecdsa key with public key {publicKey}", new PublicKeyHashFormatter(ecdsa));

@@ -217,11 +217,13 @@ public class GameEngine
             
             MultiRef<CellValueMask> modificationGroup = mutexRef;
             modificationGroup.Except(digitFence.Cells);
-            CellValueMask mask = ~digitFence.Digit.AsMask();
-            if (modificationGroup.Aggregate(false, (bool r, scoped ref CellValueMask cell) => RuleHelpers.TryMask(ref cell, mask) | r))
+
+            if (modificationGroup.Aggregate(false, RuleHelpers.TryMask, ~digitFence.Digit.AsMask()))
             {
                 // Evaluating a fence might screw up other fences, so we need to bail now, unfortunately
-                chain.Record($"Digit must be in {digitFence.SimplificationRecord.Description}, so cannot be in {mutexGroup.SimplificationRecord.Description}");
+                chain.Record(
+                    $"Digit must be in {digitFence.SimplificationRecord.Description}, so cannot be in {mutexGroup.SimplificationRecord.Description}"
+                );
                 return true;
             }
         }

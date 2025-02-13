@@ -99,12 +99,10 @@ public class PairSumUiRule : EdgeUiRuleFactoryBase<PairSumRule>
 
         public Rule(PairSumUiRule factory, Drawing drawing, GeometryGroup geometryGroup, ushort sum) : base(factory, drawing, geometryGroup)
         {
-            PairSumUiRule = factory;
             Sum = sum;
         }
 
         public ushort Sum { get; }
-        public PairSumUiRule PairSumUiRule { get; }
 
         public override bool IsValid => true;
 

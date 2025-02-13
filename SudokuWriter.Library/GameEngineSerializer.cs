@@ -89,10 +89,10 @@ public class GameEngineSerializer
             {
                 if (r is JsonArray { Count: 2 } a)
                 {
-                    string ruleName = r[0].GetValue<string>();
+                    string ruleName = a[0].GetValue<string>();
                     if (_rules.FirstOrDefault(m => m.Name.Equals(ruleName)) is not { } rule)
                         throw new InvalidDataException($"Unknown rule type {ruleName} in file");
-                    JsonObject jsonObject = r[1].AsObject();
+                    JsonObject jsonObject = a[1].AsObject();
                     rules.Add(rule.Create(jsonObject));
                 }
             }

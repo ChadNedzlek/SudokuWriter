@@ -1,5 +1,4 @@
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -15,6 +14,5 @@ public class GameEngineSerializerTests
         GameEngineSerializer serializer = new();
         MemoryStream stream = new();
         await serializer.SaveGameAsync(GameEngine.Default, stream);
-        string json = Encoding.UTF8.GetString(stream.ToArray());
     }
 }

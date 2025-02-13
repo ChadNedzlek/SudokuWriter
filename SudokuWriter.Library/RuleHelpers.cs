@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -71,11 +70,7 @@ public static class RuleHelpers
     {
         if (!inputCell.IsSingle()) return false;
 
-        CellValueMask mask = ~inputCell;
-
-        return seenCells.Aggregate(
-            (bool c, ref CellValueMask cell) => c | TryMask(ref cell, mask)
-        );
+        return seenCells.Aggregate(false, TryMask, ~inputCell);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -83,11 +78,10 @@ public static class RuleHelpers
         => Interlocked.Exchange(ref Unsafe.As<CellValueMask, ushort>(ref value), newValue.RawValue) != newValue.RawValue;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryMask(ref CellValueMask value, CellValueMask mask)
-    {
-        CellValueMask masked = value & mask;
-        return TryUpdate(ref value, masked);
-    }
+    public static bool TryMask(ref CellValueMask value, CellValueMask mask) => TryUpdate(ref value, value & mask);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryMask(bool previous, ref CellValueMask value, CellValueMask mask) => TryUpdate(ref value, value & mask) | previous;
 }
 
 [InterpolatedStringHandler]
@@ -102,6 +96,7 @@ public struct SimplificationInterpolationHandler
         (_parts ??= new List<object>()).Add(o);
     }
 
+    
     public SimplificationInterpolationHandler(int literalLength, int formattedCount, ISimplificationTracker tracker)
     {
         Tracker = tracker;

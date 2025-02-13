@@ -124,6 +124,8 @@ public class VerifyManifestCommand : CommandBase
         bool validatedHash = false;
         bool validatedSignature = false;
         AsymmetricAlgorithm publicKey = null;
+        Span<byte> expectedAki = stackalloc byte[100];
+        
         while (PemEncoding.TryFind(rem, out var field))
         {
             switch (rem[field.Label])
@@ -191,8 +193,6 @@ public class VerifyManifestCommand : CommandBase
                             CommandSet.WriteError($"Embedded certificate authority key identifier has no key id");
                             return 4;
                         }
-
-                        Span<byte> expectedAki = stackalloc byte[100];
                         Convert.FromHexString(AuthorityKeyIdentifier, expectedAki, out _, out var cbAki);
 
                         expectedAki = expectedAki[..cbAki];

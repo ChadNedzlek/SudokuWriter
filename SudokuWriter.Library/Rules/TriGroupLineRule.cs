@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -62,8 +61,7 @@ public abstract class TriGroupLineRule<T> : TriLineRule<T>
 
         bool SelfMask(CellValueMask src, ref MultiRef<CellValueMask> a)
         {
-            var m = ReducingGroupMask(src);
-            return a.Aggregate(false, (bool r, ref CellValueMask v) => r | RuleHelpers.TryMask(ref v, m));
+            return a.Aggregate(false, RuleHelpers.TryMask, ReducingGroupMask(src));
         }
 
         bool MaskOtherCells(CellValueMask src, ref MultiRef<CellValueMask> b, ref MultiRef<CellValueMask> c)
@@ -76,8 +74,8 @@ public abstract class TriGroupLineRule<T> : TriLineRule<T>
             bool reduced = false;
             CellValueMask groupMask = InputGroupMask;
             var aMask = ReducingGroupMask(groupMask & ~src);
-            reduced |= b.Aggregate(false, (bool r, ref CellValueMask v) => r | RuleHelpers.TryMask(ref v, aMask));
-            reduced |= c.Aggregate(false, (bool r, ref CellValueMask v) => r | RuleHelpers.TryMask(ref v, aMask));
+            reduced |= b.Aggregate(false, RuleHelpers.TryMask, aMask);
+            reduced |= c.Aggregate(false, RuleHelpers.TryMask, aMask);
 
             return reduced;
         }

@@ -28,7 +28,7 @@ public class VerifyReleaseCommand : CommandBase
                 CommandSet.Out.WriteLine($"=== {Path.GetFileName(file)}");
                 ret |= ValidateSingleFile(file);
             }
-            return 0;
+            return ret;
         }
 
         return ValidateSingleFile(ReleaseFilePath);

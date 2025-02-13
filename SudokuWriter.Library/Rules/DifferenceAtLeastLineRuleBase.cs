@@ -81,9 +81,7 @@ public abstract class DifferenceAtLeastLineRuleBase<T> : LineRule<T>
         {
             CellValueMask allowedMask = GetAllowedMask(adjacency.Cell);
 
-            modified = adjacency.AdjacentCells.Aggregate(modified,
-                (bool mod, ref CellValueMask cell) => RuleHelpers.TryMask(ref cell, allowedMask) | mod
-            );
+            modified = adjacency.AdjacentCells.Aggregate(modified, RuleHelpers.TryMask, allowedMask);
         }
 
         return modified ? state.WithCells(cellBuilder.MoveToImmutable()) : null;

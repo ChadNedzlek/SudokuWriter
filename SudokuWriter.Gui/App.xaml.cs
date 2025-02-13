@@ -15,7 +15,7 @@ namespace VaettirNet.SudokuWriter.Gui;
 /// <summary>
 ///     Interaction logic for App.xaml
 /// </summary>
-public partial class App : Application
+public partial class App
 {
     private ILogger _logger;
     
@@ -43,7 +43,7 @@ public partial class App : Application
                 o.RepoUrl = "https://github.com/ChadNedzlek/SudokuWriter";
             }
         );
-        collection.Configure<UpdateOptions>(o => { });
+        collection.Configure<UpdateOptions>(_ => { });
         collection.AddSingleton(
             s => new UpdateManager(
                 s.GetRequiredService<IUpdateSource>(),

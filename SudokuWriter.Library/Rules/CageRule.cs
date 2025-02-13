@@ -184,6 +184,7 @@ public class CageRule : IGameRule
         return validMask;
     }
 
+    // ReSharper disable once InconsistentNaming
     private Vec CalculateValidMaskAvx10v1(Vec maxSumExcept, Vec minSumExcept, int digits)
     {
         var allMask = Vector256.Create(CellValueMask.All(digits).RawValue);
