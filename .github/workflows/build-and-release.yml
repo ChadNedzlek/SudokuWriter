@@ -105,7 +105,7 @@ jobs:
         
     - name: Generate release notes
       run: |
-        ConvertTo-Json @{title="Sudoku Writer"; version="${{ steps.version.outputs.SemVer }}" | Out-File ./.out/tmp/conventional-changelog.json
+        ConvertTo-Json @{title="Sudoku Writer"; version="${{ steps.version.outputs.SemVer }}"} | Out-File ./.out/tmp/conventional-changelog.json
         conventional-changelog --preset conventionalcommits --outfile ./.out/tmp/release-notes.md --context ./.out/tmp/conventional-changelog.json
   
     - name: Pack Velopack Release
