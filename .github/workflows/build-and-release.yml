@@ -57,6 +57,9 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
+    
+    - name: Install node
+      uses: actions/setup-node@v3
         
     - name: Install vpk
       run: dotnet tool install -g vpk
@@ -65,6 +68,9 @@ jobs:
       uses: gittools/actions/gitversion/setup@v3.1.11
       with:
         versionSpec: 6.0.*
+    
+    - name: Install conventional-changelog
+      run: npm install -g conventional-changelog-cli
 
     - name: Determine Version
       id: version
@@ -96,6 +102,11 @@ jobs:
         git config --global user.name "Tagger"
         git tag -a v${{ steps.version.outputs.SemVer }} -m "Version ${{ steps.version.outputs.SemVer }}"
         git push --follow-tags
+        
+    - name: Generate release notes
+      run: |
+        ConvertTo-Json @{title="Sudoku Writer"; version="${{ steps.version.outputs.SemVer }}" | Out-File ./.out/tmp/conventional-changelog.json
+        conventional-changelog --preset conventionalcommits --outfile ./.out/tmp/release-notes.md --context ./.out/tmp/conventional-changelog.json
   
     - name: Pack Velopack Release
       run: |
@@ -110,6 +121,7 @@ jobs:
           --icon "./SudokuWriter.Gui/Resources/SudokuWriter.ico" `
           --packTitle "Sudoku Writer" `
           --packAuthors Vaettir.Net `
+          --releaseNotes ./.out/tmp/release-notes.md `
           --shortcuts StartMenu `
           --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr http://freetsa.org/tsr"
 
