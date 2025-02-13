@@ -105,7 +105,7 @@ jobs:
         
     - name: Generate release notes
       run: |
-        md ./.out/tmp
+        md ./.out/tmp | Out-Null
         ConvertTo-Json @{title="Sudoku Writer"; version="${{ steps.version.outputs.SemVer }}"} | Out-File ./.out/tmp/conventional-changelog.json
         conventional-changelog --preset conventionalcommits --outfile ./.out/tmp/release-notes.md --context ./.out/tmp/conventional-changelog.json
   
@@ -122,7 +122,7 @@ jobs:
           --icon "./SudokuWriter.Gui/Resources/SudokuWriter.ico" `
           --packTitle "Sudoku Writer" `
           --packAuthors Vaettir.Net `
-          --releaseNotes ./.out/tmp/release-notes.md `
+          --releaseNotes ${{ github.workspace }}\.out\tmp\release-notes.md `
           --shortcuts StartMenu `
           --signParams "/td sha256 /fd sha256 /f ${{ github.workspace }}\GitHubActionsWorkflow.pfx /tr http://freetsa.org/tsr"
 
@@ -152,10 +152,10 @@ jobs:
       env:
         GITHUB_ACCESSTOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#    - name: Upload artifacts
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: vpk
-#        path: |
-#          .out/releases
-#        retention-days: 1
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tmp
+        path: |
+          .out/tmp
+        retention-days: 1
