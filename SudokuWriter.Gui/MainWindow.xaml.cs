@@ -66,7 +66,7 @@ public partial class MainWindow
 
         List<TextBox> cells = GetDescendants<TextBox>(GameGrid);
         _cellLayout = new Lazy<ImmutableList<TextBox>>(() => PopulateCells(cells));
-        _solveTask = Task.Run(SolveQueries);
+        _solveTask = Task.Factory.StartNew(SolveQueries, TaskCreationOptions.LongRunning);
         _serializer = new GameEngineSerializer();
         int cellSize = 20;
         _ruleFactories =
@@ -163,7 +163,7 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Exception: {ex}");
+            _logger.LogCritical(ex, "Changing cell caused exception");
         }
     }
 
@@ -696,6 +696,7 @@ public partial class MainWindow
     private async void EvaluateGame(object sender, RoutedEventArgs e)
     {
         _solutionExplanation.Show();
+        _solutionExplanation.Owner = this;
         try
         {
             await RunGameEngine();
