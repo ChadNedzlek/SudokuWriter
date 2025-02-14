@@ -140,6 +140,7 @@ public partial class MainWindow
     protected override void OnClosing(CancelEventArgs e)
     {
         _exit.Cancel();
+        Application.Current.Shutdown();
         base.OnClosing(e);
     }
 
