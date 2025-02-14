@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using CsvHelper;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -42,20 +45,35 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
 
     private async Task ProcessLogQueue()
     {
+        JsonSerializerOptions o = new()
+        {
+            WriteIndented = false,
+        };
+        
         StreamWriter writer = null;
+        CsvWriter csv = null;
         ChannelReader<Record> reader = _records.Reader;
         try
         {
             await foreach (Record record in reader.ReadAllAsync())
             {
                 EnsureWriter();
-                await writer.WriteLineAsync(
-                    $"{record.Timestamp:yyyy-MM-ddTHH:mm:ss.fff} [{record.LogLevel}] {record.EventId} {record.FormattedMessage} {record.Exception} {record.ActivitySpanId} {record.ActivityTraceId} {record.ManagedThreadId} {record.MessageTemplate}"
-                );
+                csv.WriteField(record.Timestamp);
+                csv.WriteField(record.LogLevel.ToString());
+                csv.WriteField(record.EventId);
+                csv.WriteField(record.FormattedMessage);
+                csv.WriteField(record.Exception);
+                csv.WriteField(record.ActivitySpanId);
+                csv.WriteField(record.ActivityTraceId);
+                csv.WriteField(record.ManagedThreadId);
+                csv.WriteField(record.MessageTemplate);
+                csv.WriteField(JsonSerializer.Serialize(new Dictionary<string, object>(record.Attributes)));
+                await csv.NextRecordAsync();
             }
         }
         finally
         {
+            if (csv != null) await csv.DisposeAsync();
             if (writer != null) await writer.DisposeAsync();
         }
 
@@ -86,6 +104,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
                         path,
                         new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.ReadWrite }
                     );
+                    csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
                     return;
                 }
                 catch (IOException e) when ((e.HResult & 0xFFFF) == 80)
@@ -199,6 +218,19 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
 
     private class BufferedFileLogger : ILogger
     {
+        private class Null : IDisposable
+        {
+            public static Null Instance { get; } = new ();
+
+            private Null()
+            {
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+        
         private readonly BufferedFileLoggerProvider _fileLogger;
 
         public BufferedFileLogger(BufferedFileLoggerProvider fileLogger)
@@ -206,7 +238,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
             _fileLogger = fileLogger;
         }
 
-        public IDisposable BeginScope<TState>(TState state) => _fileLogger._scopeProvider.Push(state);
+        public IDisposable BeginScope<TState>(TState state) => _fileLogger._scopeProvider?.Push(state) ?? Null.Instance;
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
@@ -224,7 +256,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
             }
             
             List<IReadOnlyList<KeyValuePair<string, object>>> attributes = [];
-            _fileLogger._scopeProvider.ForEachScope((scope, list) =>
+            _fileLogger._scopeProvider?.ForEachScope((scope, list) =>
             {
                 if (scope is IReadOnlyList<KeyValuePair<string, object>> a)
                     list.Add(a);

@@ -1,9 +1,12 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Reflection;
+using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mono.Options;
+using VaettirNet.SudokuWriter.Library;
 using VaettirNet.VelopackExtensions.SignedReleases;
 using VaettirNet.VelopackExtensions.SignedReleases.Sources;
 using Velopack;
@@ -34,6 +37,21 @@ public partial class App
         
         ServiceCollection collection = new ServiceCollection();
         collection.AddLogging();
+        collection.AddSingleton<ILoggerProvider, BufferedFileLoggerProvider>();
+        collection.Configure<BufferedFileLoggerProvider.Options>(o =>
+        {
+            #if DEBUG
+            o.CountOfLogs = 0;
+            #else
+            o.CountOfLogs = 5;
+            #endif
+            o.FilePathPattern = Path.Join(
+                VelopackLocator.GetDefault(null).RootAppDir
+                    ?? Assembly.GetEntryAssembly()?.Location
+                    ?? Environment.CurrentDirectory,
+                "logs",
+                "log_{0}_{1}.txt");
+        });
         collection.AddSingleton<IVelopackAssetValidator, SameSignerAsEntryPointValidator>();
         collection.AddVelopackReleaseValidation();
         collection.AddSingleton<IUpdateSource, ValidatingGitHubReleaseSource>();
