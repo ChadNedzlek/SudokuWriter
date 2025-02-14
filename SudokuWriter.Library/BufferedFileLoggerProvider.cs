@@ -40,7 +40,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
 
     public ILogger CreateLogger(string categoryName)
     {
-        return new BufferedFileLogger(this);
+        return new BufferedFileLogger(this, categoryName);
     }
 
     private async Task ProcessLogQueue()
@@ -60,6 +60,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
                 EnsureWriter();
                 csv.WriteField(record.Timestamp);
                 csv.WriteField(record.LogLevel.ToString());
+                csv.WriteField(record.CategoryName);
                 csv.WriteField(record.EventId);
                 csv.WriteField(record.FormattedMessage);
                 csv.WriteField(record.Exception);
@@ -69,6 +70,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
                 csv.WriteField(record.MessageTemplate);
                 csv.WriteField(JsonSerializer.Serialize(new Dictionary<string, object>(record.Attributes)));
                 await csv.NextRecordAsync();
+                await csv.FlushAsync();
             }
         }
         finally
@@ -87,7 +89,12 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
                 return;
             }
 
-            foreach (var oldLogFile in Directory.GetFiles(string.Format(_options.Value.FilePathPattern, "*", "*"))
+            string wildcardFullPath = string.Format(_options.Value.FilePathPattern, "*", "*");
+            string dir = Path.GetDirectoryName(wildcardFullPath);
+            string oldLogFilePattern = Path.GetFileName(wildcardFullPath);
+            Directory.CreateDirectory(dir);
+
+            foreach (var oldLogFile in Directory.GetFiles(dir, oldLogFilePattern)
                 .OrderByDescending(f => f)
                 .Skip(_options.Value.CountOfLogs)
             )
@@ -119,6 +126,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
 
     private class Record : BufferedLogRecord
     {
+        public string CategoryName { get; }
         public override DateTimeOffset Timestamp { get; }
         public override LogLevel LogLevel { get; }
         public override EventId EventId { get; }
@@ -148,6 +156,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
         }
 
         public Record(
+            string categoryName,
             DateTimeOffset timestamp,
             LogLevel logLevel,
             EventId eventId,
@@ -160,6 +169,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
             string messageTemplate = null
         )
         {
+            CategoryName = categoryName;
             Timestamp = timestamp;
             LogLevel = logLevel;
             EventId = eventId;
@@ -173,6 +183,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
         }
         
         public Record(
+            string categoryName,
             DateTimeOffset timestamp,
             LogLevel logLevel,
             EventId eventId,
@@ -185,6 +196,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
             string messageTemplate = null
         )
         {
+            CategoryName = categoryName;
             Timestamp = timestamp;
             LogLevel = logLevel;
             EventId = eventId;
@@ -218,6 +230,8 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
 
     private class BufferedFileLogger : ILogger
     {
+        public string CategoryName { get; }
+
         private class Null : IDisposable
         {
             public static Null Instance { get; } = new ();
@@ -233,8 +247,9 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
         
         private readonly BufferedFileLoggerProvider _fileLogger;
 
-        public BufferedFileLogger(BufferedFileLoggerProvider fileLogger)
+        public BufferedFileLogger(BufferedFileLoggerProvider fileLogger, string categoryName)
         {
+            CategoryName = categoryName;
             _fileLogger = fileLogger;
         }
 
@@ -266,6 +281,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
             if (attributes.Count == 0)
             {
                 record = new Record(
+                    CategoryName,
                     _fileLogger._timeProvider.GetLocalNow(),
                     logLevel,
                     eventId,
@@ -283,6 +299,7 @@ public sealed class BufferedFileLoggerProvider : ILoggerProvider, IAsyncDisposab
                     attributes.Add(a);
                 
                 record = new Record(
+                    CategoryName,
                     _fileLogger._timeProvider.GetLocalNow(),
                     logLevel,
                     eventId,

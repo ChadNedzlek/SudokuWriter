@@ -139,6 +139,7 @@ public partial class MainWindow
 
     protected override void OnClosing(CancelEventArgs e)
     {
+        Application.Current.Shutdown();
         _exit.Cancel();
         base.OnClosing(e);
     }
@@ -510,6 +511,7 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
+            _logger.LogCritical(ex, "Failed to save game");
             MessageBox.Show(this, $"Failed to save game: \n\nDetails: {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -538,6 +540,7 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
+            _logger.LogCritical(ex, "Failed to load game");
             MessageBox.Show(this, $"Failed to load game: \n\nDetails: {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

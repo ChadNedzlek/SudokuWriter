@@ -41,14 +41,14 @@ public partial class App
         collection.Configure<BufferedFileLoggerProvider.Options>(o =>
         {
             #if DEBUG
-            o.CountOfLogs = 0;
+            o.CountOfLogs = 1;
             #else
             o.CountOfLogs = 5;
             #endif
             o.FilePathPattern = Path.Join(
                 VelopackLocator.GetDefault(null).RootAppDir
-                    ?? Assembly.GetEntryAssembly()?.Location
-                    ?? Environment.CurrentDirectory,
+                ?? Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location)
+                ?? Environment.CurrentDirectory,
                 "logs",
                 "log_{0}_{1}.txt");
         });
@@ -94,7 +94,6 @@ public partial class App
         
         _logger.LogCritical(e.Exception, "Exception unhandled by dispatcher: {message}", e.Exception.Message);
         e.Handled = true;
-
     }
 
     private ServiceProvider _serviceProvider;

@@ -40,12 +40,27 @@ public class ParityCellRule : IGameRule
         bool changed = false;
         foreach (GridCoord odd in OddCells)
         {
-            changed |= RuleHelpers.TryMask(ref cells[odd.Row, odd.Col], oddMask);
+            ref var cell = ref cells[odd.Row, odd.Col];
+            var oldValue = cell;
+            bool oddMasked = RuleHelpers.TryMask(ref cell, oddMask);
+            if (oddMasked)
+            {
+                chain.Record($"odd cell {odd} from {oldValue}=>{cell}");
+            }
+
+            changed |= oddMasked;
         }
 
         foreach (GridCoord even in EvenCells)
         {
-            changed |= RuleHelpers.TryMask(ref cells[even.Row, even.Col], oddMask << 1);
+            ref var cell = ref cells[even.Row, even.Col];
+            var oldValue = cell;
+            bool evenMasked = RuleHelpers.TryMask(ref cell, oddMask << 1);
+            if (evenMasked)
+            {
+                chain.Record($"even cell {even} from {oldValue}=>{cell}");
+            }
+            changed |= evenMasked;
         }
 
         return changed ? state.WithCells(cells.MoveToImmutable()) : null;
